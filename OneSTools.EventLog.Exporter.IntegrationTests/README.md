@@ -45,6 +45,8 @@ Checks:
 - Named JSON objects and unknown token trees from `UseStructuredDataParsing`
   fit the existing Data String, preserve the schema/cursor and support nested
   `JSONExtractString` queries.
+- Historical +1 byte checkpoints resume with opt-in latest LGF names and
+  transaction outcomes, keeping all 24 columns and SHOW CREATE TABLE unchanged.
 
 This verifies the storage contract and an orderly restart. It does not establish
 exactly-once delivery under concurrent batches, crashes or shutdown races, and does

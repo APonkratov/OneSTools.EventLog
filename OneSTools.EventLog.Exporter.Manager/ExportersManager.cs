@@ -45,6 +45,7 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
         private readonly bool _useLatestDictionaryValues;
+        private readonly bool _useFinalTransactionStatuses;
         private readonly bool _useStructuredDataParsing;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
@@ -63,6 +64,7 @@ namespace OneSTools.EventLog.Exporter.Manager
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
             _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
+            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
             _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
@@ -181,6 +183,7 @@ namespace OneSTools.EventLog.Exporter.Manager
                             SkipEventsBeforeDate = _skipEventsBeforeDate,
                             UseCorrectedValueParsing = _useCorrectedValueParsing,
                             UseLatestDictionaryValues = _useLatestDictionaryValues,
+                            UseFinalTransactionStatuses = _useFinalTransactionStatuses,
                             UseStructuredDataParsing = _useStructuredDataParsing
                         };
 

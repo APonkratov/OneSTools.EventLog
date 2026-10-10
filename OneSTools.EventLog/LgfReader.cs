@@ -158,6 +158,7 @@ namespace OneSTools.EventLog
                 throw new IOException("LGF was truncated; restart the reader to rebuild its dictionary.");
             cancellationToken.ThrowIfCancellationRequested();
             ReadTill(ObjectType.None, 0, long.MaxValue, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         public long GetPosition()

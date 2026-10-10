@@ -33,6 +33,8 @@ namespace OneSTools.EventLog
 
         public string LgpPath { get; }
         public string LgpFileName => Path.GetFileName(LgpPath);
+        internal string TransactionMarker { get; private set; }
+        internal string TransactionKey { get; private set; }
 
         public void Dispose()
         {
@@ -134,6 +136,8 @@ namespace OneSTools.EventLog
             };
 
             var transactionData = parsedData[2];
+            TransactionMarker = parsedData[1];
+            TransactionKey = TransactionOutcomeIndex.Key(parsedData);
             eventLogItem.TransactionNumber = Convert.ToInt64(transactionData[1], 16);
 
             var transactionDate = new DateTime().AddSeconds(Convert.ToInt64(transactionData[0], 16) / 10000);

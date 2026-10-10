@@ -17,6 +17,8 @@ namespace OneSTools.EventLog
         private FileSystemWatcher _lgpFilesWatcher;
         private LgpReader _lgpReader;
         private string _lastLgpFileName = string.Empty;
+        private readonly TransactionOutcomeIndex _transactionOutcomes;
+        private EventLogItem _pendingItem;
 
         public EventLogReader(EventLogReaderSettings settings)
         {
@@ -24,6 +26,8 @@ namespace OneSTools.EventLog
 
             _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"));
             _lgfReader.SetPosition(settings.LgfStartPosition);
+            if (settings.UseFinalTransactionStatuses)
+                _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode);
 
             if (settings.LgpFileName != string.Empty)
             {
@@ -69,7 +73,7 @@ namespace OneSTools.EventLog
                 try
                 {
                     if (_settings.UseLatestDictionaryValues) _lgfReader.Refresh(cancellationToken);
-                    item = _lgpReader?.ReadNextEventLogItem(cancellationToken);
+                    item = _pendingItem ?? _lgpReader?.ReadNextEventLogItem(cancellationToken);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -105,6 +109,13 @@ namespace OneSTools.EventLog
                 }
                 else
                 {
+                    if (_transactionOutcomes != null)
+                    {
+                        _pendingItem = item;
+                        item.TransactionStatus = _transactionOutcomes.Resolve(_lgpReader.TransactionMarker,
+                            _lgpReader.TransactionKey, cancellationToken);
+                        _pendingItem = null;
+                    }
                     _settings.ItemId++;
                     item.Id = _settings.ItemId;
 
@@ -168,6 +179,7 @@ namespace OneSTools.EventLog
                 _lgpChangedCreated?.Dispose();
                 _lgpChangedCreated = null;
                 _lgfReader?.Dispose();
+                _transactionOutcomes?.Dispose();
                 _lgfReader = null;
                 _lgpReader?.Dispose();
                 _lgpReader = null;

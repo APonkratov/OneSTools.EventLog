@@ -27,6 +27,7 @@ namespace OneSTools.EventLog.Exporter.Core
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
         private readonly bool _useLatestDictionaryValues;
+        private readonly bool _useFinalTransactionStatuses;
         private readonly bool _useStructuredDataParsing;
 
         private string _currentLgpFile;
@@ -53,6 +54,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _skipEventsBeforeDate = settings.SkipEventsBeforeDate;
             _useCorrectedValueParsing = settings.UseCorrectedValueParsing;
             _useLatestDictionaryValues = settings.UseLatestDictionaryValues;
+            _useFinalTransactionStatuses = settings.UseFinalTransactionStatuses;
             _useStructuredDataParsing = settings.UseStructuredDataParsing;
 
             CheckSettings();
@@ -73,6 +75,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
             _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
+            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
             _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
@@ -209,6 +212,7 @@ namespace OneSTools.EventLog.Exporter.Core
                 SkipEventsBeforeDate = _skipEventsBeforeDate,
                 UseCorrectedValueParsing = _useCorrectedValueParsing,
                 UseLatestDictionaryValues = _useLatestDictionaryValues,
+                UseFinalTransactionStatuses = _useFinalTransactionStatuses,
                 UseStructuredDataParsing = _useStructuredDataParsing
             };
 

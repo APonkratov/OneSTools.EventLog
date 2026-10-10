@@ -27,6 +27,8 @@ namespace OneSTools.EventLog
         public bool UseStructuredDataParsing { get; set; } = false;
         /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
         public bool UseLatestDictionaryValues { get; set; } = false;
+        /// <summary>Resolve transaction outcomes from available Commit/Rollback events. Opt in.</summary>
+        public bool UseFinalTransactionStatuses { get; set; } = false;
 
     }
 }

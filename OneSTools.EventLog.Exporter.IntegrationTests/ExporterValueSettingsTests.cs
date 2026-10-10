@@ -88,14 +88,54 @@ public sealed class ExporterValueSettingsTests
         finally { Directory.Delete(folder, recursive: true); }
     }
 
+    public static IEnumerable<object?[]> OutcomeOptions()
+    {
+        foreach (var constructor in new[] {false, true})
+        foreach (var option in new[] {"dictionary", "transactions"})
+        foreach (var enabled in new bool?[] {null, false, true})
+            yield return new object?[] {constructor, option, enabled};
+    }
+
+    [Theory]
+    [MemberData(nameof(OutcomeOptions))]
+    public async Task BothConstructorsPassIndependentDictionaryAndOutcomeOptions(bool configurationConstructor, string option, bool? enabled)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-outcomes", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
+                "{4,\"Test\",1},\n{4,\"_$Transaction$_.Rollback\",2},\n" +
+                "{5,11111111-1111-1111-1111-111111111111,\"old\",1},\n" +
+                "{5,11111111-1111-1111-1111-111111111111,\"new\",1}");
+            const string row = "{20261011120000,U,{0,1},0,0,0,1,1,I,\"\",1,{\"U\"},\"\",0,0,0,1,0,{0}}";
+            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"), row + ",\n" + row.Replace(",1,I,", ",2,I,"));
+            var storage = new RecordingStorage();
+            using var exporter = CreateExporter(configurationConstructor, null, folder, storage,
+                latest: option == "dictionary" ? enabled : null, final: option == "transactions" ? enabled : null);
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+            try
+            {
+                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.Equal(option == "dictionary" && enabled == true ? "new" : "old", item.Metadata);
+                Assert.Equal(option == "transactions" && enabled == true ? "Отменена" : "Зафиксирована", item.TransactionStatus);
+            }
+            finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
     private static EventLogExporter CreateExporter(bool configurationConstructor, bool? enabled, string folder,
-        RecordingStorage storage, bool? structured = null)
+        RecordingStorage storage, bool? structured = null, bool? latest = null, bool? final = null)
     {
         if (!configurationConstructor)
         {
             var settings = new EventLogExporterSettings { LogFolder = folder, Portion = 1, TimeZone = DateTimeZone.Utc };
             if (enabled.HasValue) settings.UseCorrectedValueParsing = enabled.Value;
             if (structured.HasValue) settings.UseStructuredDataParsing = structured.Value;
+            if (latest.HasValue) settings.UseLatestDictionaryValues = latest.Value;
+            if (final.HasValue) settings.UseFinalTransactionStatuses = final.Value;
             return new EventLogExporter(settings, storage);
         }
         var values = new Dictionary<string, string?>
@@ -104,6 +144,8 @@ public sealed class ExporterValueSettingsTests
         };
         if (enabled.HasValue) values["Exporter:UseCorrectedValueParsing"] = enabled.Value.ToString();
         if (structured.HasValue) values["Exporter:UseStructuredDataParsing"] = structured.Value.ToString();
+        if (latest.HasValue) values["Exporter:UseLatestDictionaryValues"] = latest.Value.ToString();
+        if (final.HasValue) values["Exporter:UseFinalTransactionStatuses"] = final.Value.ToString();
         return new EventLogExporter(null, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), storage);
     }
 
