@@ -11,7 +11,7 @@ namespace OneSTools.EventLog
     internal class LgpReader : IDisposable
     {
         private readonly DateTimeZone _timeZone;
-        private BracketsListReader _bracketsReader;
+        private Utf8BracketsReader _bracketsReader;
         private bool _disposedValue;
         private FileStream _fileStream;
         private LgfReader _lgfReader;
@@ -74,7 +74,7 @@ namespace OneSTools.EventLog
 
                 _fileStream = new FileStream(LgpPath, FileMode.Open, FileAccess.Read,
                     FileShare.ReadWrite | FileShare.Delete);
-                _bracketsReader = new BracketsListReader(_fileStream);
+                _bracketsReader = new Utf8BracketsReader(_fileStream);
             }
         }
 
@@ -83,9 +83,9 @@ namespace OneSTools.EventLog
             if (e.ChangeType == WatcherChangeTypes.Deleted && LgpPath == e.FullPath) Dispose();
         }
 
-        private (StringBuilder Data, long EndPosition) ReadNextEventLogItemData()
+        private (StringBuilder Data, long EndPosition) ReadNextEventLogItemData(CancellationToken cancellationToken)
         {
-            var data = _bracketsReader.NextNodeAsStringBuilder();
+            var data = _bracketsReader.NextNodeAsStringBuilder(cancellationToken);
 
             return (data, _bracketsReader.Position);
         }
@@ -94,7 +94,7 @@ namespace OneSTools.EventLog
         {
             while (true)
             {
-                var (data, endPosition) = ReadNextEventLogItemData();
+                var (data, endPosition) = ReadNextEventLogItemData(cancellationToken);
                 if (data.Length == 0)
                     return null;
 
@@ -130,8 +130,7 @@ namespace OneSTools.EventLog
                     ? GetCorrectedTransactionPresentation(parsedData[1])
                     : GetTransactionPresentation(parsedData[1]),
                 FileName = LgpFileName,
-                EndPosition = endPosition,
-                LgfEndPosition = _lgfReader.GetPosition()
+                EndPosition = endPosition
             };
 
             var transactionData = parsedData[2];
@@ -182,6 +181,9 @@ namespace OneSTools.EventLog
                 eventLogItem.AddPort = int.Parse(addPort);
 
             eventLogItem.Session = parsedData[16];
+
+            // The checkpoint must include all dictionary entries needed by this event.
+            eventLogItem.LgfEndPosition = _lgfReader.GetPosition();
 
             return eventLogItem;
         }

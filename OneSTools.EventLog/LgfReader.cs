@@ -8,7 +8,7 @@ namespace OneSTools.EventLog
 {
     internal class LgfReader : IDisposable
     {
-        private BracketsListReader _bracketsReader;
+        private Utf8BracketsReader _bracketsReader;
         private bool _disposedValue;
         private FileStream _fileStream;
 
@@ -44,9 +44,10 @@ namespace OneSTools.EventLog
 
             var stop = false;
 
-            while (!stop && !_bracketsReader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            while (!stop && !cancellationToken.IsCancellationRequested)
             {
-                var itemData = _bracketsReader.NextNode();
+                var itemData = _bracketsReader.NextNode(cancellationToken);
+                if (itemData == null) break;
 
                 var ot = (ObjectType) (int) itemData[0];
 
@@ -66,7 +67,7 @@ namespace OneSTools.EventLog
 
                         _referencedObjects.Add(key, value);
 
-                        if (objectType == ObjectType.None && GetPosition() >= position)
+                        if (objectType == ObjectType.None && GetPosition() >= position - 1)
                         {
                             stop = true;
                             break;
@@ -85,7 +86,7 @@ namespace OneSTools.EventLog
 
                         _objects.Add(key1, value1);
 
-                        if (objectType == ObjectType.None && GetPosition() >= position)
+                        if (objectType == ObjectType.None && GetPosition() >= position - 1)
                         {
                             stop = true;
                             break;
@@ -139,7 +140,7 @@ namespace OneSTools.EventLog
 
                 _fileStream = new FileStream(LgfPath, FileMode.Open, FileAccess.Read,
                     FileShare.ReadWrite | FileShare.Delete);
-                _bracketsReader = new BracketsListReader(_fileStream);
+                _bracketsReader = new Utf8BracketsReader(_fileStream);
             }
         }
 
