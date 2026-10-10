@@ -74,7 +74,11 @@ public sealed class ClickHouseContractTests(ITestOutputHelper output)
             await storage.WriteEventLogDataAsync([new EventLogItem
             {
                 DateTime = new DateTime(2026, 10, 9, 0, 0, 0, DateTimeKind.Utc),
-                TransactionDateTime = DateTime.MinValue
+                TransactionDateTime = DateTime.MinValue,
+                FileName = null, TransactionStatus = null, UserUuid = null, User = null,
+                Computer = null, Application = null, Event = null, Severity = null,
+                Comment = null, MetadataUuid = null, Metadata = null, Data = null,
+                DataPresentation = null, Server = null
             }]);
         }
         Assert.Equal(expectedSchema, (await server.Schema()).Replace("EventLogItems", "ExpectedItems"));
