@@ -30,7 +30,7 @@ namespace OneSTools.EventLog
                 var file = Path.Combine(_settings.LogFolder, settings.LgpFileName);
 
                 _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate,
-                    settings.UseCorrectedValueParsing);
+                    settings.UseCorrectedValueParsing, settings.UseStructuredDataParsing);
                 _lgpReader.SetPosition(settings.LgpStartPosition);
                 _lastLgpFileName = settings.LgpFileName;
             }
@@ -133,7 +133,7 @@ namespace OneSTools.EventLog
             _lgpReader = null;
 
             _lgpReader = new LgpReader(nextFile, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate,
-                _settings.UseCorrectedValueParsing);
+                _settings.UseCorrectedValueParsing, _settings.UseStructuredDataParsing);
             _lastLgpFileName = Path.GetFileName(nextFile);
 
             return true;

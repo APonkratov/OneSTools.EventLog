@@ -2,7 +2,7 @@
 
 These opt-in tests use the actual production `ClickHouseStorage` and its existing
 ClickHouse.Client 3.0.0.357 dependency. No production schema or dependencies change.
-Six additional tests verify optional value-parsing settings through both exporter
+Twelve additional tests verify optional value-parsing settings through both exporter
 constructors with an in-memory receiver; those tests do not require a server.
 The standalone test project requires .NET SDK 8+ and is outside the legacy solution.
 
@@ -42,6 +42,9 @@ Checks:
   with no duplicate/missing rows in this scenario.
 - Corrected scalar/text/status values from the actual reader fit the existing
   table without changing its schema when `UseCorrectedValueParsing` is enabled.
+- Named JSON objects and unknown token trees from `UseStructuredDataParsing`
+  fit the existing Data String, preserve the schema/cursor and support nested
+  `JSONExtractString` queries.
 
 This verifies the storage contract and an orderly restart. It does not establish
 exactly-once delivery under concurrent batches, crashes or shutdown races, and does

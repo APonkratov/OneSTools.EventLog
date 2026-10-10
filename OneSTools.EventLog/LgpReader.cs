@@ -18,15 +18,17 @@ namespace OneSTools.EventLog
         private FileSystemWatcher _lgpFileWatcher;
         private DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
+        private readonly bool _useStructuredDataParsing;
 
         public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
-            bool useCorrectedValueParsing = false)
+            bool useCorrectedValueParsing = false, bool useStructuredDataParsing = false)
         {
             LgpPath = lgpPath;
             _timeZone = timeZone;
             _lgfReader = lgfReader;
             _skipEventsBeforeDate = skipEventsBeforeDate;
             _useCorrectedValueParsing = useCorrectedValueParsing;
+            _useStructuredDataParsing = useStructuredDataParsing;
         }
 
         public string LgpPath { get; }
@@ -163,9 +165,11 @@ namespace OneSTools.EventLog
             eventLogItem.MetadataUuid = uuid;
             eventLogItem.Metadata = DecodeText(value);
 
-            eventLogItem.Data = _useCorrectedValueParsing
-                ? GetCorrectedData(parsedData[11])
-                : GetData(parsedData[11]).Trim();
+            var data = parsedData[11];
+            if (_useStructuredDataParsing && StructuredEventData.ShouldParse(data))
+                eventLogItem.Data = StructuredEventData.Parse(ev, data);
+            else
+                eventLogItem.Data = _useCorrectedValueParsing ? GetCorrectedData(data) : GetData(data).Trim();
             eventLogItem.DataPresentation = DecodeText(parsedData[12]);
             eventLogItem.Server = DecodeText(_lgfReader.GetObjectValue(ObjectType.Servers, parsedData[13], cancellationToken));
 

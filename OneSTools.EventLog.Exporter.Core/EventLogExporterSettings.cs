@@ -15,5 +15,7 @@ namespace OneSTools.EventLog.Exporter.Core
         public DateTime SkipEventsBeforeDate { get; set; }
         /// <summary>Enable corrected scalar/text/status values; false preserves historical output.</summary>
         public bool UseCorrectedValueParsing { get; set; } = false;
+        /// <summary>Enable JSON for complex/unknown Data; independent of scalar corrections.</summary>
+        public bool UseStructuredDataParsing { get; set; } = false;
     }
 }

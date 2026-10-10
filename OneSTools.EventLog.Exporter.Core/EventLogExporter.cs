@@ -26,6 +26,7 @@ namespace OneSTools.EventLog.Exporter.Core
         private BatchBlock<EventLogItem> _batchBlock;
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
+        private readonly bool _useStructuredDataParsing;
 
         private string _currentLgpFile;
 
@@ -50,6 +51,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _readingTimeout = settings.ReadingTimeout;
             _skipEventsBeforeDate = settings.SkipEventsBeforeDate;
             _useCorrectedValueParsing = settings.UseCorrectedValueParsing;
+            _useStructuredDataParsing = settings.UseStructuredDataParsing;
 
             CheckSettings();
         }
@@ -68,6 +70,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
+            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -201,7 +204,8 @@ namespace OneSTools.EventLog.Exporter.Core
                 ReadingTimeout = _readingTimeout * 1000,
                 TimeZone = _timeZone,
                 SkipEventsBeforeDate = _skipEventsBeforeDate,
-                UseCorrectedValueParsing = _useCorrectedValueParsing
+                UseCorrectedValueParsing = _useCorrectedValueParsing,
+                UseStructuredDataParsing = _useStructuredDataParsing
             };
 
             if (!_loadArchive)

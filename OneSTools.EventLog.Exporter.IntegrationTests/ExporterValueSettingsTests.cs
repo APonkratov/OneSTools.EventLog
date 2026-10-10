@@ -45,13 +45,57 @@ public sealed class ExporterValueSettingsTests
         finally { Directory.Delete(folder, recursive: true); }
     }
 
+    [Theory]
+    [InlineData(false, null)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, null)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task BothConstructorsPassIndependentStructuredOption(bool configurationConstructor, bool? enabled)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-structured", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
+                "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"_$InfoBase$_.ExclusiveModeChange\",1}", new UTF8Encoding(false));
+            File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"),
+                "{20261009123456,C,{0,0},0,0,0,1,1,I,\"\"\"Комментарий\"\"\",0,{\"P\",{2,{\"B\",1}}},\"\",0,0,0,1,0,{0}}", new UTF8Encoding(false));
+            var storage = new RecordingStorage();
+            using var exporter = CreateExporter(configurationConstructor, null, folder, storage, enabled);
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+            try
+            {
+                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                if (enabled == true)
+                {
+                    using var json = System.Text.Json.JsonDocument.Parse(item.Data);
+                    Assert.Equal("true", json.RootElement.GetProperty("ExclusiveMode").GetString());
+                }
+                else Assert.Equal("Item 1: true", item.Data);
+                // Structured mode must not implicitly enable scalar/text/status corrections.
+                Assert.Equal("Отменена", item.TransactionStatus);
+                Assert.Equal("\"\"Комментарий\"\"", item.Comment);
+            }
+            finally
+            {
+                cancellation.Cancel();
+                await run.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+        }
+        finally { Directory.Delete(folder, recursive: true); }
+    }
+
     private static EventLogExporter CreateExporter(bool configurationConstructor, bool? enabled, string folder,
-        RecordingStorage storage)
+        RecordingStorage storage, bool? structured = null)
     {
         if (!configurationConstructor)
         {
             var settings = new EventLogExporterSettings { LogFolder = folder, Portion = 1, TimeZone = DateTimeZone.Utc };
             if (enabled.HasValue) settings.UseCorrectedValueParsing = enabled.Value;
+            if (structured.HasValue) settings.UseStructuredDataParsing = structured.Value;
             return new EventLogExporter(settings, storage);
         }
         var values = new Dictionary<string, string?>
@@ -59,6 +103,7 @@ public sealed class ExporterValueSettingsTests
             ["Exporter:LogFolder"] = folder, ["Exporter:Portion"] = "1", ["Exporter:TimeZone"] = "UTC"
         };
         if (enabled.HasValue) values["Exporter:UseCorrectedValueParsing"] = enabled.Value.ToString();
+        if (structured.HasValue) values["Exporter:UseStructuredDataParsing"] = structured.Value.ToString();
         return new EventLogExporter(null, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), storage);
     }
 

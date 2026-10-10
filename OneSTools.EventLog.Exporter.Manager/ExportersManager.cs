@@ -44,6 +44,7 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly int _writingMaxDop;
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
+        private readonly bool _useStructuredDataParsing;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
             IConfiguration configuration)
@@ -60,6 +61,7 @@ namespace OneSTools.EventLog.Exporter.Manager
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
+            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -175,7 +177,8 @@ namespace OneSTools.EventLog.Exporter.Manager
                             TimeZone = _timeZone,
                             WritingMaxDop = _writingMaxDop,
                             SkipEventsBeforeDate = _skipEventsBeforeDate,
-                            UseCorrectedValueParsing = _useCorrectedValueParsing
+                            UseCorrectedValueParsing = _useCorrectedValueParsing,
+                            UseStructuredDataParsing = _useStructuredDataParsing
                         };
 
                         Task.Factory.StartNew(async () =>
