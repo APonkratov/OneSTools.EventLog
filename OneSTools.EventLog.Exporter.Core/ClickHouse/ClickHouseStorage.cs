@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OneSTools.EventLog.Exporter.Core.ClickHouse
 {
-    public class ClickHouseStorage : IEventLogStorage
+    public class ClickHouseStorage : IEventLogStorage, IEventLogStorageIdentity
     {
         private const string TableName = "EventLogItems";
         private readonly ILogger<ClickHouseStorage> _logger;
@@ -35,12 +36,24 @@ namespace OneSTools.EventLog.Exporter.Core.ClickHouse
             Init();
         }
 
+        public string CheckpointIdentity
+        {
+            get
+            {
+                var values = new DbConnectionStringBuilder { ConnectionString = _connectionString };
+                var host = values.TryGetValue("Host", out var h) ? h.ToString().ToLowerInvariant() : "localhost";
+                var port = values.TryGetValue("Port", out var p) ? p.ToString() : "8123";
+                var protocol = values.TryGetValue("Protocol", out var scheme) ? scheme.ToString().ToLowerInvariant() : "http";
+                return $"ClickHouse:{protocol}:{host}:{port}:{_databaseName}";
+            }
+        }
+
         public async Task<EventLogPosition> ReadEventLogPositionAsync(CancellationToken cancellationToken = default)
         {
             await CreateConnectionAsync(cancellationToken);
 
             var commandText =
-                $"SELECT TOP 1 FileName, EndPosition, LgfEndPosition, Id FROM {TableName} ORDER BY DateTime DESC, EndPosition DESC";
+                $"SELECT TOP 1 FileName, EndPosition, LgfEndPosition, Id FROM {TableName} ORDER BY FileName DESC, EndPosition DESC, Id DESC";
 
             await using var cmd = _connection.CreateCommand();
             cmd.CommandText = commandText;

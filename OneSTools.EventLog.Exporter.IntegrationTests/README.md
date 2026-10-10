@@ -2,8 +2,10 @@
 
 These opt-in tests use the actual production `ClickHouseStorage` and its existing
 ClickHouse.Client 3.0.0.357 dependency. No production schema or dependencies change.
-Twelve additional tests verify optional value-parsing settings through both exporter
-constructors with an in-memory receiver; those tests do not require a server.
+Additional tests verify optional parser settings through both exporter constructors,
+delivery checkpoints and service shutdown using controlled receivers without a server.
+Service lifecycle tests reference the actual standalone/Manager assemblies; their
+production target frameworks are unchanged.
 The standalone test project requires .NET SDK 8+ and is outside the legacy solution.
 
 Use a **dedicated disposable server**. Each test creates a unique
@@ -47,7 +49,15 @@ Checks:
   `JSONExtractString` queries.
 - Historical +1 byte checkpoints resume with opt-in latest LGF names and
   transaction outcomes, keeping all 24 columns and SHOW CREATE TABLE unchanged.
+- The storage cursor follows file/offset when event timestamps move backwards.
+- A deliberately partial first batch writes only its later row to the actual server;
+  local recovery replays the whole batch, preserves all events and permits duplicates.
+- Controlled receiver tests cover failed/lost acknowledgements, first/next partial
+  batches, archive EOF, bounded drain on cancellation, non-cooperative writes,
+  checkpoint corruption/locking/loss, truncated journals and failed state publication.
+- Standalone service and Manager await active writes before disposing receivers;
+  a re-added source waits for its previous worker. Archive success does not restart.
 
-This verifies the storage contract and an orderly restart. It does not establish
-exactly-once delivery under concurrent batches, crashes or shutdown races, and does
-not exercise Elasticsearch or CORP journals.
+See [delivery semantics and configuration](../docs/export-delivery.md). This does
+not establish exactly-once or power-loss durability. Process kills, actual network
+faults, disk-full conditions, Elasticsearch and CORP are not exercised here.

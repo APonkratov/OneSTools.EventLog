@@ -1,0 +1,116 @@
+using System.Reflection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
+using OneSTools.EventLog.Exporter.Core;
+using OneSTools.EventLog.Exporter.Manager;
+
+namespace OneSTools.EventLog.Exporter.IntegrationTests;
+
+public sealed class ExporterServiceLifetimeTests : IDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "onestools-lifetime", Guid.NewGuid().ToString("N"));
+    private string Base => Path.Combine(_root, "ib");
+    private string Log => Path.Combine(Base, "1Cv8Log");
+    private static TaskCompletionSource<bool> Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public ExporterServiceLifetimeTests()
+    {
+        Directory.CreateDirectory(Log);
+        File.WriteAllText(Path.Combine(_root, "1CV8Clst.lst"), "{0,0,{0}}");
+        File.WriteAllText(Path.Combine(Log, "1Cv8.lgf"), "{4,\"Test\",1}");
+        File.WriteAllText(Path.Combine(Log, "20261011000000.lgp"), "{20261011120000,N,{0,0},0,0,0,1,1,I,\"\",0,{\"U\"},\"\",0,0,0,1,0,{0}}");
+    }
+    private IConfiguration Configuration() => new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        ["Manager:ClstFolders:0:Folder"] = _root, ["Exporter:StorageType"] = "1", ["ClickHouse:ConnectionString"] = "Host=unused;",
+        ["Exporter:LoadArchive"] = "true", ["Exporter:Portion"] = "1", ["Exporter:ShutdownTimeout"] = "2"
+    }).Build();
+
+    [Fact]
+    public async Task SingleArchiveServiceStopsHostAfterConfirmedEof()
+    {
+        var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
+        using var provider = new ServiceCollection().AddTransient(_ => new EventLogExporter(
+            new EventLogExporterSettings {LogFolder = Log, LoadArchive = true, Portion = 1}, storage)).BuildServiceProvider();
+        var lifetime = new Lifetime();
+        using var service = new EventLogExporterService(provider, NullLogger<EventLogExporterService>.Instance, Configuration(), lifetime);
+        await service.StartAsync(default);
+        await lifetime.Stopped.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await service.StopAsync(default);
+        Assert.Equal(1, storage.Calls);
+        Assert.True(storage.Disposed);
+    }
+
+    [Fact]
+    public async Task SingleServiceWaitsForActiveWriteBeforeDisposingStorage()
+    {
+        var storage = new BlockingStorage();
+        using var provider = new ServiceCollection().AddTransient(_ => new EventLogExporter(
+            new EventLogExporterSettings {LogFolder = Log, LoadArchive = true, Portion = 1, ShutdownTimeout = 2}, storage)).BuildServiceProvider();
+        using var service = new EventLogExporterService(provider, NullLogger<EventLogExporterService>.Instance, Configuration(), new Lifetime());
+        await service.StartAsync(default);
+        await storage.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var stop = service.StopAsync(default);
+        try { Assert.False(stop.IsCompleted); Assert.False(storage.Disposed); }
+        finally { storage.Release.TrySetResult(true); }
+        await stop.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(storage.Disposed);
+    }
+
+    [Fact]
+    public async Task ManagerWaitsForWorkersAndReaddedSourceWaitsForRetiredWrite()
+    {
+        var first = new BlockingStorage(); var second = new BlockingStorage();
+        var calls = 0;
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        using var manager = new TestManager(provider, Configuration(), () => Interlocked.Increment(ref calls) == 1 ? first : second);
+        await manager.StartAsync(default);
+        var start = typeof(ExportersManager).GetMethod("StartExporter", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var remove = typeof(ExportersManager).GetMethod("StopExporter", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        start.Invoke(manager, new object[] {Base, "fixture", "fixture"});
+        try
+        {
+            await first.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            remove.Invoke(manager, new object[] {Base, "fixture"});
+            start.Invoke(manager, new object[] {Base, "fixture", "fixture"});
+            Assert.False(second.Entered.Task.IsCompleted);
+            Assert.Equal(1, calls);
+            first.Release.TrySetResult(true);
+            await second.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var stop = manager.StopAsync(default);
+            Assert.False(stop.IsCompleted); Assert.False(second.Disposed);
+            second.Release.TrySetResult(true);
+            await stop.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(first.Disposed); Assert.True(second.Disposed);
+        }
+        finally
+        {
+            first.Release.TrySetResult(true); second.Release.TrySetResult(true);
+            await manager.StopAsync(default).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    private sealed class TestManager(IServiceProvider services, IConfiguration configuration, Func<IEventLogStorage> storage)
+        : ExportersManager(NullLogger<ExportersManager>.Instance, services, configuration)
+    { protected override IEventLogStorage GetStorage(string dataBaseName) => storage(); }
+    private sealed class BlockingStorage : IEventLogStorage
+    {
+        public TaskCompletionSource<bool> Entered { get; } = Signal();
+        public TaskCompletionSource<bool> Release { get; } = Signal();
+        public int Calls; public bool Disposed;
+        public Task<EventLogPosition> ReadEventLogPositionAsync(CancellationToken cancellationToken = default) => Task.FromResult<EventLogPosition>(null!);
+        public async Task WriteEventLogDataAsync(List<EventLogItem> entities, CancellationToken cancellationToken = default)
+        { Calls++; Entered.TrySetResult(true); await Release.Task; Assert.False(Disposed); }
+        public void Dispose() => Disposed = true;
+    }
+    private sealed class Lifetime : IHostApplicationLifetime
+    {
+        public TaskCompletionSource<bool> Stopped { get; } = Signal();
+        public CancellationToken ApplicationStarted => default;
+        public CancellationToken ApplicationStopping => default;
+        public CancellationToken ApplicationStopped => default;
+        public void StopApplication() => Stopped.TrySetResult(true);
+    }
+    public void Dispose() => Directory.Delete(_root, true);
+}

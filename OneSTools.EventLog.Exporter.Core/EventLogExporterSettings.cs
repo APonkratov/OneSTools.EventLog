@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NodaTime;
 
 namespace OneSTools.EventLog.Exporter.Core
@@ -12,6 +12,10 @@ namespace OneSTools.EventLog.Exporter.Core
         public int CollectedFactor { get; set; } = 2;
         public int ReadingTimeout { get; set; } = 1;
         public bool LoadArchive { get; set; } = false;
+        /// <summary>Optional local acknowledged checkpoint. Empty retains recovery from storage.</summary>
+        public string CheckpointFile { get; set; } = "";
+        /// <summary>Seconds allowed to drain a pending write after cancellation (1..3600).</summary>
+        public int ShutdownTimeout { get; set; } = 30;
         public DateTime SkipEventsBeforeDate { get; set; }
         /// <summary>Enable corrected scalar/text/status values; false preserves historical output.</summary>
         public bool UseCorrectedValueParsing { get; set; } = false;

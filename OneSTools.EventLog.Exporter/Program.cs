@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +51,8 @@ namespace OneSTools.EventLog.Exporter
                     }
 
                     services.AddTransient<EventLogExporter>();
+                    services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(
+                        hostContext.Configuration.GetValue("Exporter:ShutdownTimeout", 30) + 5));
                     services.AddHostedService<EventLogExporterService>();
                 });
         }
