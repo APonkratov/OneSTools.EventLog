@@ -25,5 +25,8 @@ namespace OneSTools.EventLog
         /// False preserves the historical representation of complex values.
         /// </summary>
         public bool UseStructuredDataParsing { get; set; } = false;
+        /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
+        public bool UseLatestDictionaryValues { get; set; } = false;
+
     }
 }

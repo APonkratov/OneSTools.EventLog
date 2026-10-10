@@ -17,5 +17,8 @@ namespace OneSTools.EventLog.Exporter.Core
         public bool UseCorrectedValueParsing { get; set; } = false;
         /// <summary>Enable JSON for complex/unknown Data; independent of scalar corrections.</summary>
         public bool UseStructuredDataParsing { get; set; } = false;
+        /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
+        public bool UseLatestDictionaryValues { get; set; } = false;
+
     }
 }

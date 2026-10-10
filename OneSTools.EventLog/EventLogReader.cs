@@ -68,6 +68,7 @@ namespace OneSTools.EventLog
             {
                 try
                 {
+                    if (_settings.UseLatestDictionaryValues) _lgfReader.Refresh(cancellationToken);
                     item = _lgpReader?.ReadNextEventLogItem(cancellationToken);
                 }
                 catch (ObjectDisposedException)

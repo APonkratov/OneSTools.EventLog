@@ -149,6 +149,17 @@ namespace OneSTools.EventLog
             ReadTill(ObjectType.None, 0, position, cancellationToken);
         }
 
+        // Read completed appended entries, including updates of already cached keys.
+        // An incomplete trailing entry is left at its opening brace for the next call.
+        public void Refresh(CancellationToken cancellationToken = default)
+        {
+            InitializeStreams();
+            if (_fileStream.Length < _bracketsReader.Position)
+                throw new IOException("LGF was truncated; restart the reader to rebuild its dictionary.");
+            cancellationToken.ThrowIfCancellationRequested();
+            ReadTill(ObjectType.None, 0, long.MaxValue, cancellationToken);
+        }
+
         public long GetPosition()
         {
             InitializeStreams();
