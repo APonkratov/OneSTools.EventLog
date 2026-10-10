@@ -21,6 +21,8 @@ Upstream: https://github.com/akpaevj/OneSTools.EventLog
 
 Сохранены существующий формат позиции, значения полей, Data и Comment, представления событий и транзакций. Код ClickHouseStorage, EventLogItem, LgpReader и настройки не изменены. Новые зависимости относятся только к проекту тестов; библиотека остается netstandard2.1, экспортер — на прежнем target framework.
 
+Проект тестов запускается отдельно от существующего solution, чтобы не повышать требования к его локальной сборке. В GitHub Actions установлен SDK 8 вместо SDK 5.0.100: прежний SDK в текущем ubuntu-latest падает до восстановления пакетов с `No usable version of libssl was found`. Это изменение инструмента CI, а не target framework или runtime поставляемого экспортера.
+
 Тесты запускаются командой:
 
 ```shell
