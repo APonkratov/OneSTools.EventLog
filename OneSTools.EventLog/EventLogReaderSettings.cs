@@ -15,5 +15,10 @@ namespace OneSTools.EventLog
         public int ReadingTimeout { get; set; } = Timeout.Infinite;
         public DateTimeZone TimeZone { get; set; } = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         public DateTime SkipEventsBeforeDate { get; set; }
+        /// <summary>
+        /// Opt in to scalar N/D/S decoding, text unescaping and corrected transaction statuses.
+        /// False preserves the historical output. Complex P data keeps its legacy representation.
+        /// </summary>
+        public bool UseCorrectedValueParsing { get; set; } = false;
     }
 }

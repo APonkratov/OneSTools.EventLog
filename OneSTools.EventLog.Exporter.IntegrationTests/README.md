@@ -2,6 +2,8 @@
 
 These opt-in tests use the actual production `ClickHouseStorage` and its existing
 ClickHouse.Client 3.0.0.357 dependency. No production schema or dependencies change.
+Six additional tests verify optional value-parsing settings through both exporter
+constructors with an in-memory receiver; those tests do not require a server.
 The standalone test project requires .NET SDK 8+ and is outside the legacy solution.
 
 Use a **dedicated disposable server**. Each test creates a unique
@@ -21,7 +23,7 @@ dotnet test OneSTools.EventLog.Exporter.IntegrationTests/OneSTools.EventLog.Expo
 docker rm --force --volumes onestools-contract
 ```
 
-Without `ONESTOOLS_CLICKHOUSE_URL`, tests explicitly report **Skipped**. CI sets it
+Without `ONESTOOLS_CLICKHOUSE_URL`, server tests explicitly report **Skipped**. CI sets it
 and starts a fresh service container. An unavailable configured server fails tests.
 The official `clickhouse:lts` image resolved to **26.8.15.10** on 2026-10-10;
 CI pins that version and manifest digest for reproducibility. Update both explicitly
@@ -38,6 +40,8 @@ Checks:
 - After disposal/reconnection, the saved four-field position resumes the actual
   reader inside an LGP, then continues to another period with the same mtime,
   with no duplicate/missing rows in this scenario.
+- Corrected scalar/text/status values from the actual reader fit the existing
+  table without changing its schema when `UseCorrectedValueParsing` is enabled.
 
 This verifies the storage contract and an orderly restart. It does not establish
 exactly-once delivery under concurrent batches, crashes or shutdown races, and does

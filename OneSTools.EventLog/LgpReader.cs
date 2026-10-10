@@ -17,13 +17,16 @@ namespace OneSTools.EventLog
         private LgfReader _lgfReader;
         private FileSystemWatcher _lgpFileWatcher;
         private DateTime _skipEventsBeforeDate;
+        private readonly bool _useCorrectedValueParsing;
 
-        public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate)
+        public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
+            bool useCorrectedValueParsing = false)
         {
             LgpPath = lgpPath;
             _timeZone = timeZone;
             _lgfReader = lgfReader;
             _skipEventsBeforeDate = skipEventsBeforeDate;
+            _useCorrectedValueParsing = useCorrectedValueParsing;
         }
 
         public string LgpPath { get; }
@@ -121,7 +124,9 @@ namespace OneSTools.EventLog
             var eventLogItem = new EventLogItem
             {
                 DateTime = dateTime,
-                TransactionStatus = GetTransactionPresentation(parsedData[1]),
+                TransactionStatus = _useCorrectedValueParsing
+                    ? GetCorrectedTransactionPresentation(parsedData[1])
+                    : GetTransactionPresentation(parsedData[1]),
                 FileName = LgpFileName,
                 EndPosition = endPosition,
                 LgfEndPosition = _lgfReader.GetPosition()
@@ -137,30 +142,32 @@ namespace OneSTools.EventLog
 
             var (value, uuid) = _lgfReader.GetReferencedObjectValue(ObjectType.Users, parsedData[3], cancellationToken);
             eventLogItem.UserUuid = uuid;
-            eventLogItem.User = value;
+            eventLogItem.User = DecodeText(value);
 
-            eventLogItem.Computer = _lgfReader.GetObjectValue(ObjectType.Computers, parsedData[4], cancellationToken);
+            eventLogItem.Computer = DecodeText(_lgfReader.GetObjectValue(ObjectType.Computers, parsedData[4], cancellationToken));
 
             var application = _lgfReader.GetObjectValue(ObjectType.Applications, parsedData[5], cancellationToken);
-            eventLogItem.Application = GetApplicationPresentation(application);
+            eventLogItem.Application = GetApplicationPresentation(DecodeText(application));
 
             eventLogItem.Connection = parsedData[6];
 
             var ev = _lgfReader.GetObjectValue(ObjectType.Events, parsedData[7], cancellationToken);
-            eventLogItem.Event = GetEventPresentation(ev);
+            eventLogItem.Event = GetEventPresentation(DecodeText(ev));
 
             var severity = (string)parsedData[8];
             eventLogItem.Severity = GetSeverityPresentation(severity);
 
-            eventLogItem.Comment = parsedData[9];
+            eventLogItem.Comment = DecodeText(parsedData[9]);
 
             (value, uuid) = _lgfReader.GetReferencedObjectValue(ObjectType.Metadata, parsedData[10], cancellationToken);
             eventLogItem.MetadataUuid = uuid;
-            eventLogItem.Metadata = value;
+            eventLogItem.Metadata = DecodeText(value);
 
-            eventLogItem.Data = GetData(parsedData[11]).Trim();
-            eventLogItem.DataPresentation = parsedData[12];
-            eventLogItem.Server = _lgfReader.GetObjectValue(ObjectType.Servers, parsedData[13], cancellationToken);
+            eventLogItem.Data = _useCorrectedValueParsing
+                ? GetCorrectedData(parsedData[11])
+                : GetData(parsedData[11]).Trim();
+            eventLogItem.DataPresentation = DecodeText(parsedData[12]);
+            eventLogItem.Server = DecodeText(_lgfReader.GetObjectValue(ObjectType.Servers, parsedData[13], cancellationToken));
 
             var mainPort = _lgfReader.GetObjectValue(ObjectType.MainPorts, parsedData[14], cancellationToken);
             if (mainPort != "")
@@ -173,6 +180,41 @@ namespace OneSTools.EventLog
             eventLogItem.Session = parsedData[16];
 
             return eventLogItem;
+        }
+
+        private string DecodeText(string value) => _useCorrectedValueParsing
+            ? value?.Replace("\"\"", "\"")
+            : value;
+
+        private static string GetCorrectedData(BracketsNode node)
+        {
+            switch ((string)node[0])
+            {
+                case "N":
+                    // Keep the invariant decimal token: double/decimal can lose valid 1C precision.
+                    return node[1];
+                case "D":
+                    // A 1C Date value has no time zone; only the event timestamp is converted to UTC.
+                    return DateTime.ParseExact(node[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                        .ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+                case "S":
+                    return ((string)node[1]).Replace("\"\"", "\"");
+                default:
+                    // P subtypes need a separate structured contract; retain their legacy output here.
+                    return GetData(node).Trim();
+            }
+        }
+
+        private static string GetCorrectedTransactionPresentation(string str)
+        {
+            return str switch
+            {
+                "U" => "Не завершена",
+                "C" => "Зафиксирована",
+                "R" => "Отменена",
+                "N" => "Нет транзакции",
+                _ => ""
+            };
         }
 
         private static string GetData(BracketsNode node)

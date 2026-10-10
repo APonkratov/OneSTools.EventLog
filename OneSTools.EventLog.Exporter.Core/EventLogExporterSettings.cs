@@ -13,5 +13,7 @@ namespace OneSTools.EventLog.Exporter.Core
         public int ReadingTimeout { get; set; } = 1;
         public bool LoadArchive { get; set; } = false;
         public DateTime SkipEventsBeforeDate { get; set; }
+        /// <summary>Enable corrected scalar/text/status values; false preserves historical output.</summary>
+        public bool UseCorrectedValueParsing { get; set; } = false;
     }
 }

@@ -143,6 +143,46 @@ public sealed class ClickHouseContractTests(ITestOutputHelper output)
     private static EventLogReaderSettings Settings(string folder) =>
         new() { LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
 
+    [ClickHouseFact]
+    public async Task CorrectedScalarAndStatusValuesFitExistingTableWithoutSchemaChanges()
+    {
+        await using var server = new ClickHouseServer();
+        await server.CreateLegacyTable();
+        var schema = await server.Schema();
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-corrected-contract", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
+                "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"Corpus.Test\",1}", new UTF8Encoding(false));
+            File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"), string.Join(",\n", new[]
+            {
+                "{20261009120000,C,{0,0},0,0,0,1,1,I,\"\"\"Тест\"\"\",0,{\"N\",12345678901234567890123456789012345678},\"\",0,0,0,1,0,{0}}",
+                "{20261009120001,R,{0,0},0,0,0,1,1,I,\"\",0,{\"D\",20261009123456},\"\",0,0,0,1,0,{0}}",
+                "{20261009120002,U,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"  \"\"Текст\"\"  \"},\"\",0,0,0,1,0,{0}}"
+            }), new UTF8Encoding(false));
+            var settings = Settings(folder);
+            settings.UseCorrectedValueParsing = true;
+            using var reader = new EventLogReader(settings);
+            var items = new List<EventLogItem>();
+            while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
+            Assert.Equal(3, items.Count);
+            using var storage = server.Storage();
+            await storage.WriteEventLogDataAsync(items);
+            var rows = (await server.Query($"SELECT Data, TransactionStatus, Comment FROM {server.Database}.EventLogItems ORDER BY Id FORMAT JSONEachRow"))
+                .TrimEnd().Split('\n').Select(line => JsonSerializer.Deserialize<Dictionary<string, string>>(line)!).ToArray();
+            Assert.Equal("12345678901234567890123456789012345678", rows[0]["Data"]);
+            Assert.Equal("Зафиксирована", rows[0]["TransactionStatus"]);
+            Assert.Equal("\"Тест\"", rows[0]["Comment"]);
+            Assert.Equal("2026-10-09T12:34:56", rows[1]["Data"]);
+            Assert.Equal("Отменена", rows[1]["TransactionStatus"]);
+            Assert.Equal("  \"Текст\"  ", rows[2]["Data"]);
+            Assert.Equal("Не завершена", rows[2]["TransactionStatus"]);
+            Assert.Equal(schema, await server.Schema());
+        }
+        finally { Directory.Delete(folder, recursive: true); }
+    }
+
     private static string Record(string date) =>
         "{" + date + ",N,{0,0},0,0,0,1,1,I,\"Проверка\",0,{\"S\",\"текст\"},\"\",0,0,0,1,0,{0}}";
 
