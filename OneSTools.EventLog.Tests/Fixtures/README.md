@@ -21,6 +21,15 @@ Tests run without a 1C installation.
   native-verified labels.
 - `platform-8.3.27-event-codes.json`: the 123 codes from the native
   `ibcmd eventlog model export` XSD, used to check presentation coverage only.
+- `positional-data-8.3.27.json`: 78 artificial user, infobase parameter and
+  password-policy records. Expected fields come from individual assignments in
+  an isolated **8.3.27.2325** base, independently of this parser. Native ibcmd
+  accepted all 78 records but returned Data=null for each; this is explicitly
+  different evidence from native named JSON. Dates were normalized. Historical
+  65534 cases adapt the observed layout by omitting position 13 from current
+  65535 cases; error variants are synthetic. Unverified user positions remain
+  unnamed, and the policy action retains its numeric code. See
+  [position/evidence matrix](../../docs/positional-data.md).
 
 For a new native fixture, write a new isolated directory containing artificial
 LGF/LGP, export with `ibcmd eventlog export --format=json`, and verify that the

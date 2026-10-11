@@ -6,7 +6,7 @@ using OneSTools.BracketsFile;
 
 namespace OneSTools.EventLog
 {
-    // Only layouts checked against a platform export receive field names.
+    // Only layouts checked against a platform export or controlled platform writes receive field names.
     // A different event, subtype, arity or field type retains the entire parsed tree.
     internal static class StructuredEventData
     {
@@ -39,6 +39,8 @@ namespace OneSTools.EventLog
         {
             if (!List(node, 2) || !Literal(node[0], "P") || node[1].IsValueNode) return null;
             var body = node[1];
+            var positional = PositionalEventData.Parse(eventCode, node);
+            if (positional != null) return positional;
             switch (eventCode)
             {
                 case "_$Session$_.Authentication":

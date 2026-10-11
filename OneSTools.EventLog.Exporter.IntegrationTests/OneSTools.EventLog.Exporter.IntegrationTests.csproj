@@ -15,5 +15,7 @@
     <ProjectReference Include="../OneSTools.EventLog.Exporter/OneSTools.EventLog.Exporter.csproj" />
     <ProjectReference Include="../OneSTools.EventLog.Exporter.Manager/OneSTools.EventLog.Exporter.Manager.csproj" />
     <EmbeddedResource Include="LegacyEventLogItems.sql" />
+    <None Include="../OneSTools.EventLog.Tests/Fixtures/positional-data-8.3.27.json"
+          Link="Fixtures/positional-data-8.3.27.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
