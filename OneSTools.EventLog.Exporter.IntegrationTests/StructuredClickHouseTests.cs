@@ -27,7 +27,7 @@ public sealed class StructuredClickHouseTests
             var items = new List<EventLogItem>();
             using (var reader = new EventLogReader(new EventLogReaderSettings
             {
-                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseStructuredDataParsing = true
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc
             }))
                 while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
             Assert.Equal(cases.Length, items.Count);
@@ -67,7 +67,7 @@ public sealed class StructuredClickHouseTests
             using var reader = new EventLogReader(new EventLogReaderSettings
             {
                 LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
-                UseStructuredDataParsing = true, UseCurrentEventNames = true, UseEventContext = true, UseStrictParsing = true
+                UseEventContext = true
             });
             var item = reader.ReadNextEventLogItem();
             using (var storage = server.Storage()) await storage.WriteEventLogDataAsync(new() { item });
@@ -112,7 +112,7 @@ public sealed class StructuredClickHouseTests
             var items = new List<EventLogItem>();
             using (var reader = new EventLogReader(new EventLogReaderSettings
             {
-                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseStructuredDataParsing = true
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc
             }))
                 while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
             Assert.Equal(cases.Length, items.Count);

@@ -12,7 +12,7 @@ parser.add_argument("after", type=Path, help="Directory containing the candidate
 parser.add_argument("corpus", type=Path)
 parser.add_argument("output", type=Path)
 parser.add_argument("--runs", type=int, default=7)
-parser.add_argument("--modes", nargs="+", default=["default", "data", "latest", "strict", "structured", "context"])
+parser.add_argument("--modes", nargs="+", default=["current", "context"])
 args = parser.parse_args()
 if args.runs < 1:
     parser.error("--runs must be positive")

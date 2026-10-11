@@ -25,8 +25,7 @@ public sealed class PositionalDataTests : IDisposable
         var sample = JsonNode.Parse(fixture)!;
         var code = sample["eventCode"]!.ToString();
         var data = sample["data"]!.ToString();
-        var legacy = Read(code, data, false);
-        var item = Read(code, data, true);
+        var item = Read(code, data);
         var parsed = JsonNode.Parse(item.Data)!;
         Assert.Equal("1c-positional-data-v1", parsed["$format"]!.ToString());
         Assert.Equal("P/" + sample["nodes"]![1]![0], parsed["layout"]!.ToString());
@@ -36,11 +35,6 @@ public sealed class PositionalDataTests : IDisposable
             Assert.True(JsonNode.DeepEquals(property.Value, parsed["values"]![property.Key]),
                 $"Operation {sample["operation"]}, field {property.Key}");
 
-        Assert.DoesNotContain("1c-positional-data-v1", legacy.Data);
-        var original = JsonSerializer.SerializeToNode(legacy)!;
-        var changed = JsonSerializer.SerializeToNode(item)!;
-        changed["Data"] = original["Data"]!.ToString();
-        Assert.True(JsonNode.DeepEquals(original, changed));
     }
 
     [Theory]
@@ -73,7 +67,7 @@ public sealed class PositionalDataTests : IDisposable
             case "unknown-role-type": body[12]![1]![1]![0] = "Future"; break;
             case "unknown-event": code = "Fixture.Future"; break;
         }
-        var result = JsonNode.Parse(Read(code, Wire(nodes), true).Data)!;
+        var result = JsonNode.Parse(Read(code, Wire(nodes)).Data)!;
         Assert.Equal("1c-brackets-v1", result["$format"]!.ToString());
         Assert.True(JsonNode.DeepEquals(nodes, result["nodes"]));
     }
@@ -88,17 +82,17 @@ public sealed class PositionalDataTests : IDisposable
     [InlineData("_$InfoBase$_.DBConfigExtensionUpdate", "{P,{}}")]
     public void UnverifiedMasksAndEmptyPayloadsRemainUninterpreted(string code, string wire)
     {
-        Assert.Equal("1c-brackets-v1", JsonNode.Parse(Read(code, wire, true).Data)!["$format"]!.ToString());
+        Assert.Equal("1c-brackets-v1", JsonNode.Parse(Read(code, wire).Data)!["$format"]!.ToString());
     }
 
-    private EventLogItem Read(string code, string data, bool structured)
+    private EventLogItem Read(string code, string data)
     {
         File.WriteAllText(Path.Combine(_folder, "1Cv8.lgf"), "{4,\"" + code + "\",1}");
         File.WriteAllText(Path.Combine(_folder, "20261011000000.lgp"),
             "{20261011120000,N,{0,0},0,0,0,1,1,I,\"\",0," + data + ",\"\",0,0,0,1,0,{0}}");
         using var reader = new EventLogReader(new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseStructuredDataParsing = structured
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc
         });
         var item = reader.ReadNextEventLogItem();
         Assert.Null(reader.ReadNextEventLogItem());

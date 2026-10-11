@@ -11,18 +11,13 @@ public sealed class DictionaryRefreshTests : IDisposable
     public DictionaryRefreshTests() => Directory.CreateDirectory(_folder);
     private static string Metadata(string value) => $"{{5,11111111-1111-1111-1111-111111111111,\"{value}\",1}}";
 
-    [Theory]
-    [InlineData(null, "new")]
-    [InlineData(false, "old")]
-    [InlineData(true, "new")]
-    public void LatestCompletedValuesAreDefaultAndCanBeDisabled(bool? enabled, string expected)
+    [Fact]
+    public void LatestCompletedValuesAreAlwaysUsed()
     {
         File.WriteAllText(Lgf, "{4,\"Test\",1},\n" + Metadata("old") + ",\n" + Metadata("new"));
         File.WriteAllText(Path.Combine(_folder, FileName), JournalCursorTests.Record(metadata: 1));
-        var settings = Settings();
-        if (enabled.HasValue) settings.UseLatestDictionaryValues = enabled.Value;
-        using var reader = new EventLogReader(settings);
-        Assert.Equal(expected, reader.ReadNextEventLogItem().Metadata);
+        using var reader = new EventLogReader(Settings());
+        Assert.Equal("new", reader.ReadNextEventLogItem().Metadata);
     }
 
     [Theory]
@@ -33,7 +28,7 @@ public sealed class DictionaryRefreshTests : IDisposable
     {
         File.WriteAllText(Lgf, "{4,\"Test\",1},\n" + Metadata(initial));
         File.WriteAllText(Path.Combine(_folder, FileName), JournalCursorTests.Record(metadata: 1) + ",\n" + JournalCursorTests.Record(metadata: 1));
-        var settings = Settings(); settings.UseLatestDictionaryValues = true;
+        var settings = Settings();
         using var reader = new EventLogReader(settings);
         var first = reader.ReadNextEventLogItem();
         Assert.Equal(initial, first.Metadata);
@@ -57,7 +52,7 @@ public sealed class DictionaryRefreshTests : IDisposable
         var split = Array.IndexOf(tail, (byte)0xf0) + 1;
         using (var append = new FileStream(Lgf, FileMode.Append)) append.Write(tail[..split]);
         File.WriteAllText(Path.Combine(_folder, FileName), JournalCursorTests.Record(metadata: 1) + ",\n" + JournalCursorTests.Record(metadata: 1));
-        var settings = Settings(); settings.UseLatestDictionaryValues = true;
+        var settings = Settings(); settings.LiveMode = true;
         using var reader = new EventLogReader(settings);
         Assert.Equal("old", reader.ReadNextEventLogItem().Metadata);
         using (var append = new FileStream(Lgf, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) append.Write(tail[split..]);

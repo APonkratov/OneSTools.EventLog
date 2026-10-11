@@ -96,9 +96,10 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
     {
         File.WriteAllText(Path.Combine(Log, "1Cv8.lgf"), "{4,\"_$Data$_.NewPredefinedData\",1}");
         var configuration = Configuration();
-        configuration["Exporter:UseCurrentEventNames"] = "true";
+        foreach (var obsolete in new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
+            "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing" })
+            configuration["Exporter:" + obsolete] = "false";
         configuration["Exporter:UseEventContext"] = "true";
-        configuration["Exporter:UseStrictParsing"] = "true";
         var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
         using var provider = new ServiceCollection().BuildServiceProvider();
         using var manager = new TestManager(provider, configuration, () => storage);

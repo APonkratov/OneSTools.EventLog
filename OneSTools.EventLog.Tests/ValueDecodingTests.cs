@@ -21,51 +21,44 @@ public sealed class ValueDecodingTests : IDisposable
     }
 
     [Theory]
-    [InlineData("{\"N\",123.45}", "", "123.45")]
-    [InlineData("{\"N\",-123.45}", "", "-123.45")]
-    [InlineData("{\"N\",0}", "", "0")]
-    [InlineData("{\"N\",12345678901234567890123456789012345678}", "", "12345678901234567890123456789012345678")]
-    [InlineData("{\"N\",0.00000000000000000001}", "", "0.00000000000000000001")]
-    [InlineData("{\"D\",20261009123456}", "", "2026-10-09T12:34:56")]
-    [InlineData("{\"D\",00010101000000}", "", "0001-01-01T00:00:00")]
-    [InlineData("{\"S\",\"  пробелы  \"}", "пробелы", "  пробелы  ")]
-    [InlineData("{\"S\",\"\"}", "", "")]
-    [InlineData("{\"S\",\"  \"\"Текст\"\"\n{строка},日本語\t  \"}", "\"\"Текст\"\"\n{строка},日本語", "  \"Текст\"\n{строка},日本語\t  ")]
-    [InlineData("{\"S\",\"\"\"\"}", "\"\"", "\"")]
-    [InlineData("{\"B\",0}", "false", "false")]
-    [InlineData("{\"B\",1}", "true", "true")]
-    [InlineData("{\"U\"}", "", "")]
-    [InlineData("{\"R\",11111111-2222-3333-4444-555555555555}", "11111111-2222-3333-4444-555555555555", "11111111-2222-3333-4444-555555555555")]
-    public void ScalarValuesHaveExplicitLegacyAndCorrectedContracts(string data, string legacy, string corrected)
+    [InlineData("{\"N\",123.45}", "123.45")]
+    [InlineData("{\"N\",-123.45}", "-123.45")]
+    [InlineData("{\"N\",0}", "0")]
+    [InlineData("{\"N\",12345678901234567890123456789012345678}", "12345678901234567890123456789012345678")]
+    [InlineData("{\"N\",0.00000000000000000001}", "0.00000000000000000001")]
+    [InlineData("{\"D\",20261009123456}", "2026-10-09T12:34:56")]
+    [InlineData("{\"D\",00010101000000}", "0001-01-01T00:00:00")]
+    [InlineData("{\"S\",\"  пробелы  \"}", "  пробелы  ")]
+    [InlineData("{\"S\",\"\"}", "")]
+    [InlineData("{\"S\",\"  \"\"Текст\"\"\n{строка},日本語\t  \"}", "  \"Текст\"\n{строка},日本語\t  ")]
+    [InlineData("{\"S\",\"\"\"\"}", "\"")]
+    [InlineData("{\"B\",0}", "false")]
+    [InlineData("{\"B\",1}", "true")]
+    [InlineData("{\"U\"}", "")]
+    [InlineData("{\"R\",11111111-2222-3333-4444-555555555555}", "11111111-2222-3333-4444-555555555555")]
+    public void ScalarValuesAlwaysUseCorrectedDecoding(string data, string corrected)
     {
         Write(data);
         Assert.Equal(corrected, Read().Data);
-        Assert.Equal(legacy, Read(false).Data);
-        Assert.Equal(corrected, Read(true).Data);
     }
 
     [Theory]
-    [InlineData("N", "Нет транзакции", "Нет транзакции")]
-    [InlineData("U", "Зафиксирована", "Не завершена")]
-    [InlineData("C", "Отменена", "Зафиксирована")]
-    [InlineData("R", "Не завершена", "Отменена")]
-    public void TransactionStatusCorrectionIsDefaultAndCanBeDisabled(string code, string legacy, string corrected)
+    [InlineData("N", "Нет транзакции")]
+    [InlineData("U", "Не завершена")]
+    [InlineData("C", "Зафиксирована")]
+    [InlineData("R", "Отменена")]
+    public void TransactionStatusesAlwaysUsePlatformMeaning(string code, string corrected)
     {
         Write("{\"U\"}", code);
         Assert.Equal(corrected, Read().TransactionStatus);
-        Assert.Equal(legacy, Read(false).TransactionStatus);
-        Assert.Equal(corrected, Read(true).TransactionStatus);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void TextFieldsDecodeEscapingOnlyWhenEnabled(bool? enabled)
+    [Fact]
+    public void TextFieldsAlwaysDecodeEscaping()
     {
         Write("{\"S\",\"  \"\"данные\"\"  \"}");
-        var item = Read(enabled);
-        var quotes = enabled != false ? "\"" : "\"\"";
+        var item = Read();
+        var quotes = "\"";
         Assert.Equal($"  Пользователь {quotes}Тест{quotes}  ", item.User);
         Assert.Equal($"Компьютер {quotes}Тест{quotes}", item.Computer);
         Assert.Equal($"Приложение {quotes}Тест{quotes}", item.Application);
@@ -85,39 +78,40 @@ public sealed class ValueDecodingTests : IDisposable
     }
 
     [Fact]
-    public void ComplexDataRetainsItsExistingRepresentationInBothModes()
+    public void UnknownComplexDataPreservesEveryToken()
     {
         Write("{\"P\",{518,{\"S\",\"\"},{\"S\",\"user\"},{\"N\",1}}}");
-        Assert.Equal("Item 2: user", Read().Data);
-        Assert.Equal("Item 2: user", Read(true).Data);
+        using var data = System.Text.Json.JsonDocument.Parse(Read().Data);
+        Assert.Equal("1c-brackets-v1", data.RootElement.GetProperty("$format").GetString());
+        Assert.Equal("user", data.RootElement.GetProperty("nodes")[1][2][1].GetString());
     }
 
     [Fact]
     public void CorrectedDateValueDoesNotUseEventTimeZone()
     {
         Write("{\"D\",20261009123456}");
-        var item = Read(true);
+        var item = Read();
         Assert.Equal(new DateTime(2026, 10, 9, 9, 34, 56, DateTimeKind.Utc), item.DateTime);
         Assert.Equal("2026-10-09T12:34:56", item.Data);
     }
 
     [Fact]
-    public void CorrectedModeUsesSameBytePositionsAndResumesLegacyCheckpoint()
+    public void BytePositionsAreStableAndResumeFourFieldCheckpoint()
     {
         Write("{\"N\",123.45}");
         File.AppendAllText(Path.Combine(_folder, "20261009000000.lgp"), ",\n" + Record("{\"N\",456}", "C"));
         File.WriteAllText(Path.Combine(_folder, "20261010000000.lgp"), Record("{\"N\",789}", "R"));
-        var legacy = ReadAll(false);
-        var corrected = ReadAll(true);
-        Assert.Equal(3, corrected.Count);
-        Assert.Equal(legacy.Select(item => (item.FileName, item.EndPosition, item.LgfEndPosition, item.Id)),
-            corrected.Select(item => (item.FileName, item.EndPosition, item.LgfEndPosition, item.Id)));
-        var checkpoint = legacy[0];
+        var items = ReadAll();
+        Assert.Equal(3, items.Count);
+        Assert.Equal(Encoding.UTF8.GetByteCount(Record("{\"N\",123.45}", "N")), items[0].EndPosition);
+        Assert.Equal(new FileInfo(Path.Combine(_folder, "20261009000000.lgp")).Length, items[1].EndPosition);
+        Assert.Equal(new FileInfo(Path.Combine(_folder, "20261010000000.lgp")).Length, items[2].EndPosition);
+        var checkpoint = items[0];
         using var resumed = new EventLogReader(new EventLogReaderSettings
         {
             LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
             LgpFileName = checkpoint.FileName, LgpStartPosition = checkpoint.EndPosition,
-            LgfStartPosition = checkpoint.LgfEndPosition, ItemId = checkpoint.Id, UseCorrectedValueParsing = true
+            LgfStartPosition = checkpoint.LgfEndPosition, ItemId = checkpoint.Id
         });
         var next = resumed.ReadNextEventLogItem();
         Assert.Equal("456", next.Data);
@@ -130,25 +124,23 @@ public sealed class ValueDecodingTests : IDisposable
         Assert.Null(resumed.ReadNextEventLogItem());
     }
 
-    private List<EventLogItem> ReadAll(bool enabled)
+    private List<EventLogItem> ReadAll()
     {
         using var reader = new EventLogReader(new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseCorrectedValueParsing = enabled
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc
         });
         var items = new List<EventLogItem>();
         while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
         return items;
     }
 
-    private EventLogItem Read(bool? enabled = null)
+    private EventLogItem Read()
     {
         var settings = new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"],
-            UseStructuredDataParsing = false, UseFinalTransactionStatuses = false
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"]
         };
-        if (enabled.HasValue) settings.UseCorrectedValueParsing = enabled.Value;
         using var reader = new EventLogReader(settings);
         var item = reader.ReadNextEventLogItem();
         Assert.Null(reader.ReadNextEventLogItem());

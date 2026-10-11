@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -17,17 +17,11 @@ namespace OneSTools.EventLog
         private LgfReader _lgfReader;
         private FileSystemWatcher _lgpFileWatcher;
         private DateTime _skipEventsBeforeDate;
-        private readonly bool _useCorrectedValueParsing;
-        private readonly bool _useStructuredDataParsing;
-        private readonly bool _useCurrentEventNames;
-        private readonly bool _useStrictParsing;
         private readonly Action<EventLogDiagnostic> _diagnostic;
         private readonly EventContextReader _context;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
 
         public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
-            bool useCorrectedValueParsing = false, bool useStructuredDataParsing = false,
-            bool useCurrentEventNames = false, bool useStrictParsing = false,
             Action<EventLogDiagnostic> diagnostic = null, EventContextReader context = null,
             Action<EventLogProblemRecord> problemRecordHandler = null)
         {
@@ -35,10 +29,6 @@ namespace OneSTools.EventLog
             _timeZone = timeZone;
             _lgfReader = lgfReader;
             _skipEventsBeforeDate = skipEventsBeforeDate;
-            _useCorrectedValueParsing = useCorrectedValueParsing;
-            _useStructuredDataParsing = useStructuredDataParsing;
-            _useCurrentEventNames = useCurrentEventNames;
-            _useStrictParsing = useStrictParsing;
             _diagnostic = EventLogDiagnostic.Guard(diagnostic);
             _context = context;
             _problemRecordHandler = problemRecordHandler;
@@ -158,21 +148,10 @@ namespace OneSTools.EventLog
                 dateTime = _timeZone.ToUtc(DateTime.ParseExact(parsedData[0], "yyyyMMddHHmmss",
                     CultureInfo.InvariantCulture));
             }
-            catch (Exception error)
+            catch
             {
                 _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDate", LgpFileName, _bracketsReader.LastNodeStartPosition));
-                if (_useStrictParsing) throw;
-                if (_problemRecordHandler != null)
-                {
-                    try
-                    {
-                        _problemRecordHandler(new EventLogProblemRecord(LgpFileName, _bracketsReader.LastNodeStartPosition,
-                            endPosition, "event date fallback", error, eventLogItemData.ToString(), "utf-8", skipped: false));
-                    }
-                    catch (Exception loggingError)
-                    { throw new IOException("The problem record handler failed; the record was not consumed.", loggingError); }
-                }
-                dateTime = DateTime.MinValue;
+                throw;
             }
 
             if (dateTime < _skipEventsBeforeDate)
@@ -181,9 +160,7 @@ namespace OneSTools.EventLog
             var eventLogItem = new EventLogItem
             {
                 DateTime = dateTime,
-                TransactionStatus = _useCorrectedValueParsing
-                    ? GetCorrectedTransactionPresentation(parsedData[1])
-                    : GetTransactionPresentation(parsedData[1]),
+                TransactionStatus = GetCorrectedTransactionPresentation(parsedData[1]),
                 FileName = LgpFileName,
                 EndPosition = endPosition
             };
@@ -212,7 +189,7 @@ namespace OneSTools.EventLog
             var ev = _lgfReader.GetObjectValue(ObjectType.Events, parsedData[7], cancellationToken);
             eventLogItem.Event = GetEventPresentation(DecodeText(ev));
             var currentName = CurrentEventNames.Get(DecodeText(ev), eventLogItem.Event);
-            if (_useCurrentEventNames) eventLogItem.Event = currentName;
+            eventLogItem.Event = currentName;
             if (currentName == ev && ev != null && ev.StartsWith("_$", StringComparison.Ordinal))
                 _diagnostic?.Invoke(new EventLogDiagnostic("UnknownEvent", LgpFileName, _bracketsReader.LastNodeStartPosition, ev));
 
@@ -226,11 +203,11 @@ namespace OneSTools.EventLog
             eventLogItem.Metadata = DecodeText(value);
 
             var data = parsedData[11];
-            if (_useStructuredDataParsing && StructuredEventData.ShouldParse(data))
+            if (StructuredEventData.ShouldParse(data))
                 eventLogItem.Data = StructuredEventData.Parse(ev, data);
             else
-                eventLogItem.Data = _useCorrectedValueParsing ? GetCorrectedData(data) : GetData(data).Trim();
-            if (_useStructuredDataParsing && eventLogItem.Data.StartsWith("{\"$format\":\"1c-brackets-v1\"", StringComparison.Ordinal))
+                eventLogItem.Data = GetCorrectedData(data);
+            if (eventLogItem.Data.StartsWith("{\"$format\":\"1c-brackets-v1\"", StringComparison.Ordinal))
                 _diagnostic?.Invoke(new EventLogDiagnostic("UnknownDataFormat", LgpFileName, _bracketsReader.LastNodeStartPosition, ev, eventLogItem.Data));
             if (parsedData.Count > 19 || (parsedData.Count > 17 && parsedData[17].Text != "0"))
                 _diagnostic?.Invoke(new EventLogDiagnostic("ExtraLgpFields", LgpFileName, _bracketsReader.LastNodeStartPosition, ev));
@@ -248,9 +225,9 @@ namespace OneSTools.EventLog
                 eventLogItem.AddPort = int.Parse(addPort);
 
             eventLogItem.Session = parsedData[16];
-            if (_useStrictParsing && (eventLogItem.User == null || eventLogItem.Computer == null ||
+            if (eventLogItem.User == null || eventLogItem.Computer == null ||
                 application == null || ev == null || eventLogItem.Metadata == null ||
-                eventLogItem.Server == null || mainPort == null || addPort == null))
+                eventLogItem.Server == null || mainPort == null || addPort == null)
                 throw new InvalidDataException("Unresolved LGF reference.");
 
             // The checkpoint must include all dictionary entries needed by this event.
@@ -259,9 +236,7 @@ namespace OneSTools.EventLog
             return eventLogItem;
         }
 
-        private string DecodeText(string value) => _useCorrectedValueParsing
-            ? value?.Replace("\"\"", "\"")
-            : value;
+        private static string DecodeText(string value) => value?.Replace("\"\"", "\"");
 
         private static string GetCorrectedData(BracketsNode node)
         {
@@ -276,9 +251,10 @@ namespace OneSTools.EventLog
                         .ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
                 case "S":
                     return ((string)node[1]).Replace("\"\"", "\"");
-                default:
-                    // P subtypes need a separate structured contract; retain their legacy output here.
-                    return GetData(node).Trim();
+                case "R": return node[1];
+                case "U": return "";
+                case "B": return (string)node[1] == "0" ? "false" : "true";
+                default: throw new InvalidDataException("Unsupported scalar data format.");
             }
         }
 
@@ -289,62 +265,6 @@ namespace OneSTools.EventLog
                 "U" => "Не завершена",
                 "C" => "Зафиксирована",
                 "R" => "Отменена",
-                "N" => "Нет транзакции",
-                _ => ""
-            };
-        }
-
-        private static string GetData(BracketsNode node)
-        {
-            var dataType = (string)node[0];
-
-            switch (dataType)
-            {
-                case "R": // Reference
-                    return node[1];
-                case "U": // Undefined
-                    return "";
-                case "S": // String
-                    return node[1];
-                case "B": // Boolean
-                    return (string)node[1] == "0" ? "false" : "true";
-                case "P": // Complex data
-                    var str = new StringBuilder();
-
-                    var subDataNode = node[1];
-
-                    //var subDataType = (int)subDataNode[0];
-                    // What's known (subDataNode):
-                    // 1 - additional data of "Authentication (Windows auth) in thin or thick client"
-                    // 2 - additional data of "Authentication in COM connection" event
-                    // 6 - additional data of "Authentication in thin or thick client" event
-                    // 11 - additional data of "Access denied" event
-
-                    // I hope this is temporarily method
-                    var subDataCount = subDataNode.Count - 1;
-
-                    if (subDataCount > 0)
-                        for (var i = 1; i <= subDataCount; i++)
-                        {
-                            var value = GetData(subDataNode[i]);
-
-                            if (value != string.Empty)
-                                str.AppendLine($"Item {i}: {value}");
-                        }
-
-                    return str.ToString();
-                default:
-                    return "";
-            }
-        }
-
-        private static string GetTransactionPresentation(string str)
-        {
-            return str switch
-            {
-                "U" => "Зафиксирована",
-                "C" => "Отменена",
-                "R" => "Не завершена",
                 "N" => "Нет транзакции",
                 _ => ""
             };

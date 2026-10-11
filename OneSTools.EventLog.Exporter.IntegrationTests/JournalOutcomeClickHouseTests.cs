@@ -25,11 +25,12 @@ public sealed class JournalOutcomeClickHouseTests
             File.WriteAllText(path, row + ",\n" + row.Replace(",1,I,", ",2,I,"), new UTF8Encoding(false));
             var settings = new EventLogReaderSettings
             {
-                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
-                UseCorrectedValueParsing = false, UseFinalTransactionStatuses = false, UseLatestDictionaryValues = false
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc
             };
             EventLogItem old;
             using (var reader = new EventLogReader(settings)) old = reader.ReadNextEventLogItem();
+            old.Metadata = "old";
+            old.TransactionStatus = "Зафиксирована";
             old.EndPosition++; // Position produced by the historical decoder at a UTF-8 boundary.
             old.LgfEndPosition++;
             using (var storage = server.Storage()) await storage.WriteEventLogDataAsync([old]);
@@ -38,7 +39,6 @@ public sealed class JournalOutcomeClickHouseTests
                 var checkpoint = await reconnected.ReadEventLogPositionAsync();
                 settings.LgpFileName = checkpoint.FileName; settings.LgpStartPosition = checkpoint.EndPosition;
                 settings.LgfStartPosition = checkpoint.LgfEndPosition; settings.ItemId = checkpoint.Id;
-                settings.UseFinalTransactionStatuses = true; settings.UseLatestDictionaryValues = true;
                 using var resumed = new EventLogReader(settings);
                 var item = resumed.ReadNextEventLogItem();
                 Assert.Equal(2, item.Id);

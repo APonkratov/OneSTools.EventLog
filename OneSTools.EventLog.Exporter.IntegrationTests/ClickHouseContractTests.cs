@@ -194,7 +194,7 @@ public sealed class ClickHouseContractTests(ITestOutputHelper output)
                 "{20261009120002,U,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"  \"\"Текст\"\"  \"},\"\",0,0,0,1,0,{0}}"
             }), new UTF8Encoding(false));
             var settings = Settings(folder);
-            settings.UseCorrectedValueParsing = true;
+
             using var reader = new EventLogReader(settings);
             var items = new List<EventLogItem>();
             while (reader.ReadNextEventLogItem() is { } item) items.Add(item);

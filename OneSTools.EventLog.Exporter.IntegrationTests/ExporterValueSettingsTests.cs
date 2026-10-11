@@ -1,129 +1,50 @@
-using System.Text;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Configuration;
 using NodaTime;
 using OneSTools.EventLog.Exporter.Core;
 
 namespace OneSTools.EventLog.Exporter.IntegrationTests;
 
-// No server required: exercise both public exporter constructors through actual delivery.
-public sealed class ExporterValueSettingsTests
+// Exercise both public constructors through delivery, including stale configuration.
+public sealed class ExporterValueSettingsTests : IDisposable
 {
-    [Theory]
-    [InlineData(false, null)]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, null)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task BothConstructorsPassOptionalModeToReader(bool configurationConstructor, bool? enabled)
+    private readonly string _folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-values", Guid.NewGuid().ToString("N"));
+    private static readonly string[] RemovedFlags =
+    [
+        "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
+        "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing"
+    ];
+
+    public ExporterValueSettingsTests()
     {
-        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-values", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
-        {
-            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
-                "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"Corpus.Test\",1}", new UTF8Encoding(false));
-            File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"),
-                "{20261009123456,C,{0,0},0,0,0,1,1,I,\"\"\"Комментарий\"\"\",0,{\"N\",123.45},\"\",0,0,0,1,0,{0}}", new UTF8Encoding(false));
-            var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, enabled, folder, storage, final: false);
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
-            try
-            {
-                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                Assert.Equal(enabled != false ? "123.45" : "", item.Data);
-                Assert.Equal(enabled != false ? "Зафиксирована" : "Отменена", item.TransactionStatus);
-                Assert.Equal(enabled != false ? "\"Комментарий\"" : "\"\"Комментарий\"\"", item.Comment);
-            }
-            finally
-            {
-                cancellation.Cancel();
-                await run.WaitAsync(TimeSpan.FromSeconds(5));
-            }
-        }
-        finally { Directory.Delete(folder, recursive: true); }
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(Path.Combine(_folder, "1Cv8.lgf"),
+            "{4,\"_$Session$_.ExternalReportConnect\",1},{4,\"_$Transaction$_.Rollback\",2}," +
+            "{4,\"_$InfoBase$_.ExclusiveModeChange\",3}," +
+            "{5,11111111-1111-1111-1111-111111111111,\"old\",1}," +
+            "{5,11111111-1111-1111-1111-111111111111,\"new\",1}");
+        File.WriteAllText(Path.Combine(_folder, "20261011000000.lgp"),
+            Row("U", 1, "{\"N\",123.45}") + "," + Row("U", 2, "{\"U\"}") + "," +
+            Row("N", 3, "{\"P\",{2,{\"B\",1}}}"));
     }
 
     [Theory]
     [InlineData(false, null)]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
     [InlineData(true, null)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task BothConstructorsPassIndependentStructuredOption(bool configurationConstructor, bool? enabled)
+    [InlineData(true, "false")]
+    [InlineData(true, "true")]
+    [InlineData(true, "not-a-boolean")]
+    public async Task CorrectedBehaviorIsUnconditionalAndObsoleteKeysAreIgnored(bool configurationConstructor, string? obsoleteValue)
     {
-        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-structured", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
-        {
-            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
-                "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"_$InfoBase$_.ExclusiveModeChange\",1}", new UTF8Encoding(false));
-            File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"),
-                "{20261009123456,C,{0,0},0,0,0,1,1,I,\"\"\"Комментарий\"\"\",0,{\"P\",{2,{\"B\",1}}},\"\",0,0,0,1,0,{0}}", new UTF8Encoding(false));
-            var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, false, folder, storage, enabled, final: false);
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
-            try
-            {
-                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                if (enabled != false)
-                {
-                    using var json = System.Text.Json.JsonDocument.Parse(item.Data);
-                    Assert.Equal("true", json.RootElement.GetProperty("ExclusiveMode").GetString());
-                }
-                else Assert.Equal("Item 1: true", item.Data);
-                // Structured mode must not implicitly enable scalar/text/status corrections.
-                Assert.Equal("Отменена", item.TransactionStatus);
-                Assert.Equal("\"\"Комментарий\"\"", item.Comment);
-            }
-            finally
-            {
-                cancellation.Cancel();
-                await run.WaitAsync(TimeSpan.FromSeconds(5));
-            }
-        }
-        finally { Directory.Delete(folder, recursive: true); }
-    }
-
-    public static IEnumerable<object?[]> OutcomeOptions()
-    {
-        foreach (var constructor in new[] {false, true})
-        foreach (var option in new[] {"dictionary", "transactions"})
-        foreach (var enabled in new bool?[] {null, false, true})
-            yield return new object?[] {constructor, option, enabled};
-    }
-
-    [Theory]
-    [MemberData(nameof(OutcomeOptions))]
-    public async Task BothConstructorsPassIndependentDictionaryAndOutcomeOptions(bool configurationConstructor, string option, bool? enabled)
-    {
-        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-outcomes", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
-        {
-            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
-                "{4,\"Test\",1},\n{4,\"_$Transaction$_.Rollback\",2},\n" +
-                "{5,11111111-1111-1111-1111-111111111111,\"old\",1},\n" +
-                "{5,11111111-1111-1111-1111-111111111111,\"new\",1}");
-            const string row = "{20261011120000,U,{0,1},0,0,0,1,1,I,\"\",1,{\"U\"},\"\",0,0,0,1,0,{0}}";
-            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"), row + ",\n" + row.Replace(",1,I,", ",2,I,"));
-            var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, false, folder, storage,
-                latest: option == "dictionary" ? enabled : false, final: option == "transactions" ? enabled : false);
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
-            try
-            {
-                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                Assert.Equal(option == "dictionary" && enabled != false ? "new" : "old", item.Metadata);
-                Assert.Equal(option == "transactions" && enabled != false ? "Отменена" : "Зафиксирована", item.TransactionStatus);
-            }
-            finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
-        }
-        finally { Directory.Delete(folder, true); }
+        var items = await Export(configurationConstructor, obsoleteValue);
+        Assert.Equal(3, items.Count);
+        var first = items[0];
+        Assert.Equal("123.45", first.Data);
+        Assert.Equal("\"Комментарий\"", first.Comment);
+        Assert.Equal("new", first.Metadata);
+        Assert.Equal("Отменена", first.TransactionStatus);
+        Assert.Equal("Сеанс. Подключение внешнего отчета", first.Event);
+        Assert.Equal("true", JsonNode.Parse(items[2].Data)!["ExclusiveMode"]!.GetValue<string>());
     }
 
     [Theory]
@@ -131,105 +52,63 @@ public sealed class ExporterValueSettingsTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public async Task BothConstructorsPassCatalogAndContextIndependently(bool configurationConstructor, bool enabled)
+    public async Task ContextRemainsAnIndependentOption(bool configurationConstructor, bool context)
     {
-        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-context", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
+        var items = await Export(configurationConstructor, context: context);
+        if (context)
         {
-            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), "{4,\"_$Session$_.ExternalReportConnect\",1}");
-            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"),
-                "{20261011120000,N,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"sample\"},\"\",0,0,0,1,0,{0}}");
-            var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, null, folder, storage,
-                current: enabled, context: enabled, strict: true);
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
-            try
-            {
-                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                if (enabled)
-                {
-                    Assert.DoesNotContain("_$", item.Event);
-                    var envelope = System.Text.Json.Nodes.JsonNode.Parse(item.Data)!;
-                    Assert.Equal("1c-event-context-v1", envelope["$format"]!.GetValue<string>());
-                    Assert.Equal("sample", envelope["Data"]!.GetValue<string>());
-                }
-                else Assert.Equal("sample", item.Data);
-            }
-            finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
+            var envelope = JsonNode.Parse(items[0].Data)!;
+            Assert.Equal("1c-event-context-v1", envelope["$format"]!.GetValue<string>());
+            Assert.Equal("123.45", envelope["Data"]!.GetValue<string>());
+            Assert.Equal("_$Session$_.ExternalReportConnect", envelope["EventCode"]!.GetValue<string>());
         }
-        finally { Directory.Delete(folder, true); }
+        else Assert.Equal("123.45", items[0].Data);
+        Assert.Equal("new", items[0].Metadata);
+        Assert.Equal("Отменена", items[0].TransactionStatus);
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task BothConstructorsPassStrictOptionWithoutEnablingContext(bool configurationConstructor, bool enabled)
+    [Fact]
+    public void RemovedSwitchesAreNotPartOfPublicSettings()
     {
-        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-strict", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
+        foreach (var flag in RemovedFlags)
         {
-            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), "{4,\"Test\",1}");
-            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"),
-                "{invalid,N,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"sample\"},\"\",0,0,0,1,0,{0}}");
-            var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, null, folder, storage, strict: enabled);
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
-            try
-            {
-                if (enabled) await Assert.ThrowsAsync<EventLogParseException>(() => run.WaitAsync(TimeSpan.FromSeconds(10)));
-                else Assert.Equal("sample", (await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10))).Data);
-            }
-            finally { cancellation.Cancel(); if (!enabled) await run.WaitAsync(TimeSpan.FromSeconds(5)); }
+            Assert.Null(typeof(EventLogReaderSettings).GetProperty(flag));
+            Assert.Null(typeof(EventLogExporterSettings).GetProperty(flag));
         }
-        finally { Directory.Delete(folder, true); }
     }
 
-    private static EventLogExporter CreateExporter(bool configurationConstructor, bool? enabled, string folder,
-        RecordingStorage storage, bool? structured = null, bool? latest = null, bool? final = null,
-        bool? current = null, bool? context = null, bool? strict = null)
+    private async Task<List<EventLogItem>> Export(bool configurationConstructor, string? obsoleteValue = null, bool context = false)
     {
-        if (!configurationConstructor)
-        {
-            var settings = new EventLogExporterSettings { LogFolder = folder, Portion = 1, TimeZone = DateTimeZone.Utc };
-            if (enabled.HasValue) settings.UseCorrectedValueParsing = enabled.Value;
-            if (structured.HasValue) settings.UseStructuredDataParsing = structured.Value;
-            if (latest.HasValue) settings.UseLatestDictionaryValues = latest.Value;
-            if (final.HasValue) settings.UseFinalTransactionStatuses = final.Value;
-            if (current.HasValue) settings.UseCurrentEventNames = current.Value;
-            if (context.HasValue) settings.UseEventContext = context.Value;
-            if (strict.HasValue) settings.UseStrictParsing = strict.Value;
-            return new EventLogExporter(settings, storage);
-        }
+        var storage = new RecordingStorage();
         var values = new Dictionary<string, string?>
         {
-            ["Exporter:LogFolder"] = folder, ["Exporter:Portion"] = "1", ["Exporter:TimeZone"] = "UTC"
+            ["Exporter:LogFolder"] = _folder, ["Exporter:Portion"] = "3", ["Exporter:TimeZone"] = "UTC",
+            ["Exporter:UseEventContext"] = context.ToString()
         };
-        if (enabled.HasValue) values["Exporter:UseCorrectedValueParsing"] = enabled.Value.ToString();
-        if (structured.HasValue) values["Exporter:UseStructuredDataParsing"] = structured.Value.ToString();
-        if (latest.HasValue) values["Exporter:UseLatestDictionaryValues"] = latest.Value.ToString();
-        if (final.HasValue) values["Exporter:UseFinalTransactionStatuses"] = final.Value.ToString();
-        if (current.HasValue) values["Exporter:UseCurrentEventNames"] = current.Value.ToString();
-        if (context.HasValue) values["Exporter:UseEventContext"] = context.Value.ToString();
-        if (strict.HasValue) values["Exporter:UseStrictParsing"] = strict.Value.ToString();
-        return new EventLogExporter(null, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), storage);
+        if (obsoleteValue != null)
+            foreach (var flag in RemovedFlags) values["Exporter:" + flag] = obsoleteValue;
+        using var exporter = configurationConstructor
+            ? new EventLogExporter(null, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), storage)
+            : new EventLogExporter(new EventLogExporterSettings
+                { LogFolder = _folder, Portion = 3, TimeZone = DateTimeZone.Utc, UseEventContext = context }, storage);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+        try { return await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10)); }
+        finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
     }
+
+    private static string Row(string status, int ev, string data) =>
+        "{20261011120000," + status + ",{0,1},0,0,0,1," + ev + ",I,\"\"\"Комментарий\"\"\",1," + data + ",\"\",0,0,0,1,0,{0}}";
 
     private sealed class RecordingStorage : IEventLogStorage
     {
-        public TaskCompletionSource<EventLogItem> Received { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<List<EventLogItem>> Received { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<EventLogPosition> ReadEventLogPositionAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<EventLogPosition>(null!);
         public Task WriteEventLogDataAsync(List<EventLogItem> entities, CancellationToken cancellationToken = default)
-        {
-            Received.TrySetResult(Assert.Single(entities));
-            return Task.CompletedTask;
-        }
+        { Received.TrySetResult(entities.ToList()); return Task.CompletedTask; }
         public void Dispose() { }
     }
+
+    public void Dispose() => Directory.Delete(_folder, true);
 }

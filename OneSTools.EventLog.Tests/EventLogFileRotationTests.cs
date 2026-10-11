@@ -103,7 +103,7 @@ public sealed class EventLogFileRotationTests : IDisposable
         File.AppendAllText(path, ",\n" + tail[..^5]);
         using var reader = Reader();
         Assert.NotNull(reader.ReadNextEventLogItem());
-        Assert.Null(reader.ReadNextEventLogItem());
+        Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
         File.AppendAllText(path, tail[^5..]);
         Assert.Equal(new DateTime(2026, 10, 9, 13, 0, 0, DateTimeKind.Utc), reader.ReadNextEventLogItem().DateTime);
         Assert.Null(reader.ReadNextEventLogItem());
@@ -123,14 +123,13 @@ public sealed class EventLogFileRotationTests : IDisposable
     public void ExistingFieldValuesRemainUnchangedByRotationFix()
     {
         Write(First, "20261009120000");
-        using var reader = Reader(settings => settings.UseCorrectedValueParsing = false);
+        using var reader = Reader();
         var item = reader.ReadNextEventLogItem();
         Assert.Equal("Corpus.Test", item.Event);
         Assert.Equal("Информация", item.Severity);
         Assert.Equal("Нет транзакции", item.TransactionStatus);
         Assert.Equal("Комментарий", item.Comment);
-        // Explicit legacy scalar output is independent of file rotation.
-        Assert.Equal("Текст \"\"в кавычках\"\"", item.Data);
+        Assert.Equal("  Текст \"в кавычках\"  ", item.Data);
         Assert.Equal(1, item.Id);
         Assert.Equal(1, item.Session);
         Assert.Equal(1, item.Connection);

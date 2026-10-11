@@ -26,7 +26,7 @@ namespace OneSTools.EventLog
             _live = live;
             _problemRecordHandler = problemRecordHandler;
             // A separate dictionary must not refresh the legacy presentation cache.
-            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"), problemRecordHandler: problemRecordHandler);
+            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"), problemRecordHandler: problemRecordHandler, live: live);
         }
 
         internal static string Key(BracketsNode record) =>

@@ -18,24 +18,22 @@ public sealed class TransactionOutcomeTests : IDisposable
     [Theory]
     [InlineData(2, "Зафиксирована")]
     [InlineData(3, "Отменена")]
-    public void ResolvesAcrossPeriodsAndFromCheckpointWithIndependentOptIn(int finalizer, string expected)
+    public void ResolvesAcrossPeriodsAndFromFourFieldCheckpoint(int finalizer, string expected)
     {
         // The same transaction number/time in another connection must not match.
         Write(FileName, Row() + ",\n" + Row(connection: 2));
         Write("20261012000000.lgp", Row(ev: finalizer));
         var legacySettings = Settings();
-        legacySettings.UseCorrectedValueParsing = false;
-        legacySettings.UseFinalTransactionStatuses = false;
         using var legacy = new EventLogReader(legacySettings);
         var checkpoint = legacy.ReadNextEventLogItem();
-        Assert.Equal("Зафиксирована", checkpoint.TransactionStatus);
-        var settings = Settings(); settings.UseFinalTransactionStatuses = true;
+        Assert.Equal(expected, checkpoint.TransactionStatus);
+        var settings = Settings();
         using (var reader = new EventLogReader(settings))
         {
             Assert.Equal(expected, reader.ReadNextEventLogItem().TransactionStatus);
             Assert.Equal("Не завершена", reader.ReadNextEventLogItem().TransactionStatus);
         }
-        settings = Settings(); settings.UseFinalTransactionStatuses = true;
+        settings = Settings();
         settings.LgpFileName = checkpoint.FileName; settings.LgpStartPosition = checkpoint.EndPosition;
         settings.LgfStartPosition = checkpoint.LgfEndPosition; settings.ItemId = checkpoint.Id;
         using var resumed = new EventLogReader(settings);
@@ -48,10 +46,10 @@ public sealed class TransactionOutcomeTests : IDisposable
     [InlineData("C", "Зафиксирована")]
     [InlineData("R", "Отменена")]
     [InlineData("U", "Не завершена")]
-    public void DirectMarkersDoNotRequireScalarCorrection(string marker, string expected)
+    public void DirectMarkersUsePlatformMeaning(string marker, string expected)
     {
         Write(FileName, Row(marker));
-        var settings = Settings(); settings.UseFinalTransactionStatuses = true;
+        var settings = Settings();
         using var reader = new EventLogReader(settings);
         Assert.Equal(expected, reader.ReadNextEventLogItem().TransactionStatus);
     }
@@ -61,7 +59,7 @@ public sealed class TransactionOutcomeTests : IDisposable
     {
         var prior = Row(ev: 3).Replace("20261011120000", "20261010120000");
         Write(FileName, prior + ",\n" + Row() + ",\n" + Row(tx: "123456789abcc,1"));
-        var settings = Settings(); settings.UseFinalTransactionStatuses = true;
+        var settings = Settings();
         settings.SkipEventsBeforeDate = new DateTime(2026, 10, 11);
         settings.LgpFileName = FileName; settings.LgpStartPosition = System.Text.Encoding.UTF8.GetByteCount(prior);
         using var reader = new EventLogReader(settings);
@@ -73,7 +71,7 @@ public sealed class TransactionOutcomeTests : IDisposable
     public void LiveIndexRetriesIncompleteFinalizerAndDoesNotRewriteDeliveredItems()
     {
         Write(FileName, Row() + ",\n" + Row());
-        var settings = Settings(); settings.LiveMode = true; settings.UseFinalTransactionStatuses = true;
+        var settings = Settings(); settings.LiveMode = true;
         settings.ReadingTimeout = 500;
         using var reader = new EventLogReader(settings);
         var delivered = reader.ReadNextEventLogItem();
@@ -91,7 +89,7 @@ public sealed class TransactionOutcomeTests : IDisposable
     public void ConflictingOutcomesFailWithoutAdvancingDeliveryId()
     {
         Write(FileName, Row() + ",\n" + Row(ev: 2) + ",\n" + Row(ev: 3));
-        var settings = Settings(); settings.UseFinalTransactionStatuses = true;
+        var settings = Settings();
         using var reader = new EventLogReader(settings);
         Assert.Throws<InvalidDataException>(() => reader.ReadNextEventLogItem());
         Assert.Throws<InvalidDataException>(() => reader.ReadNextEventLogItem());
@@ -102,7 +100,7 @@ public sealed class TransactionOutcomeTests : IDisposable
     public void MissingDictionaryReferenceCanBeFixedAndRetriedWithoutLosingPendingEvent()
     {
         Write(FileName, Row() + ",\n" + Row(ev: 4));
-        var settings = Settings(); settings.LiveMode = true; settings.UseFinalTransactionStatuses = true;
+        var settings = Settings(); settings.LiveMode = true;
         using var reader = new EventLogReader(settings);
         Assert.Throws<InvalidDataException>(() => reader.ReadNextEventLogItem());
         Assert.Equal(0, settings.ItemId);

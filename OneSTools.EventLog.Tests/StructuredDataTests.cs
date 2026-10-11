@@ -12,28 +12,23 @@ public sealed class StructuredDataTests : IDisposable
 
     // Wire shapes and field names checked against ibcmd 8.3.27.2325 exports.
     // Values/identifiers are artificial; original journals are not distributed.
-    public static TheoryData<string, string, string, string> KnownCases => new()
+    public static TheoryData<string, string, string> KnownCases => new()
     {
-        { "_$Session$_.Authentication", "{\"P\",{518,{\"S\",\"\"},{\"S\",\"test-computer\\test-user\"},{\"N\",1}}}",
-            "{\"Name\":\"\",\"CurrentOSUser\":\"test-computer\\\\test-user\",\"AuthenticationMethod\":\"1\"}", "Item 2: test-computer\\test-user" },
-        { "_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"\"},{\"S\",\"\"}}}", "{\"Vendor\":\"\",\"Version\":\"\"}", "" },
-        { "_$InfoBase$_.DBConfigUpdate", "{\"P\",{{\"S\",\"\"},{\"S\",\"\"}}}", "{\"Vendor\":\"\",\"Version\":\"\"}", "" },
-        { "_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"FixtureVendor\"},{\"S\",\"9.8.7\"}}}", "{\"Vendor\":\"FixtureVendor\",\"Version\":\"9.8.7\"}", "Item 1: 9.8.7" },
-        { "_$InfoBase$_.DBConfigUpdate", "{\"P\",{{\"S\",\"FixtureVendor\"},{\"S\",\"9.8.7\"}}}", "{\"Vendor\":\"FixtureVendor\",\"Version\":\"9.8.7\"}", "Item 1: 9.8.7" },
-        { "_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}", "{\"ExclusiveMode\":\"true\"}", "Item 1: true" },
-        { "_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",0}}}", "{\"ExclusiveMode\":\"false\"}", "Item 1: false" },
-        { "_$Access$_.Access", "{\"P\",{1,{\"Z\",{2,1,{\"Свойство\",{\"Pattern\"}},{\"Значение\",{\"Pattern\"}},{{\"S\",\"Право\"},{\"S\",\"Администрирование\"}}}}}}",
-            "{\"Data\":{\"Column\":[{\"name\":\"Свойство\"},{\"name\":\"Значение\"}],\"Row\":{\"Свойство\":\"Право\",\"Значение\":\"Администрирование\"}}}", "" }
+        { "_$Session$_.Authentication", "{\"P\",{518,{\"S\",\"\"},{\"S\",\"test-computer\\test-user\"},{\"N\",1}}}", "{\"Name\":\"\",\"CurrentOSUser\":\"test-computer\\\\test-user\",\"AuthenticationMethod\":\"1\"}" },
+        { "_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"\"},{\"S\",\"\"}}}", "{\"Vendor\":\"\",\"Version\":\"\"}" },
+        { "_$InfoBase$_.DBConfigUpdate", "{\"P\",{{\"S\",\"\"},{\"S\",\"\"}}}", "{\"Vendor\":\"\",\"Version\":\"\"}" },
+        { "_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"FixtureVendor\"},{\"S\",\"9.8.7\"}}}", "{\"Vendor\":\"FixtureVendor\",\"Version\":\"9.8.7\"}" },
+        { "_$InfoBase$_.DBConfigUpdate", "{\"P\",{{\"S\",\"FixtureVendor\"},{\"S\",\"9.8.7\"}}}", "{\"Vendor\":\"FixtureVendor\",\"Version\":\"9.8.7\"}" },
+        { "_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}", "{\"ExclusiveMode\":\"true\"}" },
+        { "_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",0}}}", "{\"ExclusiveMode\":\"false\"}" },
+        { "_$Access$_.Access", "{\"P\",{1,{\"Z\",{2,1,{\"Свойство\",{\"Pattern\"}},{\"Значение\",{\"Pattern\"}},{{\"S\",\"Право\"},{\"S\",\"Администрирование\"}}}}}}", "{\"Data\":{\"Column\":[{\"name\":\"Свойство\"},{\"name\":\"Значение\"}],\"Row\":{\"Свойство\":\"Право\",\"Значение\":\"Администрирование\"}}}" }
     };
 
     [Theory]
     [MemberData(nameof(KnownCases))]
-    public void KnownShapesMatchPlatformByDefaultAndKeepExplicitLegacyOutput(string ev, string data, string expected, string legacy)
+    public void KnownShapesAlwaysMatchPlatform(string ev, string data, string expected)
     {
         AssertJson(expected, Read(ev, data).Data);
-        Assert.Equal(legacy, Read(ev, data, structured: false).Data);
-        AssertJson(expected, Read(ev, data, structured: true).Data);
-        AssertJson(expected, Read(ev, data, corrected: true, structured: true).Data);
     }
 
     [Theory]
@@ -52,28 +47,17 @@ public sealed class StructuredDataTests : IDisposable
     [InlineData("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}},\"extra\"}", "[\"P\",[\"2\",[\"B\",\"1\"]],\"extra\"]")]
     public void UnknownOrChangedShapesPreserveEveryParsedToken(string ev, string data, string nodes)
     {
-        var parsed = JsonNode.Parse(Read(ev, data, structured: true).Data)!;
+        var parsed = JsonNode.Parse(Read(ev, data).Data)!;
         Assert.Equal("1c-brackets-v1", parsed["$format"]!.GetValue<string>());
         Assert.Equal(2, parsed.AsObject().Count);
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(nodes), parsed["nodes"]));
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void OptionsAreIndependentAndOnlyDataChangesWithStructuredMode(bool corrected, bool structured)
+    [Fact]
+    public void ScalarAndStructuredDataAreBothDecodedWithoutOptions()
     {
-        Assert.Equal(corrected ? "123.45" : "", Read("Corpus.Test", "{\"N\",123.45}", corrected, structured).Data);
-        var legacy = Read("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}", corrected, false);
-        var item = Read("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}", corrected, structured);
-        if (structured) AssertJson("{\"ExclusiveMode\":\"true\"}", item.Data);
-        else Assert.Equal("Item 1: true", item.Data);
-        var original = System.Text.Json.JsonSerializer.SerializeToNode(legacy)!;
-        var changed = System.Text.Json.JsonSerializer.SerializeToNode(item)!;
-        changed["Data"] = original["Data"]!.GetValue<string>();
-        Assert.True(JsonNode.DeepEquals(original, changed));
+        Assert.Equal("123.45", Read("Corpus.Test", "{\"N\",123.45}").Data);
+        AssertJson("{\"ExclusiveMode\":\"true\"}", Read("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}").Data);
     }
 
     [Fact]
@@ -81,7 +65,7 @@ public sealed class StructuredDataTests : IDisposable
     {
         const string text = "  \"Тест\"\\path\n\r\t\b\f\0\u001f日本語😀  ";
         var value = text.Replace("\"", "\"\"");
-        var item = Read("_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"" + value + "\"},{\"S\",\"1.2\"}}}", structured: true);
+        var item = Read("_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"" + value + "\"},{\"S\",\"1.2\"}}}");
         var parsed = JsonNode.Parse(item.Data)!;
         Assert.Equal(text, parsed["Vendor"]!.GetValue<string>());
         Assert.Equal("1.2", parsed["Version"]!.GetValue<string>());
@@ -91,7 +75,7 @@ public sealed class StructuredDataTests : IDisposable
     public void MultipleTableRowsRetainEveryCell()
     {
         const string data = "{\"P\",{1,{\"Z\",{2,2,{\"A\",{\"Pattern\"}},{\"B\",{\"Pattern\"}},{{\"S\",\"one\"},{\"S\",\"two\"}},{{\"S\",\"three\"},{\"S\",\"four\"}}}}}}";
-        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data, structured: true).Data)!;
+        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data).Data)!;
         AssertJson("{\"Data\":{\"Column\":[{\"name\":\"A\"},{\"name\":\"B\"}],\"Row\":[{\"A\":\"one\",\"B\":\"two\"},{\"A\":\"three\",\"B\":\"four\"}]}}", parsed.ToJsonString());
     }
 
@@ -107,15 +91,14 @@ public sealed class StructuredDataTests : IDisposable
     [MemberData(nameof(PlatformFixtures))]
     public void ExpandedLayoutsMatchIndependentPlatformFixtures(string code, string data, string expected)
     {
-        AssertJson(expected, Read(code, data, structured: true).Data);
-        AssertJson(expected, Read(code, data, corrected: true, structured: true).Data);
+        AssertJson(expected, Read(code, data).Data);
     }
 
     [Fact]
     public void DuplicateColumnNamesFallBackInsteadOfOverwritingValues()
     {
         const string data = "{\"P\",{1,{\"Z\",{2,1,{\"A\",{\"Pattern\"}},{\"A\",{\"Pattern\"}},{{\"S\",\"one\"},{\"S\",\"two\"}}}}}}";
-        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data, structured: true).Data)!;
+        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data).Data)!;
         Assert.Equal("1c-brackets-v1", parsed["$format"]!.GetValue<string>());
         Assert.Equal("two", parsed["nodes"]![1]![1]![1]![4]![1]![1]!.GetValue<string>());
     }
@@ -124,13 +107,13 @@ public sealed class StructuredDataTests : IDisposable
     public void UnknownColumnDescriptorFallsBackInsteadOfDiscardingIt()
     {
         const string data = "{\"P\",{1,{\"Z\",{2,1,{\"A\",{\"FuturePattern\",\"metadata\"}},{\"B\",{\"Pattern\"}},{{\"S\",\"one\"},{\"S\",\"two\"}}}}}}";
-        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data, structured: true).Data)!;
+        var parsed = JsonNode.Parse(Read("_$Access$_.Access", data).Data)!;
         Assert.Equal("1c-brackets-v1", parsed["$format"]!.GetValue<string>());
         AssertJson("[\"FuturePattern\",\"metadata\"]", parsed["nodes"]![1]![1]![1]![2]![1]!.ToJsonString());
     }
 
     [Fact]
-    public void LegacyCheckpointResumesIntoStructuredModeAndAcrossPeriods()
+    public void FourFieldCheckpointResumesStructuredDataAcrossPeriods()
     {
         Read("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}");
         var firstPath = Path.Combine(_folder, "20261009000000.lgp");
@@ -142,7 +125,6 @@ public sealed class StructuredDataTests : IDisposable
         var remaining = legacy.ReadNextEventLogItem();
         var following = legacy.ReadNextEventLogItem();
         var settings = Settings();
-        settings.UseStructuredDataParsing = true;
         settings.LgpFileName = checkpoint.FileName;
         settings.LgpStartPosition = checkpoint.EndPosition;
         settings.LgfStartPosition = checkpoint.LgfEndPosition;
@@ -161,7 +143,7 @@ public sealed class StructuredDataTests : IDisposable
     private EventLogReaderSettings Settings() =>
         new() { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
 
-    private EventLogItem Read(string ev, string data, bool corrected = false, bool? structured = null)
+    private EventLogItem Read(string ev, string data)
     {
         File.WriteAllText(Path.Combine(_folder, "1Cv8.lgf"),
             "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"" + ev + "\",1}", new UTF8Encoding(false));
@@ -169,9 +151,8 @@ public sealed class StructuredDataTests : IDisposable
             "{20261009123456,C,{0,0},0,0,0,17,1,I,\"\"\"Тест\"\"\",0," + data + ",\"\",0,0,0,23,0,{0}}", new UTF8Encoding(false));
         var settings = new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseCorrectedValueParsing = corrected
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc
         };
-        if (structured.HasValue) settings.UseStructuredDataParsing = structured.Value;
         using var reader = new EventLogReader(settings);
         var item = reader.ReadNextEventLogItem();
         Assert.Null(reader.ReadNextEventLogItem());

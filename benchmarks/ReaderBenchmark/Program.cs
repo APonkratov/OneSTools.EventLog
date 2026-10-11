@@ -8,10 +8,10 @@ using OneSTools.EventLog;
 
 // Identical executable source is built against each reader. Reflection configures
 // optional settings once, never reads a record in the measured loop.
-if (args.Length < 2) throw new ArgumentException("Usage: ReaderBenchmark <corpus> <default|current|data|latest|strict|structured|context> [warmups=1] [runs=1]");
+if (args.Length < 2) throw new ArgumentException("Usage: ReaderBenchmark <corpus> <default|current|context> [warmups=1] [runs=1]");
 var root = Path.GetFullPath(args[0]);
 var mode = args[1];
-if (mode is not ("default" or "current" or "data" or "latest" or "strict" or "structured" or "context")) throw new ArgumentException("Unknown mode");
+if (mode is not ("default" or "current" or "context")) throw new ArgumentException("Unknown mode");
 var warmups = args.Length > 2 ? int.Parse(args[2]) : 1;
 var runs = args.Length > 3 ? int.Parse(args[3]) : 1;
 if (warmups < 0 || runs < 1) throw new ArgumentException("Invalid run count");
@@ -22,27 +22,12 @@ var settings = folders.Select(f => new EventLogReaderSettings
 {
     LogFolder = f, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"]
 }).ToArray();
-// Freeze historical benchmark modes independently of library defaults. Missing
-// properties are allowed only for the all-off upstream comparison.
-foreach (var setting in settings)
-    foreach (var name in new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
-        "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing", "UseEventContext" })
-        typeof(EventLogReaderSettings).GetProperty(name)?.SetValue(setting, false);
-var options = mode switch
-{
-    "default" => Array.Empty<string>(),
-    "current" => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames", "UseLatestDictionaryValues", "UseFinalTransactionStatuses" },
-    "data" => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing" },
-    "latest" => new[] { "UseLatestDictionaryValues" },
-    "strict" => new[] { "UseStrictParsing" },
-    _ => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames", "UseLatestDictionaryValues", "UseStrictParsing" }
-};
-    foreach (var option in options)
-        foreach (var setting in settings)
-            (typeof(EventLogReaderSettings).GetProperty(option) ?? throw new InvalidOperationException("Unsupported: " + option)).SetValue(setting, true);
+// default/current use each version's actual production behavior. Historical
+// switch combinations belong to frozen historical builds, not this reader API.
 if (mode == "context")
     foreach (var setting in settings)
-        typeof(EventLogReaderSettings).GetProperty("UseEventContext")!.SetValue(setting, true);
+        (typeof(EventLogReaderSettings).GetProperty("UseEventContext") ??
+            throw new InvalidOperationException("This reader does not support context")).SetValue(setting, true);
 var inputBytes = folders.Sum(f => Directory.GetFiles(f).Where(p => Path.GetExtension(p).Equals(".lgf", StringComparison.OrdinalIgnoreCase) ||
     Path.GetExtension(p).Equals(".lgp", StringComparison.OrdinalIgnoreCase)).Sum(p => new FileInfo(p).Length));
 var assembly = typeof(EventLogReader).Assembly;

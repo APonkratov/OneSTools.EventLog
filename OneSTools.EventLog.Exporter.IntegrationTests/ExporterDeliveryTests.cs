@@ -83,7 +83,7 @@ public sealed class ExporterDeliveryTests : IDisposable
     {
         Write(3);
         File.AppendAllText(Path.Combine(Folder, FileName), ",\n{invalid,N,{0,0},0}");
-        var settings = Settings(true); settings.UseStrictParsing = true;
+        var settings = Settings(true);
         var storage = new Storage();
         await Assert.ThrowsAsync<EventLogParseException>(() => Run(settings, storage));
         Assert.Equal(new long[] { 1, 2, 3 }, storage.Stored.Select(i => i.Id));
@@ -545,7 +545,7 @@ public sealed class ExporterDeliveryTests : IDisposable
     public async Task TransactionScanAheadNeverAcknowledgesUndeliveredEvents()
     {
         File.WriteAllText(Path.Combine(Folder, FileName), Record(1).Replace(",N,", ",U,") + ",{bad}," + Record(2));
-        var settings = Settings(true); settings.UseFinalTransactionStatuses = true; settings.Portion = 1;
+        var settings = Settings(true); settings.Portion = 1;
         var storage = new Storage { Behavior = (_, _) => throw new IOException("INSERT failed") };
         var logger = new ProblemLogger();
         await Assert.ThrowsAsync<IOException>(() => Run(settings, storage, logger));

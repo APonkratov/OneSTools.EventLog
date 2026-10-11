@@ -56,13 +56,7 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly DateTimeZone _timeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         private readonly int _writingMaxDop;
         private readonly DateTime _skipEventsBeforeDate;
-        private readonly bool _useCorrectedValueParsing;
-        private readonly bool _useLatestDictionaryValues;
-        private readonly bool _useFinalTransactionStatuses;
-        private readonly bool _useStructuredDataParsing;
-        private readonly bool _useStrictParsing;
         private readonly bool _useEventContext;
-        private readonly bool _useCurrentEventNames;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
             IConfiguration configuration)
@@ -80,13 +74,7 @@ namespace OneSTools.EventLog.Exporter.Manager
             _shutdownTimeout = configuration.GetValue("Exporter:ShutdownTimeout", 30);
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
-            _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", true);
-            _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", true);
-            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", true);
-            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", true);
-            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
             _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
-            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", true);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -222,13 +210,7 @@ namespace OneSTools.EventLog.Exporter.Manager
                             TimeZone = _timeZone,
                             WritingMaxDop = _writingMaxDop,
                             SkipEventsBeforeDate = _skipEventsBeforeDate,
-                            UseCorrectedValueParsing = _useCorrectedValueParsing,
-                            UseLatestDictionaryValues = _useLatestDictionaryValues,
-                            UseFinalTransactionStatuses = _useFinalTransactionStatuses,
-                            UseStructuredDataParsing = _useStructuredDataParsing,
-                            UseCurrentEventNames = _useCurrentEventNames,
                             UseEventContext = _useEventContext,
-                            UseStrictParsing = _useStrictParsing
                         };
 
                         run.Task = Task.Run(async () =>

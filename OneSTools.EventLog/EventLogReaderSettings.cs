@@ -15,31 +15,12 @@ namespace OneSTools.EventLog
         public int ReadingTimeout { get; set; } = Timeout.Infinite;
         public DateTimeZone TimeZone { get; set; } = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         public DateTime SkipEventsBeforeDate { get; set; }
-        /// <summary>
-        /// Enabled by default: scalar N/D/S decoding, text unescaping and corrected transaction statuses.
-        /// False preserves historical scalar/text decoding; final transaction outcomes are independent.
-        /// P data is controlled separately by UseStructuredDataParsing.
-        /// </summary>
-        public bool UseCorrectedValueParsing { get; set; } = true;
-        /// <summary>
-        /// Enabled by default: JSON for complex/unknown Data. Independent of UseCorrectedValueParsing.
-        /// False preserves the historical representation of complex values.
-        /// </summary>
-        public bool UseStructuredDataParsing { get; set; } = true;
-        /// <summary>Use the extended event presentation catalog by default. False retains legacy names.</summary>
-        public bool UseCurrentEventNames { get; set; } = true;
         /// <summary>Wrap Data in a lossless context envelope, including separation values. Opt in.</summary>
         public bool UseEventContext { get; set; } = false;
-        /// <summary>Reject invalid dates, unresolved references and incomplete archived records. Opt in.</summary>
-        public bool UseStrictParsing { get; set; } = false;
         /// <summary>Optional synchronous diagnostics. NodesJson may contain personal information.</summary>
         public Action<EventLogDiagnostic> DiagnosticHandler { get; set; }
         /// <summary>Opt in to logging and skipping complete malformed records. A throwing handler keeps the cursor for retry.</summary>
         public Action<EventLogProblemRecord> ProblemRecordHandler { get; set; }
-        /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Enabled by default.</summary>
-        public bool UseLatestDictionaryValues { get; set; } = true;
-        /// <summary>Resolve transaction outcomes from available Commit/Rollback events. Enabled by default; never wait for future events.</summary>
-        public bool UseFinalTransactionStatuses { get; set; } = true;
 
     }
 }

@@ -12,8 +12,8 @@ public sealed class ProblemRecordTests : IDisposable
     private string Lgf => Path.Combine(_folder, "1Cv8.lgf");
     private static string Row(string comment = "good", string date = "20261011120000", string marker = "N") =>
         "{" + date + "," + marker + ",{0,0},0,0,0,1,1,I,\"" + comment + "\",0,{\"U\"},\"\",0,0,0,1,0,{0}}";
-    private EventLogReaderSettings Settings(Action<EventLogProblemRecord>? sink = null, bool strict = false) => new()
-    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseStrictParsing = strict, ProblemRecordHandler = sink };
+    private EventLogReaderSettings Settings(Action<EventLogProblemRecord>? sink = null) => new()
+    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, ProblemRecordHandler = sink };
     public ProblemRecordTests()
     { Directory.CreateDirectory(_folder); File.WriteAllText(Lgf, "{4,\"Test\",1}"); }
 
@@ -111,15 +111,14 @@ public sealed class ProblemRecordTests : IDisposable
     }
 
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void MalformedDictionaryEntriesDoNotBlockLaterValidEntries(bool strict, bool context)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MalformedDictionaryEntriesDoNotBlockLaterValidEntries(bool context)
     {
         File.WriteAllText(Lgf, "{4,\"bad\",oops},{1,,2},{4,\"Test\",1}");
         File.WriteAllText(Lgp, Row());
         var problems = new List<EventLogProblemRecord>();
-        var settings = Settings(problems.Add, strict); settings.UseEventContext = context;
+        var settings = Settings(problems.Add); settings.UseEventContext = context;
         using var reader = new EventLogReader(settings);
         Assert.Equal("Test", reader.ReadNextEventLogItem().Event);
         Assert.All(problems, p => Assert.Equal("1Cv8.lgf", p.FileName));
@@ -133,7 +132,7 @@ public sealed class ProblemRecordTests : IDisposable
     {
         var row = Row("tail"); File.WriteAllText(Lgp, row[..^1]);
         var problems = new List<EventLogProblemRecord>();
-        var settings = Settings(problems.Add, true); settings.LiveMode = true; settings.ReadingTimeout = 0;
+        var settings = Settings(problems.Add); settings.LiveMode = true; settings.ReadingTimeout = 0;
         using var reader = new EventLogReader(settings);
         Assert.Throws<EventLogReaderTimeoutException>(() => reader.ReadNextEventLogItem());
         Assert.Empty(problems); Assert.Equal(0, settings.ItemId);
@@ -146,7 +145,7 @@ public sealed class ProblemRecordTests : IDisposable
     {
         var tail = Row("tail")[..^1]; File.WriteAllText(Lgp, tail);
         var problems = new List<EventLogProblemRecord>();
-        using var reader = new EventLogReader(Settings(problems.Add, true));
+        using var reader = new EventLogReader(Settings(problems.Add));
         Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
         var problem = Assert.Single(problems); Assert.False(problem.Skipped); Assert.Equal(tail, problem.RawRecord);
     }
@@ -157,7 +156,7 @@ public sealed class ProblemRecordTests : IDisposable
         const string tail = "{4,\"unfinished";
         File.AppendAllText(Lgf, "," + tail); File.WriteAllText(Lgp, Row());
         var problems = new List<EventLogProblemRecord>();
-        using var reader = new EventLogReader(Settings(problems.Add, true));
+        using var reader = new EventLogReader(Settings(problems.Add));
         Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
         var problem = Assert.Single(problems); Assert.False(problem.Skipped); Assert.Equal(tail, problem.RawRecord);
         Assert.Equal("1Cv8.lgf", problem.FileName);
@@ -184,33 +183,30 @@ public sealed class ProblemRecordTests : IDisposable
         File.WriteAllText(Lgf, "{4,\"Unknown.Future.Event\",1}");
         File.WriteAllText(Lgp, Row().Replace("{\"U\"}", "{\"Future\",{\"field\",\"value\"}}"));
         var problems = new List<EventLogProblemRecord>();
-        var settings = Settings(problems.Add, true); settings.UseStructuredDataParsing = true;
+        var settings = Settings(problems.Add);
         using var reader = new EventLogReader(settings);
         var item = reader.ReadNextEventLogItem();
         Assert.Equal("Unknown.Future.Event", item.Event); Assert.Contains("Future", item.Data);
         Assert.Empty(problems);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void InvalidDatesLogRawContentAndRetainTheConfiguredCompatibilityMode(bool strict)
+    [Fact]
+    public void InvalidDatesLogRawContentAndSkipOnlyAfterSuccessfulLogging()
     {
         var bad = Row("date", "invalid"); File.WriteAllText(Lgp, bad + "," + Row());
         var problems = new List<EventLogProblemRecord>();
-        using var reader = new EventLogReader(Settings(problems.Add, strict));
+        using var reader = new EventLogReader(Settings(problems.Add));
         var item = reader.ReadNextEventLogItem();
-        Assert.Equal(strict ? "good" : "date", item.Comment);
-        if (!strict) Assert.Equal(DateTime.MinValue, item.DateTime);
-        var problem = Assert.Single(problems); Assert.Equal(strict, problem.Skipped); Assert.Equal(bad, problem.RawRecord);
+        Assert.Equal("good", item.Comment);
+        var problem = Assert.Single(problems); Assert.True(problem.Skipped); Assert.Equal(bad, problem.RawRecord);
     }
 
     [Fact]
-    public void OptionalTransactionIndexRecoversWithoutWaitingForFutureOutcomes()
+    public void TransactionIndexRecoversWithoutWaitingForFutureOutcomes()
     {
         File.WriteAllText(Lgp, Row("in transaction", marker: "U") + ",{bad}," + Row());
         var problems = new List<EventLogProblemRecord>();
-        var settings = Settings(problems.Add); settings.UseFinalTransactionStatuses = true;
+        var settings = Settings(problems.Add);
         using var reader = new EventLogReader(settings);
         Assert.Equal("Не завершена", reader.ReadNextEventLogItem().TransactionStatus);
         Assert.Equal("good", reader.ReadNextEventLogItem().Comment);

@@ -46,8 +46,8 @@ Checks:
   reader inside an LGP, then continues to another period with the same mtime,
   with no duplicate/missing rows in this scenario.
 - Corrected scalar/text/status values from the actual reader fit the existing
-  table without changing its schema when `UseCorrectedValueParsing` is enabled.
-- Named JSON objects and unknown token trees from `UseStructuredDataParsing`
+  table without changing its schema with unconditional corrected value parsing.
+- Named JSON objects and unknown token trees from unconditional structured parsing
   fit the existing Data String, preserve the schema/cursor and support nested
   `JSONExtractString` queries.
 - Context envelopes, nonzero separation values and typed reference identities

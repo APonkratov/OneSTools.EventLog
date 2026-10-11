@@ -72,7 +72,7 @@ public sealed class JournalCursorTests : IDisposable
         var settings = Settings();
         settings.LgpFileName = FileName;
         using var reader = new EventLogReader(settings);
-        Assert.Null(reader.ReadNextEventLogItem());
+        Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
         using (var append = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
             append.Write(bytes[split..]);
         var item = reader.ReadNextEventLogItem();
@@ -120,7 +120,7 @@ public sealed class JournalCursorTests : IDisposable
         File.WriteAllText(Path.Combine(_folder, FileName), first + ",\n" + second, new UTF8Encoding(false));
         using var reader = new EventLogReader(Settings());
         var item = reader.ReadNextEventLogItem();
-        Assert.Equal(wireComment, item.Comment);
+        Assert.Equal(wireComment.Replace("\"\"", "\""), item.Comment);
         Assert.Equal(Encoding.UTF8.GetByteCount(first), item.EndPosition);
         var next = reader.ReadNextEventLogItem();
         Assert.Equal("next", next.Comment);
@@ -158,8 +158,8 @@ public sealed class JournalCursorTests : IDisposable
         File.WriteAllBytes(path, bytes[..split]);
         var settings = Settings(); settings.LgpFileName = FileName;
         using var reader = new EventLogReader(settings);
-        Assert.Null(reader.ReadNextEventLogItem());
-        Assert.Null(reader.ReadNextEventLogItem());
+        Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
+        Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
         using (var append = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
             append.Write(bytes[split..]);
         var item = reader.ReadNextEventLogItem();
@@ -170,6 +170,6 @@ public sealed class JournalCursorTests : IDisposable
     }
 
     internal EventLogReaderSettings Settings() => new()
-    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseCorrectedValueParsing = false };
+    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
     public void Dispose() => Directory.Delete(_folder, true);
 }

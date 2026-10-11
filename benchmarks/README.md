@@ -15,18 +15,17 @@ these are warm-cache measurements, not cold-storage latency tests.
 
 Modes:
 
-| Mode | Enabled flags |
+| Mode | Behavior |
 | --- | --- |
-| default | All explicitly off: frozen historical/upstream comparison |
-| current | CorrectedValueParsing, StructuredDataParsing, CurrentEventNames, LatestDictionaryValues, FinalTransactionStatuses (new production defaults) |
-| data | UseCorrectedValueParsing, UseStructuredDataParsing |
-| latest | UseLatestDictionaryValues only |
-| strict | UseStrictParsing only |
-| structured | CorrectedValueParsing, StructuredDataParsing, CurrentEventNames, LatestDictionaryValues, StrictParsing |
-| context | All of structured plus UseEventContext |
+| default / current | The selected version's actual production defaults |
+| context | Production defaults plus the optional UseEventContext envelope |
 
-UseFinalTransactionStatuses is enabled only in current. Upstream supports only default.
-Reflection checks required settings at startup, outside the measured loop.
+The improved reader has one parsing behavior; obsolete flag combinations cannot
+be selected. Historical reports used frozen binaries with their historical mode
+definitions. Comparing upstream and fork defaults measures different work and
+output; do not interpret that as a same-feature performance regression.
+Context mode requires a reader that supports the optional envelope. Reflection
+sets only that option at startup, outside the measured loop.
 
 ```powershell
 dotnet build benchmarks/ReaderBenchmark/ReaderBenchmark.csproj -c Release -o C:/bench/fork
@@ -35,7 +34,7 @@ $env:DOTNET_TieredCompilation = '0'
 $env:DOTNET_gcServer = '0'
 dotnet C:/bench/upstream/ReaderBenchmark.dll C:/bench/corpus default 1 7
 dotnet C:/bench/fork/ReaderBenchmark.dll C:/bench/corpus default 1 7
-dotnet C:/bench/fork/ReaderBenchmark.dll C:/bench/corpus data 1 7
+dotnet C:/bench/fork/ReaderBenchmark.dll C:/bench/corpus current 1 7
 ```
 
 For balanced order, run separate processes with one warmup/one measured scan,

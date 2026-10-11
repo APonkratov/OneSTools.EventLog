@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using OneSTools.BracketsFile;
 
@@ -13,6 +14,7 @@ namespace OneSTools.EventLog
         private FileStream _fileStream;
         private readonly Action<EventLogDiagnostic> _diagnostic;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private readonly bool _live;
 
         /// <summary>
         ///     Key tuple - first value is an object type, second value is an object number in the array
@@ -27,11 +29,12 @@ namespace OneSTools.EventLog
             new Dictionary<(ObjectType, int), (string, string)>();
 
         public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null,
-            Action<EventLogProblemRecord> problemRecordHandler = null)
+            Action<EventLogProblemRecord> problemRecordHandler = null, bool live = false)
         {
             LgfPath = lgfPath;
             _diagnostic = EventLogDiagnostic.Guard(diagnostic);
             _problemRecordHandler = problemRecordHandler;
+            _live = live;
         }
 
         public string LgfPath { get; }
@@ -56,6 +59,13 @@ namespace OneSTools.EventLog
                     var itemData = _bracketsReader.NextNode(cancellationToken);
                     if (itemData == null) break;
                     var ot = (ObjectType) (int) itemData[0];
+
+                    if (ot >= ObjectType.Users && ot < ObjectType.Unknown)
+                    {
+                        var count = ot == ObjectType.Users || ot == ObjectType.Metadata ? 4 : 3;
+                        if (itemData.Count != count || itemData.Any(node => !node.IsValueNode))
+                            throw new InvalidDataException("Invalid LGF record shape.");
+                    }
 
                     // Skip unknown object types
                     if (ot >= ObjectType.Unknown)
@@ -120,6 +130,14 @@ namespace OneSTools.EventLog
                         _problemRecordHandler, cancellationToken)) continue;
                     throw new EventLogParseException("1Cv8.lgf", start, "dictionary entry", error);
                 }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_live && _bracketsReader.HasIncompleteRecord)
+            {
+                var error = new EventLogParseException("1Cv8.lgf", _bracketsReader.Position, "incomplete dictionary entry");
+                _bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "incomplete dictionary entry", error,
+                    _problemRecordHandler, cancellationToken);
+                throw error;
             }
         }
 

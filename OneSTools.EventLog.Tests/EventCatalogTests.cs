@@ -12,19 +12,11 @@ public sealed class EventCatalogTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Names))]
-    public void CatalogNamesAreDefaultAndExplicitLegacyModeRemainsAvailable(string code, string expected)
+    public void CatalogNamesAreAlwaysCurrent(string code, string expected)
     {
         Write(code);
-        using var legacy = new EventLogReader(Settings(false));
-        var before = legacy.ReadNextEventLogItem();
-        using var current = new EventLogReader(Settings(true));
-        var after = current.ReadNextEventLogItem();
-        Assert.Equal(expected, after.Event);
-        using var defaults = new EventLogReader(new EventLogReaderSettings
-        { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc });
-        Assert.Equal(expected, defaults.ReadNextEventLogItem().Event);
-        after.Event = before.Event;
-        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(after));
+        using var reader = new EventLogReader(Settings());
+        Assert.Equal(expected, reader.ReadNextEventLogItem().Event);
     }
 
     [Fact]
@@ -35,19 +27,19 @@ public sealed class EventCatalogTests : IDisposable
         foreach (var code in codes)
         {
             Write(code);
-            using var reader = new EventLogReader(Settings(true));
+            using var reader = new EventLogReader(Settings());
             Assert.NotEqual(code, reader.ReadNextEventLogItem().Event);
         }
         Write("_$Future$_.Unknown");
         var evidence = new List<EventLogDiagnostic>();
-        var settings = Settings(true); settings.DiagnosticHandler = evidence.Add;
+        var settings = Settings(); settings.DiagnosticHandler = evidence.Add;
         using var future = new EventLogReader(settings);
         Assert.Equal("_$Future$_.Unknown", future.ReadNextEventLogItem().Event);
         Assert.Contains(evidence, d => d.Code == "UnknownEvent");
     }
 
-    private EventLogReaderSettings Settings(bool current) => new()
-    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseCurrentEventNames = current };
+    private EventLogReaderSettings Settings() => new()
+    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
     private void Write(string code)
     {
         File.WriteAllText(Path.Combine(_folder, "1Cv8.lgf"), "{4,\"" + code + "\",1}");

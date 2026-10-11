@@ -11,10 +11,10 @@ using OneSTools.EventLog.Exporter.Core.ClickHouse;
 
 // Deliberately sequential read/insert batches isolate common reader+storage cost.
 // This does not benchmark either version's background service scheduling.
-if (args.Length < 3) throw new ArgumentException("Usage: ExportBenchmark <corpus> <default|current|data|structured|context> <dedicated-loopback-ClickHouse-url> [warmups=1] [runs=1]");
+if (args.Length < 3) throw new ArgumentException("Usage: ExportBenchmark <corpus> <default|current|context> <dedicated-loopback-ClickHouse-url> [warmups=1] [runs=1]");
 var root = Path.GetFullPath(args[0]); var mode = args[1]; var url = new Uri(args[2]);
 if (!url.IsLoopback || url.Scheme != "http") throw new ArgumentException("Dedicated loopback HTTP test server required");
-if (mode is not ("default" or "current" or "data" or "structured" or "context")) throw new ArgumentException("Unknown mode");
+if (mode is not ("default" or "current" or "context")) throw new ArgumentException("Unknown mode");
 var warmups = args.Length > 3 ? int.Parse(args[3]) : 1;
 var runs = args.Length > 4 ? int.Parse(args[4]) : 1;
 var folders = Directory.GetDirectories(root).Where(f => File.Exists(Path.Combine(f, "1Cv8.lgf"))).Order(StringComparer.Ordinal).ToArray();
@@ -76,18 +76,9 @@ for (var run = -warmups; run < runs; run++)
 EventLogReaderSettings Settings(string folder)
 {
     var setting = new EventLogReaderSettings { LogFolder = folder, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"] };
-    foreach (var name in new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
-        "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing", "UseEventContext" })
-        typeof(EventLogReaderSettings).GetProperty(name)?.SetValue(setting, false);
-    var options = mode switch
-    {
-        "default" => Array.Empty<string>(),
-        "current" => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames", "UseLatestDictionaryValues", "UseFinalTransactionStatuses" },
-        "data" => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing" },
-        _ => new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames", "UseLatestDictionaryValues", "UseStrictParsing" }
-    };
-    foreach (var option in options) (typeof(EventLogReaderSettings).GetProperty(option) ?? throw new Exception("Unsupported " + option)).SetValue(setting, true);
-    if (mode == "context") typeof(EventLogReaderSettings).GetProperty("UseEventContext")!.SetValue(setting, true);
+    if (mode == "context")
+        (typeof(EventLogReaderSettings).GetProperty("UseEventContext") ??
+            throw new InvalidOperationException("This reader does not support context")).SetValue(setting, true);
     return setting;
 }
 
