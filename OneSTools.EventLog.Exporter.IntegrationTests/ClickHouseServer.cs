@@ -38,7 +38,15 @@ internal sealed class ClickHouseServer : IAsyncDisposable
         _connection = connection.ConnectionString;
     }
 
-    public ClickHouseStorage Storage() => new(_connection);
+    public ClickHouseStorage Storage(Uri? endpoint = null) => new(ConnectionString(endpoint));
+
+    public string ConnectionString(Uri? endpoint = null)
+    {
+        if (endpoint == null) return _connection;
+        var connection = new DbConnectionStringBuilder { ConnectionString = _connection };
+        connection["Host"] = endpoint.Host; connection["Port"] = endpoint.Port; connection["Protocol"] = endpoint.Scheme;
+        return connection.ConnectionString;
+    }
 
     public async Task<string> Query(string sql)
     {

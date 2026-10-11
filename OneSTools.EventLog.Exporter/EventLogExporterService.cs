@@ -48,7 +48,9 @@ namespace OneSTools.EventLog.Exporter
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogCritical(ex, "Failed to execute EventLogExporter");
+                    _logger?.LogCritical(ex,
+                        "Failed to execute EventLogExporter; {ErrorType}: {Reason}. Retry delay: {RetryDelayMs} ms.",
+                        ex.GetBaseException().GetType().Name, ex.GetBaseException().Message, 5000);
                 }
                 if (stoppingToken.IsCancellationRequested) break;
                 try { await Task.Delay(5000, stoppingToken); }

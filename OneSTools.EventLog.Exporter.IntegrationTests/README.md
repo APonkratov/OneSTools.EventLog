@@ -7,6 +7,8 @@ delivery checkpoints and service shutdown using controlled receivers without a s
 Service lifecycle tests reference the actual standalone/Manager assemblies; their
 production target frameworks are unchanged.
 The standalone test project requires .NET SDK 8+ and is outside the legacy solution.
+The test-only ASP.NET Core framework reference provides a loopback Kestrel fault
+proxy; production projects have no new framework or package requirements.
 
 Use a **dedicated disposable server**. Each test creates a unique
 `onestools_contract_<guid>` database and drops that database in `finally`.
@@ -64,7 +66,14 @@ Checks:
   and an event in the next daily file, preserving all 47 unique file/offset positions.
 - Standalone service and Manager await active writes before disposing receivers;
   a re-added source waits for its previous worker. Archive success does not restart.
+- A real HTTP proxy rejects the second INSERT with 503 or drops its TCP response
+  after ClickHouse commits. Both actual service retry loops resume from the last
+  acknowledged checkpoint: rejected writes have no duplicates; unknown outcomes
+  replay only the unacknowledged packet. Another restart sends no INSERT.
+- The same storage instance retries setup after CREATE TABLE fails. Missing
+  databases are created with mixed-case and quoted Database connection settings.
 
-See [delivery semantics and configuration](../docs/export-delivery.md). This does
-not establish exactly-once or power-loss durability. Process kills, actual network
-faults, disk-full conditions, Elasticsearch and CORP are not exercised here.
+See [delivery semantics and configuration](../docs/export-delivery.md) and
+[ClickHouse recovery results](../docs/clickhouse-recovery.md). This does not
+establish exactly-once or power-loss durability. Process kills, network partitions,
+server crashes, disk-full conditions, Elasticsearch and CORP are not exercised here.

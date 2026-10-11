@@ -111,7 +111,8 @@ namespace OneSTools.EventLog.Exporter.Core.ClickHouse
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"Failed to write data to {_databaseName}");
+                _logger?.LogError(ex, "Failed to write data to {Database}; {ErrorType}: {Reason}",
+                    _databaseName, ex.GetBaseException().GetType().Name, ex.GetBaseException().Message);
                 throw;
             }
 
@@ -128,8 +129,10 @@ namespace OneSTools.EventLog.Exporter.Core.ClickHouse
             if (_connectionString == string.Empty)
                 throw new Exception("Connection string is not specified");
 
-            _databaseName = Regex.Match(_connectionString, "(?<=Database=).*?(?=(;|$))", RegexOptions.IgnoreCase).Value;
-            _connectionString = Regex.Replace(_connectionString, "Database=.*?(;|$)", "");
+            var values = new DbConnectionStringBuilder { ConnectionString = _connectionString };
+            _databaseName = values.TryGetValue("Database", out var database) ? database.ToString() : "";
+            values.Remove("Database");
+            _connectionString = values.ConnectionString;
 
             if (string.IsNullOrWhiteSpace(_databaseName))
                 throw new Exception("Database name is not specified");
@@ -144,22 +147,33 @@ namespace OneSTools.EventLog.Exporter.Core.ClickHouse
         {
             if (_connection is null)
             {
-                _connection = new ClickHouseConnection(_connectionString);
-                await _connection.OpenAsync(cancellationToken);
-
-                await CreateEventLogItemsDatabaseAsync(cancellationToken);
+                var connection = new ClickHouseConnection(_connectionString);
+                try
+                {
+                    await connection.OpenAsync(cancellationToken);
+                    await CreateEventLogItemsDatabaseAsync(connection, cancellationToken);
+                    // Publish only a completely initialized connection. A failed
+                    // Open/CREATE/ChangeDatabase must be retried on the next call.
+                    _connection = connection;
+                }
+                catch
+                {
+                    connection.Dispose();
+                    throw;
+                }
             }
         }
 
-        private async Task CreateEventLogItemsDatabaseAsync(CancellationToken cancellationToken = default)
+        private async Task CreateEventLogItemsDatabaseAsync(ClickHouseConnection connection,
+            CancellationToken cancellationToken = default)
         {
             var commandDbText = $@"CREATE DATABASE IF NOT EXISTS {_databaseName}";
 
-            await using var cmdDb = _connection.CreateCommand();
+            await using var cmdDb = connection.CreateCommand();
             cmdDb.CommandText = commandDbText;
             await cmdDb.ExecuteNonQueryAsync(cancellationToken);
 
-            await _connection.ChangeDatabaseAsync(_databaseName, cancellationToken);
+            await connection.ChangeDatabaseAsync(_databaseName, cancellationToken);
 
             var commandText =
                 $@"CREATE TABLE IF NOT EXISTS {TableName}
@@ -194,7 +208,7 @@ namespace OneSTools.EventLog.Exporter.Core.ClickHouse
                 ORDER BY (DateTime, EndPosition)
                 SETTINGS index_granularity = 8192;";
 
-            await using var cmd = _connection.CreateCommand();
+            await using var cmd = connection.CreateCommand();
             cmd.CommandText = commandText;
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }

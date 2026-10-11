@@ -247,7 +247,13 @@ namespace OneSTools.EventLog.Exporter.Manager
                                         if (_loadArchive) break;
                                     }
                                     catch (OperationCanceledException) when (token.IsCancellationRequested) { break; }
-                                    catch (Exception ex) { _logger?.LogCritical(ex, "Failed to execute EventLogExporter"); }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogCritical(ex,
+                                            "Failed to execute EventLogExporter for {LogFolder} to {Database}; {ErrorType}: {Reason}. Retry delay: {RetryDelayMs} ms.",
+                                            logFolder, dataBaseName, ex.GetBaseException().GetType().Name,
+                                            ex.GetBaseException().Message, 5000);
+                                    }
                                     if (token.IsCancellationRequested) break;
                                     await Task.Delay(5000, token);
                                 }

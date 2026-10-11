@@ -537,7 +537,7 @@ public sealed class ExporterDeliveryTests : IDisposable
         public bool Disabled, Fail;
         public List<Dictionary<string, object?>> Problems { get; } = new();
         public List<Exception?> Errors { get; } = new();
-        public IDisposable? BeginScope<TState>(TState state) => null;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
         public bool IsEnabled(LogLevel level) => !Disabled;
         public void Log<TState>(LogLevel level, EventId id, TState state, Exception? error, Func<TState, Exception?, string> formatter)
         {
@@ -573,7 +573,7 @@ public sealed class ExporterDeliveryTests : IDisposable
     private sealed class ReadLogger : ILogger<EventLogExporter>
     {
         public TaskCompletionSource<bool> Reading { get; } = Signal();
-        public IDisposable? BeginScope<TState>(TState state) => null;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
         public bool IsEnabled(LogLevel logLevel) => true;
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         { if (formatter(state, exception).StartsWith("Reader started reading", StringComparison.Ordinal)) Reading.TrySetResult(true); }
