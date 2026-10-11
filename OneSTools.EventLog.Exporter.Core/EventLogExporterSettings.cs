@@ -21,6 +21,14 @@ namespace OneSTools.EventLog.Exporter.Core
         public bool UseCorrectedValueParsing { get; set; } = false;
         /// <summary>Enable JSON for complex/unknown Data; independent of scalar corrections.</summary>
         public bool UseStructuredDataParsing { get; set; } = false;
+        /// <summary>Use the extended event presentation catalog. False retains legacy names.</summary>
+        public bool UseCurrentEventNames { get; set; } = false;
+        /// <summary>Wrap Data in a lossless context envelope, including separation values. Opt in.</summary>
+        public bool UseEventContext { get; set; } = false;
+        /// <summary>Reject invalid dates, unresolved references and incomplete archived records. Opt in.</summary>
+        public bool UseStrictParsing { get; set; } = false;
+        /// <summary>Optional synchronous diagnostics. NodesJson may contain personal information.</summary>
+        public Action<EventLogDiagnostic> DiagnosticHandler { get; set; }
         /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
         public bool UseLatestDictionaryValues { get; set; } = false;
         /// <summary>Resolve transaction outcomes from available Commit/Rollback events. Opt in.</summary>

@@ -88,12 +88,27 @@ public sealed class StructuredDataTests : IDisposable
     }
 
     [Fact]
-    public void UnverifiedValueTableShapesFallBackInsteadOfDroppingRows()
+    public void MultipleTableRowsRetainEveryCell()
     {
         const string data = "{\"P\",{1,{\"Z\",{2,2,{\"A\",{\"Pattern\"}},{\"B\",{\"Pattern\"}},{{\"S\",\"one\"},{\"S\",\"two\"}},{{\"S\",\"three\"},{\"S\",\"four\"}}}}}}";
         var parsed = JsonNode.Parse(Read("_$Access$_.Access", data, structured: true).Data)!;
-        Assert.Equal("1c-brackets-v1", parsed["$format"]!.GetValue<string>());
-        AssertJson("[\"P\",[\"1\",[\"Z\",[\"2\",\"2\",[\"A\",[\"Pattern\"]],[\"B\",[\"Pattern\"]],[[\"S\",\"one\"],[\"S\",\"two\"]],[[\"S\",\"three\"],[\"S\",\"four\"]]]]]]", parsed["nodes"]!.ToJsonString());
+        AssertJson("{\"Data\":{\"Column\":[{\"name\":\"A\"},{\"name\":\"B\"}],\"Row\":[{\"A\":\"one\",\"B\":\"two\"},{\"A\":\"three\",\"B\":\"four\"}]}}", parsed.ToJsonString());
+    }
+
+    public static IEnumerable<object[]> PlatformFixtures()
+    {
+        using var fixtures = System.Text.Json.JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "noncorp-data-8.3.27.json")));
+        foreach (var item in fixtures.RootElement.GetProperty("cases").EnumerateArray())
+            yield return new object[] { item.GetProperty("eventCode").GetString()!, item.GetProperty("data").GetString()!, item.GetProperty("expected").GetRawText() };
+    }
+
+    [Theory]
+    [MemberData(nameof(PlatformFixtures))]
+    public void ExpandedLayoutsMatchIndependentPlatformFixtures(string code, string data, string expected)
+    {
+        AssertJson(expected, Read(code, data, structured: true).Data);
+        AssertJson(expected, Read(code, data, corrected: true, structured: true).Data);
     }
 
     [Fact]

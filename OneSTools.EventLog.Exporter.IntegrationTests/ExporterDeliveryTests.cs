@@ -56,6 +56,22 @@ public sealed class ExporterDeliveryTests : IDisposable
     }
 
     [Fact]
+    public async Task StrictParsingFailureAcknowledgesOnlyTheValidPrefixAndResumesAfterRepair()
+    {
+        Write(3);
+        File.AppendAllText(Path.Combine(Folder, FileName), ",\n{invalid,N,{0,0},0}");
+        var settings = Settings(true); settings.UseStrictParsing = true;
+        var storage = new Storage();
+        await Assert.ThrowsAsync<EventLogParseException>(() => Run(settings, storage));
+        Assert.Equal(new long[] { 1, 2, 3 }, storage.Stored.Select(i => i.Id));
+        Assert.Contains("\"Id\":3", File.ReadAllText(State));
+        Write(4);
+        await Run(settings, storage);
+        Assert.Equal(new long[] { 1, 2, 3, 4 }, storage.Stored.Select(i => i.Id));
+        Assert.Contains("\"Id\":4", File.ReadAllText(State));
+    }
+
+    [Fact]
     public async Task RestartAfterFifteenCompletedFilesDoesNotExportAnyAcknowledgedEvents()
     {
         WriteFifteenDailyFiles();

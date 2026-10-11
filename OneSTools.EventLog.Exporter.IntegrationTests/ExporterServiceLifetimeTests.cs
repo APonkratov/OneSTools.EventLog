@@ -91,6 +91,30 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task ManagerPassesNoncorpOptionsToEachWorker()
+    {
+        File.WriteAllText(Path.Combine(Log, "1Cv8.lgf"), "{4,\"_$Data$_.NewPredefinedData\",1}");
+        var configuration = Configuration();
+        configuration["Exporter:UseCurrentEventNames"] = "true";
+        configuration["Exporter:UseEventContext"] = "true";
+        configuration["Exporter:UseStrictParsing"] = "true";
+        var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        using var manager = new TestManager(provider, configuration, () => storage);
+        await manager.StartAsync(default);
+        typeof(ExportersManager).GetMethod("StartExporter", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(manager, new object[] { Base, "fixture", "fixture" });
+        try
+        {
+            await storage.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.DoesNotContain("_$", storage.Item!.Event);
+            var envelope = System.Text.Json.Nodes.JsonNode.Parse(storage.Item.Data)!;
+            Assert.Equal("1c-event-context-v1", envelope["$format"]!.GetValue<string>());
+        }
+        finally { await manager.StopAsync(default).WaitAsync(TimeSpan.FromSeconds(5)); }
+    }
+
     private sealed class TestManager(IServiceProvider services, IConfiguration configuration, Func<IEventLogStorage> storage)
         : ExportersManager(NullLogger<ExportersManager>.Instance, services, configuration)
     { protected override IEventLogStorage GetStorage(string dataBaseName) => storage(); }
@@ -98,10 +122,10 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
     {
         public TaskCompletionSource<bool> Entered { get; } = Signal();
         public TaskCompletionSource<bool> Release { get; } = Signal();
-        public int Calls; public bool Disposed;
+        public int Calls; public bool Disposed; public EventLogItem? Item;
         public Task<EventLogPosition> ReadEventLogPositionAsync(CancellationToken cancellationToken = default) => Task.FromResult<EventLogPosition>(null!);
         public async Task WriteEventLogDataAsync(List<EventLogItem> entities, CancellationToken cancellationToken = default)
-        { Calls++; Entered.TrySetResult(true); await Release.Task; Assert.False(Disposed); }
+        { Calls++; Item = entities.FirstOrDefault(); Entered.TrySetResult(true); await Release.Task; Assert.False(Disposed); }
         public void Dispose() => Disposed = true;
     }
     private sealed class Lifetime : IHostApplicationLifetime

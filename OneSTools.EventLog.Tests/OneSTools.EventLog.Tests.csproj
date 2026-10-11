@@ -20,4 +20,5 @@
     <ProjectReference Include="../OneSTools.EventLog/OneSTools.EventLog.csproj" />
   </ItemGroup>
 
+  <ItemGroup><None Update="Fixtures/**/*.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>

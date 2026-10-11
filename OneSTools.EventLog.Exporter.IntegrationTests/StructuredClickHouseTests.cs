@@ -8,6 +8,39 @@ namespace OneSTools.EventLog.Exporter.IntegrationTests;
 public sealed class StructuredClickHouseTests
 {
     [ClickHouseFact]
+    public async Task ContextAndTypedReferencesUseExistingColumnsAndRemainQueryable()
+    {
+        await using var server = new ClickHouseServer();
+        await server.CreateLegacyTable();
+        var schema = await server.Schema();
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-context-clickhouse", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            const string identity = "255:11111111111111111111111111111111";
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"),
+                "{4,\"_$Data$_.NewPredefinedData\",1},{9,11111111-1111-1111-1111-111111111111,\"Tenant\",1},{10,{\"N\",123},1,1}");
+            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"),
+                "{20261011120000,N,{0,0},0,0,0,1,1,I,\"\",0,{\"P\",{2,{\"Name\",{\"S\",\"sample\"}},{\"Reference\",{\"@\",\"" + identity + "\"}}}},\"\",0,0,0,1,0,{1,1,1},future}");
+            using var reader = new EventLogReader(new EventLogReaderSettings
+            {
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
+                UseStructuredDataParsing = true, UseCurrentEventNames = true, UseEventContext = true, UseStrictParsing = true
+            });
+            var item = reader.ReadNextEventLogItem();
+            using (var storage = server.Storage()) await storage.WriteEventLogDataAsync(new() { item });
+            Assert.Equal("123\n", await server.Query($"SELECT JSONExtractString(Data, 'SessionDataSeparation', 'Tenant') FROM {server.Database}.EventLogItems"));
+            Assert.Equal(identity + "\n", await server.Query($"SELECT JSONExtractString(JSONExtractString(Data, 'Data'), 'values', 'Reference', 'value') FROM {server.Database}.EventLogItems"));
+            using var stored = JsonDocument.Parse(await server.Query($"SELECT * FROM {server.Database}.EventLogItems FORMAT JSONEachRow"));
+            Assert.Equal(24, stored.RootElement.EnumerateObject().Count());
+            Assert.Equal(item.Data, stored.RootElement.GetProperty("Data").GetString());
+            Assert.Equal(item.Event, stored.RootElement.GetProperty("Event").GetString());
+            Assert.Equal(schema, await server.Schema());
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
+    [ClickHouseFact]
     public async Task NamedObjectsAndFallbackTokensRemainQueryableInExistingDataString()
     {
         await using var server = new ClickHouseServer();

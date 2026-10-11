@@ -126,8 +126,73 @@ public sealed class ExporterValueSettingsTests
         finally { Directory.Delete(folder, true); }
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task BothConstructorsPassCatalogAndContextIndependently(bool configurationConstructor, bool enabled)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-context", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), "{4,\"_$Session$_.ExternalReportConnect\",1}");
+            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"),
+                "{20261011120000,N,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"sample\"},\"\",0,0,0,1,0,{0}}");
+            var storage = new RecordingStorage();
+            using var exporter = CreateExporter(configurationConstructor, null, folder, storage,
+                current: enabled, context: enabled, strict: true);
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+            try
+            {
+                var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                if (enabled)
+                {
+                    Assert.DoesNotContain("_$", item.Event);
+                    var envelope = System.Text.Json.Nodes.JsonNode.Parse(item.Data)!;
+                    Assert.Equal("1c-event-context-v1", envelope["$format"]!.GetValue<string>());
+                    Assert.Equal("sample", envelope["Data"]!.GetValue<string>());
+                }
+                else Assert.Equal("sample", item.Data);
+            }
+            finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task BothConstructorsPassStrictOptionWithoutEnablingContext(bool configurationConstructor, bool enabled)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-exporter-strict", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), "{4,\"Test\",1}");
+            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"),
+                "{invalid,N,{0,0},0,0,0,1,1,I,\"\",0,{\"S\",\"sample\"},\"\",0,0,0,1,0,{0}}");
+            var storage = new RecordingStorage();
+            using var exporter = CreateExporter(configurationConstructor, null, folder, storage, strict: enabled);
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+            try
+            {
+                if (enabled) await Assert.ThrowsAsync<EventLogParseException>(() => run.WaitAsync(TimeSpan.FromSeconds(10)));
+                else Assert.Equal("sample", (await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10))).Data);
+            }
+            finally { cancellation.Cancel(); if (!enabled) await run.WaitAsync(TimeSpan.FromSeconds(5)); }
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
     private static EventLogExporter CreateExporter(bool configurationConstructor, bool? enabled, string folder,
-        RecordingStorage storage, bool? structured = null, bool? latest = null, bool? final = null)
+        RecordingStorage storage, bool? structured = null, bool? latest = null, bool? final = null,
+        bool? current = null, bool? context = null, bool? strict = null)
     {
         if (!configurationConstructor)
         {
@@ -136,6 +201,9 @@ public sealed class ExporterValueSettingsTests
             if (structured.HasValue) settings.UseStructuredDataParsing = structured.Value;
             if (latest.HasValue) settings.UseLatestDictionaryValues = latest.Value;
             if (final.HasValue) settings.UseFinalTransactionStatuses = final.Value;
+            if (current.HasValue) settings.UseCurrentEventNames = current.Value;
+            if (context.HasValue) settings.UseEventContext = context.Value;
+            if (strict.HasValue) settings.UseStrictParsing = strict.Value;
             return new EventLogExporter(settings, storage);
         }
         var values = new Dictionary<string, string?>
@@ -146,6 +214,9 @@ public sealed class ExporterValueSettingsTests
         if (structured.HasValue) values["Exporter:UseStructuredDataParsing"] = structured.Value.ToString();
         if (latest.HasValue) values["Exporter:UseLatestDictionaryValues"] = latest.Value.ToString();
         if (final.HasValue) values["Exporter:UseFinalTransactionStatuses"] = final.Value.ToString();
+        if (current.HasValue) values["Exporter:UseCurrentEventNames"] = current.Value.ToString();
+        if (context.HasValue) values["Exporter:UseEventContext"] = context.Value.ToString();
+        if (strict.HasValue) values["Exporter:UseStrictParsing"] = strict.Value.ToString();
         return new EventLogExporter(null, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), storage);
     }
 

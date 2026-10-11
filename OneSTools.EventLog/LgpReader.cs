@@ -19,9 +19,15 @@ namespace OneSTools.EventLog
         private DateTime _skipEventsBeforeDate;
         private readonly bool _useCorrectedValueParsing;
         private readonly bool _useStructuredDataParsing;
+        private readonly bool _useCurrentEventNames;
+        private readonly bool _useStrictParsing;
+        private readonly Action<EventLogDiagnostic> _diagnostic;
+        private readonly EventContextReader _context;
 
         public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
-            bool useCorrectedValueParsing = false, bool useStructuredDataParsing = false)
+            bool useCorrectedValueParsing = false, bool useStructuredDataParsing = false,
+            bool useCurrentEventNames = false, bool useStrictParsing = false,
+            Action<EventLogDiagnostic> diagnostic = null, EventContextReader context = null)
         {
             LgpPath = lgpPath;
             _timeZone = timeZone;
@@ -29,12 +35,18 @@ namespace OneSTools.EventLog
             _skipEventsBeforeDate = skipEventsBeforeDate;
             _useCorrectedValueParsing = useCorrectedValueParsing;
             _useStructuredDataParsing = useStructuredDataParsing;
+            _useCurrentEventNames = useCurrentEventNames;
+            _useStrictParsing = useStrictParsing;
+            _diagnostic = diagnostic;
+            _context = context;
         }
 
         public string LgpPath { get; }
         public string LgpFileName => Path.GetFileName(LgpPath);
         internal string TransactionMarker { get; private set; }
         internal string TransactionKey { get; private set; }
+        internal bool HasIncompleteRecord => _bracketsReader?.HasIncompleteRecord == true;
+        internal long IncompletePosition => _bracketsReader?.Position ?? 0;
 
         public void Dispose()
         {
@@ -96,11 +108,28 @@ namespace OneSTools.EventLog
         {
             while (true)
             {
-                var (data, endPosition) = ReadNextEventLogItemData(cancellationToken);
-                if (data.Length == 0)
-                    return null;
+                StringBuilder data;
+                long endPosition;
+                long recordStart = -1;
+                EventLogItem eventLogItem;
+                try
+                {
+                    (data, endPosition) = ReadNextEventLogItemData(cancellationToken);
+                    if (data.Length == 0)
+                        return null;
+                    recordStart = _bracketsReader.LastNodeStartPosition;
 
-                var eventLogItem = ParseEventLogItemData(data, endPosition, cancellationToken);
+                    eventLogItem = ParseEventLogItemData(data, endPosition, cancellationToken);
+                }
+                catch (Exception error)
+                {
+                    if (recordStart >= 0) _bracketsReader.Position = recordStart;
+                    if (!(error is ArgumentException || error is FormatException || error is OverflowException || error is InvalidDataException || error is IndexOutOfRangeException)) throw;
+                    var start = _bracketsReader.LastNodeStartPosition;
+                    _bracketsReader.Position = start;
+                    _diagnostic?.Invoke(new EventLogDiagnostic("InvalidRecord", LgpFileName, start));
+                    throw new EventLogParseException(LgpFileName, start, "LGP record", error);
+                }
                 if (eventLogItem != null)
                     return eventLogItem;
             }
@@ -109,7 +138,9 @@ namespace OneSTools.EventLog
         private EventLogItem ParseEventLogItemData(StringBuilder eventLogItemData, long endPosition,
             CancellationToken cancellationToken = default)
         {
-            var parsedData = BracketsParser.ParseBlock(eventLogItemData);
+            var parsedData = JournalNodeParser.Parse(eventLogItemData);
+            if (parsedData.Count < 17 || parsedData[2].IsValueNode || parsedData[2].Count != 2)
+                throw new InvalidDataException("Invalid LGP record shape.");
 
             DateTime dateTime = default;
             try
@@ -119,6 +150,8 @@ namespace OneSTools.EventLog
             }
             catch
             {
+                _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDate", LgpFileName, _bracketsReader.LastNodeStartPosition));
+                if (_useStrictParsing) throw;
                 dateTime = DateTime.MinValue;
             }
 
@@ -158,6 +191,10 @@ namespace OneSTools.EventLog
 
             var ev = _lgfReader.GetObjectValue(ObjectType.Events, parsedData[7], cancellationToken);
             eventLogItem.Event = GetEventPresentation(DecodeText(ev));
+            var currentName = CurrentEventNames.Get(DecodeText(ev), eventLogItem.Event);
+            if (_useCurrentEventNames) eventLogItem.Event = currentName;
+            if (currentName == ev && ev != null && ev.StartsWith("_$", StringComparison.Ordinal))
+                _diagnostic?.Invoke(new EventLogDiagnostic("UnknownEvent", LgpFileName, _bracketsReader.LastNodeStartPosition, ev));
 
             var severity = (string)parsedData[8];
             eventLogItem.Severity = GetSeverityPresentation(severity);
@@ -173,6 +210,12 @@ namespace OneSTools.EventLog
                 eventLogItem.Data = StructuredEventData.Parse(ev, data);
             else
                 eventLogItem.Data = _useCorrectedValueParsing ? GetCorrectedData(data) : GetData(data).Trim();
+            if (_useStructuredDataParsing && eventLogItem.Data.StartsWith("{\"$format\":\"1c-brackets-v1\"", StringComparison.Ordinal))
+                _diagnostic?.Invoke(new EventLogDiagnostic("UnknownDataFormat", LgpFileName, _bracketsReader.LastNodeStartPosition, ev, eventLogItem.Data));
+            if (parsedData.Count > 19 || (parsedData.Count > 17 && parsedData[17].Text != "0"))
+                _diagnostic?.Invoke(new EventLogDiagnostic("ExtraLgpFields", LgpFileName, _bracketsReader.LastNodeStartPosition, ev));
+            if (_context != null)
+                eventLogItem.Data = _context.Wrap(DecodeText(ev), DecodeText(application), eventLogItem.Data, parsedData, LgpFileName, _bracketsReader.LastNodeStartPosition);
             eventLogItem.DataPresentation = DecodeText(parsedData[12]);
             eventLogItem.Server = DecodeText(_lgfReader.GetObjectValue(ObjectType.Servers, parsedData[13], cancellationToken));
 
@@ -185,6 +228,10 @@ namespace OneSTools.EventLog
                 eventLogItem.AddPort = int.Parse(addPort);
 
             eventLogItem.Session = parsedData[16];
+            if (_useStrictParsing && (eventLogItem.User == null || eventLogItem.Computer == null ||
+                application == null || ev == null || eventLogItem.Metadata == null ||
+                eventLogItem.Server == null || mainPort == null || addPort == null))
+                throw new InvalidDataException("Unresolved LGF reference.");
 
             // The checkpoint must include all dictionary entries needed by this event.
             eventLogItem.LgfEndPosition = _lgfReader.GetPosition();

@@ -47,6 +47,10 @@ Checks:
 - Named JSON objects and unknown token trees from `UseStructuredDataParsing`
   fit the existing Data String, preserve the schema/cursor and support nested
   `JSONExtractString` queries.
+- Context envelopes, nonzero separation values and typed reference identities
+  remain queryable in that same Data String, with all 24 columns and DDL unchanged.
+  Both exporter constructors and Manager forward the independent opt-in settings.
+  A strict parsing error acknowledges only the valid prefix and resumes after repair.
 - Historical +1 byte checkpoints resume with opt-in latest LGF names and
   transaction outcomes, keeping all 24 columns and SHOW CREATE TABLE unchanged.
 - The storage cursor follows file/offset when event timestamps move backwards.

@@ -11,6 +11,7 @@ namespace OneSTools.EventLog
         private Utf8BracketsReader _bracketsReader;
         private bool _disposedValue;
         private FileStream _fileStream;
+        private readonly Action<EventLogDiagnostic> _diagnostic;
 
         /// <summary>
         ///     Key tuple - first value is an object type, second value is an object number in the array
@@ -24,9 +25,10 @@ namespace OneSTools.EventLog
         private Dictionary<(ObjectType, int), (string, string)> _referencedObjects =
             new Dictionary<(ObjectType, int), (string, string)>();
 
-        public LgfReader(string lgfPath)
+        public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null)
         {
             LgfPath = lgfPath;
+            _diagnostic = diagnostic;
         }
 
         public string LgfPath { get; }
@@ -48,54 +50,68 @@ namespace OneSTools.EventLog
             {
                 var itemData = _bracketsReader.NextNode(cancellationToken);
                 if (itemData == null) break;
-
-                var ot = (ObjectType) (int) itemData[0];
-
-                // Skip unknown object types
-                if (ot >= ObjectType.Unknown)
-                    continue;
-
-                switch (ot)
+                try
                 {
-                    case ObjectType.Users:
-                    case ObjectType.Metadata:
-                        var key = (ot, (int) itemData[3]);
-                        var value = ((string) itemData[2], (string) itemData[1]);
+                    var ot = (ObjectType) (int) itemData[0];
 
-                        if (_referencedObjects.ContainsKey(key))
-                            _referencedObjects.Remove(key);
+                    // Skip unknown object types
+                    if (ot >= ObjectType.Unknown)
+                    {
+                        _diagnostic?.Invoke(new EventLogDiagnostic("DictionaryRecord", "1Cv8.lgf", _bracketsReader.LastNodeStartPosition,
+                            nodesJson: StructuredEventData.Json(StructuredEventData.TokenTree(itemData))));
+                        continue;
+                    }
 
-                        _referencedObjects.Add(key, value);
+                    switch (ot)
+                    {
+                        case ObjectType.Users:
+                        case ObjectType.Metadata:
+                            var key = (ot, (int) itemData[3]);
+                            var value = ((string) itemData[2], (string) itemData[1]);
 
-                        if (objectType == ObjectType.None && GetPosition() >= position - 1)
-                        {
-                            stop = true;
+                            if (_referencedObjects.ContainsKey(key))
+                                _referencedObjects.Remove(key);
+
+                            _referencedObjects.Add(key, value);
+
+                            if (objectType == ObjectType.None && GetPosition() >= position - 1)
+                            {
+                                stop = true;
+                                break;
+                            }
+
+                            if (ot == objectType && key.Item2 == number)
+                                stop = true;
+
                             break;
-                        }
+                        default:
+                            var key1 = (ot, (int) itemData[2]);
+                            var value1 = (string) itemData[1];
 
-                        if (ot == objectType && key.Item2 == number)
-                            stop = true;
+                            if (_objects.ContainsKey(key1))
+                                _objects.Remove(key1);
 
-                        break;
-                    default:
-                        var key1 = (ot, (int) itemData[2]);
-                        var value1 = (string) itemData[1];
+                            _objects.Add(key1, value1);
 
-                        if (_objects.ContainsKey(key1))
-                            _objects.Remove(key1);
+                            if (objectType == ObjectType.None && GetPosition() >= position - 1)
+                            {
+                                stop = true;
+                                break;
+                            }
 
-                        _objects.Add(key1, value1);
+                            if (ot == objectType && key1.Item2 == number)
+                                stop = true;
 
-                        if (objectType == ObjectType.None && GetPosition() >= position - 1)
-                        {
-                            stop = true;
                             break;
-                        }
-
-                        if (ot == objectType && key1.Item2 == number)
-                            stop = true;
-
-                        break;
+                    }
+                }
+                catch (Exception error)
+                {
+                    var start = _bracketsReader.LastNodeStartPosition;
+                    _bracketsReader.Position = start;
+                    if (!(error is ArgumentException || error is FormatException || error is OverflowException)) throw;
+                    _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDictionary", "1Cv8.lgf", start));
+                    throw new EventLogParseException("1Cv8.lgf", start, "dictionary entry", error);
                 }
             }
         }

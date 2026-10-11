@@ -15,6 +15,8 @@ namespace OneSTools.EventLog
         private int _offset;
         private int _length;
         private long _position;
+        public long LastNodeStartPosition { get; private set; }
+        public bool HasIncompleteRecord { get; private set; }
 
         public Utf8BracketsReader(Stream stream)
         {
@@ -49,6 +51,7 @@ namespace OneSTools.EventLog
         public StringBuilder NextNodeAsStringBuilder(CancellationToken cancellationToken = default)
         {
             long start = -1;
+            HasIncompleteRecord = false;
             var depth = 0;
             var quoted = false;
             using var bytes = new MemoryStream();
@@ -61,13 +64,14 @@ namespace OneSTools.EventLog
                     {
                         if (value != '{') continue; // BOM, header, separators.
                         start = Position - 1;
+                        LastNodeStartPosition = start;
                     }
                     bytes.WriteByte((byte)value);
                     if (value == '"') quoted = !quoted; // Doubled quotes toggle twice.
                     if (quoted) continue;
-                    if (value == '{') depth++;
+                    if (value == '{' && ++depth > 256) throw new InvalidDataException("Journal nesting exceeds 256 levels.");
                     else if (value == '}' && --depth == 0)
-                        return new StringBuilder(Encoding.UTF8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length));
+                        return new StringBuilder(new UTF8Encoding(false, true).GetString(bytes.GetBuffer(), 0, (int)bytes.Length));
                 }
             }
             catch
@@ -76,14 +80,23 @@ namespace OneSTools.EventLog
                 throw;
             }
             // Keep an incomplete record, including a split UTF-8 code point, for retry.
-            if (start >= 0) Position = start;
+            if (start >= 0) { Position = start; HasIncompleteRecord = true; }
             return new StringBuilder();
         }
 
         public BracketsNode NextNode(CancellationToken cancellationToken = default)
         {
-            var text = NextNodeAsStringBuilder(cancellationToken);
-            return text.Length == 0 ? null : BracketsParser.ParseBlock(text);
+            try
+            {
+                var text = NextNodeAsStringBuilder(cancellationToken);
+                return text.Length == 0 ? null : JournalNodeParser.Parse(text);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception error) when (error is InvalidDataException || error is ArgumentException || error is FormatException)
+            {
+                Position = LastNodeStartPosition;
+                throw new EventLogParseException(Path.GetFileName((_stream as FileStream)?.Name ?? "journal"), LastNodeStartPosition, "brackets", error);
+            }
         }
 
         public void Dispose() => _stream.Dispose();

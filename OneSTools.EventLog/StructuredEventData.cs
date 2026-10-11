@@ -32,9 +32,7 @@ namespace OneSTools.EventLog
                 ["$format"] = "1c-brackets-v1",
                 ["nodes"] = TokenTree(node)
             };
-            var json = new StringBuilder();
-            WriteJson(json, value);
-            return json.ToString();
+            return Json(value);
         }
 
         private static object KnownData(string eventCode, BracketsNode node)
@@ -44,6 +42,7 @@ namespace OneSTools.EventLog
             switch (eventCode)
             {
                 case "_$Session$_.Authentication":
+                case "_$Session$_.AuthenticationError":
                     if (List(body, 4) && Literal(body[0], "518") && Typed(body[1], "S") &&
                         Typed(body[2], "S") && Typed(body[3], "N"))
                         return new Dictionary<string, object>
@@ -52,6 +51,9 @@ namespace OneSTools.EventLog
                             ["CurrentOSUser"] = Text(body[2]),
                             ["AuthenticationMethod"] = body[3][1].Text
                         };
+                    if (eventCode == "_$Session$_.AuthenticationError" && List(body, 3) &&
+                        Literal(body[0], "513") && Typed(body[1], "S") && Typed(body[2], "N"))
+                        return new Dictionary<string, object> { ["OSUser"] = Text(body[1]), ["AuthenticationMethod"] = body[2][1].Text };
                     break;
                 case "_$InfoBase$_.ConfigUpdate":
                 case "_$InfoBase$_.DBConfigUpdate":
@@ -63,6 +65,7 @@ namespace OneSTools.EventLog
                         };
                     break;
                 case "_$InfoBase$_.ExclusiveModeChange":
+                case "_$InfoBase$_.ExclusiveModeChangeError":
                     if (List(body, 2) && Literal(body[0], "2") && Typed(body[1], "B") &&
                         (Literal(body[1][1], "0") || Literal(body[1][1], "1")))
                         return new Dictionary<string, object>
@@ -77,31 +80,158 @@ namespace OneSTools.EventLog
                         if (table != null) return new Dictionary<string, object> { ["Data"] = table };
                     }
                     break;
+                case "_$Access$_.AccessDenied":
+                    if (List(body, 2) && Literal(body[0], "1") && Typed(body[1], "S"))
+                        return new Dictionary<string, object> { ["Right"] = Text(body[1]) };
+                    break;
+                case "_$Session$_.ConfigExtensionApplyError":
+                    if (List(body, 1) && Typed(body[0], "S"))
+                        return new Dictionary<string, object> { ["Name"] = Text(body[0]) };
+                    break;
+                case "_$Session$_.ExternalDataProcessorConnect":
+                case "_$Session$_.ExternalReportConnect":
+                    return Fields(body, new[] { "Path", "Name", "SafeMode", "SecurityProfile", "UnsafeOperationProtection", "LanguageCode" }, "SSBSBS");
+                case "_$InfoBase$_.ConfigExtensionUpdate":
+                case "_$InfoBase$_.DBConfigExtensionUpdate":
+                case "_$InfoBase$_.DBConfigExtensionUpdateError":
+                case "_$InfoBase$_.DBConfigExtensionDelete":
+                    return Fields(body, new[] { "Name", "Version", "Vendor", "UUID", "HashSum", "Synonym", "SafeMode", "SecurityProfile", "Active", "UnsafeOperationProtection", "Purpose", "UsedInDistributedInfoBase", "Scope", "DefaultRoles", "UseDefaultRolesForAllUsers" }, "SSSSSSBSBBSBSAB");
+                case "_$InfoBase$_.PredefinedDataUpdate":
+                case "_$Data$_.PredefinedDataInitialization":
+                case "_$Data$_.UpdatePredefinedData":
+                    if (List(body, 2) && Literal(body[0], "1") && List(body[1], 2) &&
+                        (Literal(body[1][0], "Данные") || Literal(body[1][0], "Ссылка")))
+                    {
+                        var table = AccessTable(body[1][1]);
+                        if (table != null) return new Dictionary<string, object> { ["Data"] = table };
+                    }
+                    break;
+            }
+            if (body.Count > 0 && Count(body[0], out var count) && count > 0 && (long)count + 1 == body.Count)
+            {
+                var values = new Dictionary<string, object>(StringComparer.Ordinal);
+                for (var i = 1; i <= count; i++)
+                {
+                    var pair = body[i];
+                    if (!List(pair, 2) || !pair[0].IsValueNode) return null;
+                    var name = pair[0].Text.Replace("\"\"", "\"");
+                    if (values.ContainsKey(name)) return null;
+                    var field = NamedValue(pair[1]);
+                    if (field == null) return null;
+                    values.Add(name, field);
+                }
+                // Preserve the complete wire evidence as well as named values. Reference
+                // identity is retained without claiming that an object currently exists.
+                return new Dictionary<string, object>
+                {
+                    ["$format"] = "1c-named-data-v1", ["values"] = values, ["nodes"] = TokenTree(node)
+                };
             }
             return null;
+        }
+
+        private static object NamedValue(BracketsNode node)
+        {
+            if (List(node, 1) && Literal(node[0], "U")) return new Dictionary<string, object> { ["$type"] = "U" };
+            if (node.IsValueNode || node.Count != 2 || !node[0].IsValueNode || !node[1].IsValueNode) return null;
+            switch (node[0].Text)
+            {
+                case "S": return Text(node);
+                case "N": return node[1].Text;
+                case "B": return Literal(node[1], "1") ? "true" : Literal(node[1], "0") ? "false" : null;
+                case "D":
+                    return DateTime.TryParseExact(node[1].Text, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                        ? date.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture) : null;
+                case "@":
+                case "R": return new Dictionary<string, object> { ["$type"] = node[0].Text, ["value"] = node[1].Text };
+                default: return null;
+            }
         }
 
         private static object AccessTable(BracketsNode node)
         {
             if (!List(node, 2) || !Literal(node[0], "Z")) return null;
             var table = node[1];
-            // Verified layout: two columns with Pattern descriptors, one row of strings.
-            // Other table layouts remain available as tokens instead of being guessed.
-            if (!List(table, 5) || !Literal(table[0], "2") || !Literal(table[1], "1") ||
-                !List(table[4], 2) || !Typed(table[4][0], "S") || !Typed(table[4][1], "S")) return null;
+            if (table.IsValueNode || table.Count < 2 || !Count(table[0], out var columnCount) ||
+                !Count(table[1], out var rowCount) || columnCount == 0 ||
+                (long)columnCount + rowCount + 2 != table.Count) return null;
             var columns = new List<object>();
-            var row = new Dictionary<string, object>();
-            for (var i = 0; i < 2; i++)
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            var orderedNames = new List<string>();
+            for (var i = 0; i < columnCount; i++)
             {
                 var column = table[i + 2];
-                if (!List(column, 2) || !column[0].IsValueNode || !List(column[1], 1) ||
-                    !Literal(column[1][0], "Pattern")) return null;
+                if (!List(column, 2) || !column[0].IsValueNode) return null;
+                var pattern = column[1];
+                if (!(List(pattern, 1) && Literal(pattern[0], "Pattern")) &&
+                    !(List(pattern, 2) && Literal(pattern[0], "Pattern") && List(pattern[1], 1) && Literal(pattern[1][0], "S"))) return null;
                 var name = column[0].Text.Replace("\"\"", "\"");
-                if (row.ContainsKey(name)) return null;
+                if (!names.Add(name)) return null;
+                orderedNames.Add(name);
                 columns.Add(new Dictionary<string, object> { ["name"] = name });
-                row.Add(name, Text(table[4][i]));
             }
-            return new Dictionary<string, object> { ["Column"] = columns, ["Row"] = row };
+            var rows = new List<object>();
+            for (var r = 0; r < rowCount; r++)
+            {
+                var source = table[2 + columnCount + r];
+                if (!List(source, columnCount)) return null;
+                var row = new Dictionary<string, object>();
+                for (var c = 0; c < columnCount; c++)
+                {
+                    if (!Typed(source[c], "S")) return null;
+                    row.Add(orderedNames[c], Text(source[c]));
+                }
+                rows.Add(row);
+            }
+            var result = new Dictionary<string, object> { ["Column"] = columnCount == 1 ? columns[0] : columns };
+            if (rowCount != 0) result["Row"] = rowCount == 1 ? rows[0] : rows;
+            return result;
+        }
+
+        private static object Fields(BracketsNode body, string[] names, string types)
+        {
+            if (!List(body, names.Length)) return null;
+            var result = new Dictionary<string, object>();
+            for (var i = 0; i < names.Length; i++)
+            {
+                var node = body[i];
+                if (types[i] == 'A')
+                {
+                    if (!List(node, 2) || !Literal(node[0], "A") || node[1].IsValueNode || node[1].Count == 0 ||
+                        !Count(node[1][0], out var count) || (long)count + 1 != node[1].Count) return null;
+                    var items = new List<object>();
+                    for (var j = 1; j <= count; j++)
+                    {
+                        if (!Typed(node[1][j], "S")) return null;
+                        items.Add(Text(node[1][j]));
+                    }
+                    result[names[i]] = count == 0 ? null : new Dictionary<string, object> { ["Item"] = count == 1 ? items[0] : items };
+                }
+                else
+                {
+                    if (!Typed(node, types[i].ToString())) return null;
+                    if (types[i] == 'B')
+                    {
+                        if (!Literal(node[1], "0") && !Literal(node[1], "1")) return null;
+                        result[names[i]] = Literal(node[1], "1") ? "true" : "false";
+                    }
+                    else result[names[i]] = Text(node);
+                }
+            }
+            return result;
+        }
+
+        private static bool Count(BracketsNode node, out int count)
+        {
+            count = 0;
+            return node.IsValueNode && int.TryParse(node.Text, NumberStyles.None, CultureInfo.InvariantCulture, out count);
+        }
+
+        internal static string Json(object value)
+        {
+            var json = new StringBuilder();
+            WriteJson(json, value);
+            return json.ToString();
         }
 
         private static bool List(BracketsNode node, int count) => !node.IsValueNode && node.Count == count;
@@ -110,7 +240,7 @@ namespace OneSTools.EventLog
             List(node, 2) && Literal(node[0], type) && node[1].IsValueNode;
         private static string Text(BracketsNode node) => node[1].Text.Replace("\"\"", "\"");
 
-        private static object TokenTree(BracketsNode node)
+        internal static object TokenTree(BracketsNode node)
         {
             // Keep raw leaf text, including doubled quotes and exact numeric tokens.
             if (node.IsValueNode) return node.Text;
@@ -123,7 +253,8 @@ namespace OneSTools.EventLog
         // and no new JSON dependency in the netstandard2.1 production library.
         private static void WriteJson(StringBuilder json, object value)
         {
-            if (value is string text)
+            if (value == null) json.Append("null");
+            else if (value is string text)
             {
                 WriteString(json, text);
             }

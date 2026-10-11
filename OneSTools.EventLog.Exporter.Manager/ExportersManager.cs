@@ -60,6 +60,9 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly bool _useLatestDictionaryValues;
         private readonly bool _useFinalTransactionStatuses;
         private readonly bool _useStructuredDataParsing;
+        private readonly bool _useStrictParsing;
+        private readonly bool _useEventContext;
+        private readonly bool _useCurrentEventNames;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
             IConfiguration configuration)
@@ -81,6 +84,9 @@ namespace OneSTools.EventLog.Exporter.Manager
             _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
             _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
             _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
+            _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -219,7 +225,10 @@ namespace OneSTools.EventLog.Exporter.Manager
                             UseCorrectedValueParsing = _useCorrectedValueParsing,
                             UseLatestDictionaryValues = _useLatestDictionaryValues,
                             UseFinalTransactionStatuses = _useFinalTransactionStatuses,
-                            UseStructuredDataParsing = _useStructuredDataParsing
+                            UseStructuredDataParsing = _useStructuredDataParsing,
+                            UseCurrentEventNames = _useCurrentEventNames,
+                            UseEventContext = _useEventContext,
+                            UseStrictParsing = _useStrictParsing
                         };
 
                         run.Task = Task.Run(async () =>

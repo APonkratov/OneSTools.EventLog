@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
@@ -30,7 +30,12 @@ namespace OneSTools.EventLog.Exporter.Core
         private readonly bool _useLatestDictionaryValues;
         private readonly bool _useFinalTransactionStatuses;
         private readonly bool _useStructuredDataParsing;
+        private readonly bool _useStrictParsing;
+        private readonly bool _useEventContext;
+        private readonly bool _useCurrentEventNames;
 
+        private readonly Action<EventLogDiagnostic> _diagnosticHandler;
+        private readonly HashSet<string> _seenDiagnostics = new HashSet<string>(StringComparer.Ordinal);
         private string _currentLgpFile;
 
         private bool _disposedValue;
@@ -56,7 +61,11 @@ namespace OneSTools.EventLog.Exporter.Core
             _useCorrectedValueParsing = settings.UseCorrectedValueParsing;
             _useLatestDictionaryValues = settings.UseLatestDictionaryValues;
             _useFinalTransactionStatuses = settings.UseFinalTransactionStatuses;
+            _diagnosticHandler = settings.DiagnosticHandler;
             _useStructuredDataParsing = settings.UseStructuredDataParsing;
+            _useStrictParsing = settings.UseStrictParsing;
+            _useEventContext = settings.UseEventContext;
+            _useCurrentEventNames = settings.UseCurrentEventNames;
 
             CheckSettings();
         }
@@ -80,6 +89,9 @@ namespace OneSTools.EventLog.Exporter.Core
             _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
             _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
             _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
+            _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -201,6 +213,15 @@ namespace OneSTools.EventLog.Exporter.Core
             batch.Clear();
         }
 
+        private void ReportParsingDiagnostic(EventLogDiagnostic diagnostic)
+        {
+            _diagnosticHandler?.Invoke(diagnostic);
+            // Keep normal exporter logs free of payloads and repeated per-event warnings.
+            if (_seenDiagnostics.Count < 1000 && _seenDiagnostics.Add(diagnostic.Code + "|" + diagnostic.EventCode))
+                _logger?.LogWarning("Journal diagnostic {Code} in {FileName} at byte {Position}; event {EventCode}.",
+                    diagnostic.Code, diagnostic.FileName, diagnostic.Position, diagnostic.EventCode);
+        }
+
         private async Task<EventLogReaderSettings> GetReaderSettingsAsync(DeliveryCheckpoint checkpoint, CancellationToken cancellationToken = default)
         {
             var eventLogReaderSettings = new EventLogReaderSettings
@@ -213,7 +234,11 @@ namespace OneSTools.EventLog.Exporter.Core
                 UseCorrectedValueParsing = _useCorrectedValueParsing,
                 UseLatestDictionaryValues = _useLatestDictionaryValues,
                 UseFinalTransactionStatuses = _useFinalTransactionStatuses,
-                UseStructuredDataParsing = _useStructuredDataParsing
+                UseStructuredDataParsing = _useStructuredDataParsing,
+                UseCurrentEventNames = _useCurrentEventNames,
+                UseEventContext = _useEventContext,
+                UseStrictParsing = _useStrictParsing,
+                DiagnosticHandler = ReportParsingDiagnostic
             };
 
             EventLogPosition position;

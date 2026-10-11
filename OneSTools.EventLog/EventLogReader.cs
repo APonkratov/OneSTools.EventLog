@@ -19,13 +19,17 @@ namespace OneSTools.EventLog
         private string _lastLgpFileName = string.Empty;
         private readonly TransactionOutcomeIndex _transactionOutcomes;
         private EventLogItem _pendingItem;
+        private readonly EventContextReader _eventContext;
 
         public EventLogReader(EventLogReaderSettings settings)
         {
             _settings = settings;
 
-            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"));
+            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler);
             _lgfReader.SetPosition(settings.LgfStartPosition);
+            if (settings.UseEventContext || settings.UseStrictParsing)
+                _eventContext = new EventContextReader(Path.Combine(settings.LogFolder, "1Cv8.lgf"),
+                    settings.UseStrictParsing, settings.LiveMode, settings.DiagnosticHandler);
             if (settings.UseFinalTransactionStatuses)
                 _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode);
 
@@ -34,7 +38,8 @@ namespace OneSTools.EventLog
                 var file = Path.Combine(_settings.LogFolder, settings.LgpFileName);
 
                 _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate,
-                    settings.UseCorrectedValueParsing, settings.UseStructuredDataParsing);
+                    settings.UseCorrectedValueParsing, settings.UseStructuredDataParsing, settings.UseCurrentEventNames,
+                    settings.UseStrictParsing, settings.DiagnosticHandler, settings.UseEventContext ? _eventContext : null);
                 _lgpReader.SetPosition(settings.LgpStartPosition);
                 _lastLgpFileName = settings.LgpFileName;
             }
@@ -72,6 +77,7 @@ namespace OneSTools.EventLog
             {
                 try
                 {
+                    _eventContext?.Refresh(cancellationToken);
                     if (_settings.UseLatestDictionaryValues) _lgfReader.Refresh(cancellationToken);
                     item = _pendingItem ?? _lgpReader?.ReadNextEventLogItem(cancellationToken);
                 }
@@ -136,6 +142,13 @@ namespace OneSTools.EventLog
                 .FirstOrDefault(file => string.IsNullOrEmpty(_lastLgpFileName) ||
                     StringComparer.Ordinal.Compare(Path.GetFileName(file), _lastLgpFileName) > 0);
 
+            if (_settings.UseStrictParsing && _lgpReader?.HasIncompleteRecord == true &&
+                (!_settings.LiveMode || !string.IsNullOrEmpty(nextFile)))
+            {
+                _settings.DiagnosticHandler?.Invoke(new EventLogDiagnostic("IncompleteRecord", _lgpReader.LgpFileName, _lgpReader.IncompletePosition));
+                throw new EventLogParseException(_lgpReader.LgpFileName, _lgpReader.IncompletePosition, "incomplete LGP record");
+            }
+
             if (string.IsNullOrEmpty(nextFile))
             {
                 return false;
@@ -145,7 +158,8 @@ namespace OneSTools.EventLog
             _lgpReader = null;
 
             _lgpReader = new LgpReader(nextFile, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate,
-                _settings.UseCorrectedValueParsing, _settings.UseStructuredDataParsing);
+                _settings.UseCorrectedValueParsing, _settings.UseStructuredDataParsing, _settings.UseCurrentEventNames,
+                _settings.UseStrictParsing, _settings.DiagnosticHandler, _settings.UseEventContext ? _eventContext : null);
             _lastLgpFileName = Path.GetFileName(nextFile);
 
             return true;
@@ -167,7 +181,12 @@ namespace OneSTools.EventLog
         private void LgpFilesWatcher_Event(object sender, FileSystemEventArgs e)
         {
             if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Changed)
-                _lgpChangedCreated.Set();
+            {
+                // FileSystemWatcher can have a callback in flight after Dispose returns.
+                var signal = _lgpChangedCreated;
+                try { signal?.Set(); }
+                catch (ObjectDisposedException) { }
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -179,6 +198,7 @@ namespace OneSTools.EventLog
                 _lgpChangedCreated?.Dispose();
                 _lgpChangedCreated = null;
                 _lgfReader?.Dispose();
+                _eventContext?.Dispose();
                 _transactionOutcomes?.Dispose();
                 _lgfReader = null;
                 _lgpReader?.Dispose();
