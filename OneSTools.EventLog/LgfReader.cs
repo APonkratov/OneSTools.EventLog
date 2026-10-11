@@ -170,9 +170,13 @@ namespace OneSTools.EventLog
         public void Refresh(CancellationToken cancellationToken = default)
         {
             InitializeStreams();
-            if (_fileStream.Length < _bracketsReader.Position)
+            var length = _fileStream.Length;
+            if (length < _bracketsReader.Position)
                 throw new IOException("LGF was truncated; restart the reader to rebuild its dictionary.");
             cancellationToken.ThrowIfCancellationRequested();
+            // Position is the consumed byte cursor, not the buffered stream position.
+            // An incomplete entry rewinds it, so its tail is still retried.
+            if (length == _bracketsReader.Position) return;
             ReadTill(ObjectType.None, 0, long.MaxValue, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
         }

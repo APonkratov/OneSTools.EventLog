@@ -92,6 +92,83 @@ public sealed class JournalCursorTests : IDisposable
         Assert.Equal(new FileInfo(Path.Combine(_folder, "1Cv8.lgf")).Length, item.LgfEndPosition);
     }
 
+    [Theory]
+    [InlineData(8180)]
+    [InlineData(8181)]
+    [InlineData(8184)]
+    [InlineData(8185)]
+    [InlineData(8186)]
+    [InlineData(8187)]
+    [InlineData(8188)]
+    [InlineData(8189)]
+    [InlineData(8190)]
+    [InlineData(8191)]
+    [InlineData(8192)]
+    [InlineData(8193)]
+    [InlineData(8194)]
+    [InlineData(8195)]
+    [InlineData(8196)]
+    [InlineData(8197)]
+    [InlineData(16383)]
+    [InlineData(16384)]
+    public void BufferedAndSpanningRecordsPreserveUtf8QuotesAndFollowingRecord(int specialOffset)
+    {
+        var commentStart = Record().IndexOf("I,\"", StringComparison.Ordinal) + 3;
+        var wireComment = new string('x', specialOffset - commentStart) + "😀\"\"{я}\"\"";
+        var first = Record(wireComment);
+        var second = Record("next");
+        File.WriteAllText(Path.Combine(_folder, FileName), first + ",\n" + second, new UTF8Encoding(false));
+        using var reader = new EventLogReader(Settings());
+        var item = reader.ReadNextEventLogItem();
+        Assert.Equal(wireComment, item.Comment);
+        Assert.Equal(Encoding.UTF8.GetByteCount(first), item.EndPosition);
+        var next = reader.ReadNextEventLogItem();
+        Assert.Equal("next", next.Comment);
+        Assert.Equal(Encoding.UTF8.GetByteCount(first + ",\n" + second), next.EndPosition);
+        Assert.Null(reader.ReadNextEventLogItem());
+    }
+
+    [Theory]
+    [InlineData(8191)]
+    [InlineData(8192)]
+    [InlineData(8193)]
+    public void RecordEndingAtBufferBoundaryDoesNotConsumeFollowingRecord(int end)
+    {
+        var first = Record("first");
+        var second = Record("second");
+        var prefix = new string(' ', end - Encoding.UTF8.GetByteCount(first));
+        File.WriteAllText(Path.Combine(_folder, FileName), prefix + first + ",\n" + second, new UTF8Encoding(false));
+        using var reader = new EventLogReader(Settings());
+        var item = reader.ReadNextEventLogItem();
+        Assert.Equal("first", item.Comment);
+        Assert.Equal(end, item.EndPosition);
+        var next = reader.ReadNextEventLogItem();
+        Assert.Equal("second", next.Comment);
+        Assert.Equal(end + 2 + Encoding.UTF8.GetByteCount(second), next.EndPosition);
+        Assert.Null(reader.ReadNextEventLogItem());
+    }
+
+    [Fact]
+    public void SpanningIncompleteRecordCanBeRetriedBeforeAndAfterItsTailArrives()
+    {
+        var comment = new string('я', 12000) + "😀end";
+        var bytes = Encoding.UTF8.GetBytes(Record(comment));
+        var split = Array.IndexOf(bytes, (byte)0xf0) + 2;
+        var path = Path.Combine(_folder, FileName);
+        File.WriteAllBytes(path, bytes[..split]);
+        var settings = Settings(); settings.LgpFileName = FileName;
+        using var reader = new EventLogReader(settings);
+        Assert.Null(reader.ReadNextEventLogItem());
+        Assert.Null(reader.ReadNextEventLogItem());
+        using (var append = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            append.Write(bytes[split..]);
+        var item = reader.ReadNextEventLogItem();
+        Assert.Equal(comment, item.Comment);
+        Assert.Equal(bytes.Length, item.EndPosition);
+        Assert.Equal(1, item.Id);
+        Assert.Null(reader.ReadNextEventLogItem());
+    }
+
     internal EventLogReaderSettings Settings() => new() { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
     public void Dispose() => Directory.Delete(_folder, true);
 }

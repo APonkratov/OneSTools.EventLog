@@ -11,6 +11,7 @@ namespace OneSTools.EventLog
     internal sealed class Utf8BracketsReader : IDisposable
     {
         private readonly Stream _stream;
+        private static readonly Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private readonly byte[] _buffer = new byte[8192];
         private int _offset;
         private int _length;
@@ -35,43 +36,52 @@ namespace OneSTools.EventLog
             }
         }
 
-        private int ReadByte(CancellationToken cancellationToken)
-        {
-            if (_offset == _length)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                _length = _stream.Read(_buffer, 0, _buffer.Length);
-                _offset = 0;
-                if (_length == 0) return -1;
-            }
-            _position++;
-            return _buffer[_offset++];
-        }
-
         public StringBuilder NextNodeAsStringBuilder(CancellationToken cancellationToken = default)
         {
             long start = -1;
             HasIncompleteRecord = false;
             var depth = 0;
             var quoted = false;
-            using var bytes = new MemoryStream();
+            // Most records fit in the input buffer. Only spanning records need
+            // a temporary buffer, filled in chunks rather than byte by byte.
+            MemoryStream bytes = null;
+            var segmentStart = _offset;
             try
             {
-                int value;
-                while ((value = ReadByte(cancellationToken)) != -1)
+                while (true)
                 {
+                    if (_offset == _length)
+                    {
+                        if (start >= 0)
+                        {
+                            if (bytes == null) bytes = new MemoryStream();
+                            bytes.Write(_buffer, segmentStart, _offset - segmentStart);
+                        }
+                        cancellationToken.ThrowIfCancellationRequested();
+                        _length = _stream.Read(_buffer, 0, _buffer.Length);
+                        _offset = segmentStart = 0;
+                        if (_length == 0) break;
+                    }
+                    var value = _buffer[_offset++];
+                    _position++;
                     if (start < 0)
                     {
                         if (value != '{') continue; // BOM, header, separators.
                         start = Position - 1;
                         LastNodeStartPosition = start;
+                        segmentStart = _offset - 1;
                     }
-                    bytes.WriteByte((byte)value);
                     if (value == '"') quoted = !quoted; // Doubled quotes toggle twice.
                     if (quoted) continue;
                     if (value == '{' && ++depth > 256) throw new InvalidDataException("Journal nesting exceeds 256 levels.");
                     else if (value == '}' && --depth == 0)
-                        return new StringBuilder(new UTF8Encoding(false, true).GetString(bytes.GetBuffer(), 0, (int)bytes.Length));
+                    {
+                        var count = _offset - segmentStart;
+                        if (bytes == null)
+                            return new StringBuilder(StrictUtf8.GetString(_buffer, segmentStart, count));
+                        bytes.Write(_buffer, segmentStart, count);
+                        return new StringBuilder(StrictUtf8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length));
+                    }
                 }
             }
             catch
@@ -79,6 +89,7 @@ namespace OneSTools.EventLog
                 if (start >= 0) Position = start;
                 throw;
             }
+            finally { bytes?.Dispose(); }
             // Keep an incomplete record, including a split UTF-8 code point, for retry.
             if (start >= 0) { Position = start; HasIncompleteRecord = true; }
             return new StringBuilder();

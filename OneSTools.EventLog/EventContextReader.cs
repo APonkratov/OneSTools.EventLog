@@ -29,7 +29,10 @@ namespace OneSTools.EventLog
                 _stream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 _reader = new Utf8BracketsReader(_stream);
             }
-            if (_stream.Length < _reader.Position) throw new EventLogParseException("1Cv8.lgf", _reader.Position, "truncated dictionary");
+            var length = _stream.Length;
+            if (length < _reader.Position) throw new EventLogParseException("1Cv8.lgf", _reader.Position, "truncated dictionary");
+            cancellationToken.ThrowIfCancellationRequested();
+            if (length == _reader.Position) return;
             BracketsNode node;
             while ((node = _reader.NextNode(cancellationToken)) != null)
             {

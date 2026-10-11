@@ -84,10 +84,12 @@ public sealed class EventContextAndDiagnosticsTests : IDisposable
         Assert.Equal(System.Text.Json.JsonSerializer.Serialize(baseline), System.Text.Json.JsonSerializer.Serialize(item));
     }
 
-    [Fact]
-    public void ContextUpdatesAndRestoresIndependentlyOfLegacyDictionaryNames()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ContextUpdatesAndRestoresIndependentlyOfLegacyDictionaryNames(bool live)
     {
-        var settings = Settings(context: true); settings.LiveMode = true; settings.ReadingTimeout = 0;
+        var settings = Settings(context: true); settings.LiveMode = live; settings.ReadingTimeout = 0;
         using var reader = new EventLogReader(settings);
         var first = reader.ReadNextEventLogItem();
         File.AppendAllText(Lgf, ",{10,{\"N\",789},1,1},{5,11111111-1111-1111-1111-111111111111,\"new\",1}");
@@ -103,6 +105,40 @@ public sealed class EventContextAndDiagnosticsTests : IDisposable
         Assert.Equal(second.Data, after.Data);
         Assert.Equal(second.Metadata, after.Metadata);
         Assert.Equal(second.Id, after.Id);
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, true)]
+    public void DictionaryPollingAfterEofStillDetectsAppendAndTruncation(bool context, bool strict, bool latest)
+    {
+        File.WriteAllText(Lgp, string.Join(",", Enumerable.Repeat(Row(), 4)));
+        var settings = Settings(context, strict); settings.UseLatestDictionaryValues = latest;
+        using var reader = new EventLogReader(settings);
+        Assert.NotNull(reader.ReadNextEventLogItem());
+        Assert.NotNull(reader.ReadNextEventLogItem()); // unchanged LGF at EOF
+        File.AppendAllText(Lgf, ",{5,11111111-1111-1111-1111-111111111111,\"new\",1},{10,{\"N\",789},1,1}");
+        var updated = reader.ReadNextEventLogItem();
+        Assert.Equal(latest ? "new" : "old", updated.Metadata);
+        if (context)
+            Assert.Equal("789", JsonNode.Parse(updated.Data)!["SessionDataSeparation"]!["TenantA"]!.GetValue<string>());
+        using (var writer = new FileStream(Lgf, FileMode.Open, FileAccess.Write, FileShare.ReadWrite)) writer.SetLength(0);
+        Assert.ThrowsAny<IOException>(() => reader.ReadNextEventLogItem());
+    }
+
+    [Fact]
+    public void StrictPollingAtEofDoesNotHideANewIncompleteDictionaryTail()
+    {
+        File.WriteAllText(Lgp, Row() + "," + Row());
+        using var reader = new EventLogReader(Settings(strict: true));
+        Assert.NotNull(reader.ReadNextEventLogItem());
+        File.AppendAllText(Lgf, ",{4,\"unfinished");
+        Assert.Equal("1Cv8.lgf", Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem()).FileName);
+        Assert.Throws<EventLogParseException>(() => reader.ReadNextEventLogItem());
+        File.AppendAllText(Lgf, "\",2}");
+        Assert.Equal(2, reader.ReadNextEventLogItem().Id);
     }
 
     [Fact]
