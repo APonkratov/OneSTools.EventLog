@@ -55,6 +55,9 @@ Checks:
 - Controlled receiver tests cover failed/lost acknowledgements, first/next partial
   batches, archive EOF, bounded drain on cancellation, non-cooperative writes,
   checkpoint corruption/locking/loss, truncated journals and failed state publication.
+- Restarting after acknowledging 45 events in 15 retained daily files performs no
+  INSERT, even if their mtimes change. A live restart exports only an appended event
+  and an event in the next daily file, preserving all 47 unique file/offset positions.
 - Standalone service and Manager await active writes before disposing receivers;
   a re-added source waits for its previous worker. Archive success does not restart.
 

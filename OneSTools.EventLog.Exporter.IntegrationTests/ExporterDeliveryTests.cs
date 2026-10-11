@@ -19,8 +19,17 @@ public sealed class ExporterDeliveryTests : IDisposable
         Directory.CreateDirectory(Folder);
         File.WriteAllText(Path.Combine(Folder, "1Cv8.lgf"), "{4,\"Test\",1}");
     }
-    private void Write(int count) => File.WriteAllText(Path.Combine(Folder, FileName), string.Join(",\n", Enumerable.Range(1, count).Select(i =>
-        $"{{20261011120000,N,{{0,0}},0,0,0,1,1,I,\"{i}\",0,{{\"U\"}},\"\",0,0,0,1,0,{{0}}}}")));
+    private static string Record(int number) =>
+        $"{{20261011120000,N,{{0,0}},0,0,0,1,1,I,\"{number}\",0,{{\"U\"}},\"\",0,0,0,1,0,{{0}}}}";
+    private void Write(int count) => File.WriteAllText(Path.Combine(Folder, FileName),
+        string.Join(",\n", Enumerable.Range(1, count).Select(Record)));
+    private static string DailyFileName(int day) => $"202610{day:D2}000000.lgp";
+    private void WriteFifteenDailyFiles()
+    {
+        for (var day = 1; day <= 15; day++)
+            File.WriteAllText(Path.Combine(Folder, DailyFileName(day)),
+                string.Join(",\n", Enumerable.Range((day - 1) * 3 + 1, 3).Select(Record)));
+    }
     private EventLogExporterSettings Settings(bool checkpoint = false) => new()
     {
         LogFolder = Folder, Portion = 2, LoadArchive = true, TimeZone = DateTimeZone.Utc,
@@ -44,6 +53,63 @@ public sealed class ExporterDeliveryTests : IDisposable
         await Run(Settings(), storage);
         Assert.Equal(Enumerable.Range(1, count).Select(i => (long)i), storage.Stored.Select(i => i.Id));
         Assert.Equal((count + 1) / 2, storage.Calls);
+    }
+
+    [Fact]
+    public async Task RestartAfterFifteenCompletedFilesDoesNotExportAnyAcknowledgedEvents()
+    {
+        WriteFifteenDailyFiles();
+        var settings = Settings(true); settings.Portion = 7;
+        var first = new Storage();
+        await Run(settings, first);
+        Assert.Equal(Enumerable.Range(1, 45).Select(i => (long)i), first.Stored.Select(i => i.Id));
+        Assert.Equal(15, first.Stored.Select(i => i.FileName).Distinct().Count());
+        Assert.Equal(7, first.Calls); // Includes the partial final batch.
+        var acknowledged = File.ReadAllText(State);
+        Assert.Contains(DailyFileName(15), acknowledged);
+        Assert.Contains("\"Id\":45", acknowledged);
+        foreach (var path in Directory.EnumerateFiles(Folder, "*.lgp"))
+            File.SetLastWriteTimeUtc(path, new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        // A fresh process has no in-memory cursor; all fifteen files remain available.
+        var restarted = new Storage();
+        await Run(settings, restarted);
+        Assert.Empty(restarted.Stored);
+        Assert.Equal(0, restarted.Calls);
+        Assert.Equal(0, restarted.Reads);
+        Assert.Equal(acknowledged, File.ReadAllText(State));
+    }
+
+    [Fact]
+    public async Task LiveRestartAfterFifteenFilesExportsOnlyAppendedAndNewPeriodEvents()
+    {
+        WriteFifteenDailyFiles();
+        var settings = Settings(true); settings.LoadArchive = false;
+        settings.Portion = 7; settings.ReadingTimeout = 0;
+        var storage = new Storage();
+        async Task RunUntilCount(int count)
+        {
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            storage.AfterWrite = () => { if (storage.Stored.Count >= count) cancellation.Cancel(); };
+            using var exporter = new EventLogExporter(settings, storage);
+            await Task.Run(() => exporter.StartAsync(cancellation.Token)).WaitAsync(TimeSpan.FromSeconds(6));
+        }
+
+        await RunUntilCount(45);
+        Assert.Equal(45, storage.Stored.Count);
+        Assert.Equal(7, storage.Calls);
+        Assert.Equal(1, storage.Reads); // Only the initial bootstrap consults the receiver.
+        File.AppendAllText(Path.Combine(Folder, DailyFileName(15)), ",\n" + Record(46));
+        File.WriteAllText(Path.Combine(Folder, DailyFileName(16)), Record(47));
+
+        await RunUntilCount(47);
+        Assert.Equal(Enumerable.Range(1, 47).Select(i => (long)i), storage.Stored.Select(i => i.Id));
+        Assert.Equal(Enumerable.Range(1, 47).Select(i => i.ToString()), storage.Stored.Select(i => i.Comment));
+        Assert.Equal(47, storage.Stored.Select(i => (i.FileName, i.EndPosition)).Distinct().Count());
+        Assert.Equal(new[] { DailyFileName(15), DailyFileName(16) }, storage.Stored.Skip(45).Select(i => i.FileName));
+        Assert.Equal(8, storage.Calls);
+        Assert.Equal(1, storage.Reads);
+        Assert.Contains("\"Id\":47", File.ReadAllText(State));
     }
 
     [Fact]
