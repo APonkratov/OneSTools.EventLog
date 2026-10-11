@@ -41,6 +41,18 @@ For balanced order, run separate processes with one warmup/one measured scan,
 alternating binaries across seven rounds. Compilation and process startup are
 excluded from timed scans. The output includes the actual reader assembly hash.
 
+To automate a balanced before/after comparison of two frozen fork builds:
+
+```powershell
+python benchmarks/compare-readers.py C:/bench/before C:/bench/after C:/bench/corpus C:/bench/comparison.json --runs 7
+```
+
+This runs all six reader modes in alternating order, with one warmup and one
+measured scan per process. It checks count, aggregate checksum and Data length
+for each pair, and saves individual samples plus medians/ranges. Python uses only
+its standard library and is a benchmark tool, not an exporter dependency. Use
+`--modes default` when comparing with upstream, which lacks the optional flags.
+
 `ExportBenchmark` measures **sequential reading plus ClickHouseStorage writes**,
 in portions of 10,000 with one write in flight. It compiles against each version's
 Exporter.Core through `ExporterProject`. This measures common reader, bulk
