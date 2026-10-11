@@ -12,7 +12,7 @@ public sealed class ExporterValueSettingsTests : IDisposable
     private static readonly string[] RemovedFlags =
     [
         "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
-        "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing"
+        "UseLatestDictionaryValues", "UseFinalTransactionStatuses"
     ];
 
     public ExporterValueSettingsTests()

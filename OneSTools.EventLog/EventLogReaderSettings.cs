@@ -16,6 +16,9 @@ namespace OneSTools.EventLog
         public DateTimeZone TimeZone { get; set; } = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         public DateTime SkipEventsBeforeDate { get; set; }
         /// <summary>Wrap Data in a lossless context envelope, including separation values. Opt in.</summary>
+        /// <summary>Diagnostic mode: log malformed records and fail without skipping. Does not reject unknown valid formats.</summary>
+        public bool UseStrictParsing { get; set; } = false;
+
         public bool UseEventContext { get; set; } = false;
         /// <summary>Optional synchronous diagnostics. NodesJson may contain personal information.</summary>
         public Action<EventLogDiagnostic> DiagnosticHandler { get; set; }

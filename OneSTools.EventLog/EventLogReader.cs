@@ -25,12 +25,12 @@ namespace OneSTools.EventLog
         {
             _settings = settings;
 
-            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler, settings.ProblemRecordHandler, settings.LiveMode);
+            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler, settings.ProblemRecordHandler, settings.LiveMode, settings.UseStrictParsing);
             _lgfReader.SetPosition(settings.LgfStartPosition);
             if (settings.UseEventContext)
                 _eventContext = new EventContextReader(Path.Combine(settings.LogFolder, "1Cv8.lgf"),
-                    settings.LiveMode, settings.DiagnosticHandler, settings.ProblemRecordHandler);
-            _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode, settings.ProblemRecordHandler);
+                    settings.LiveMode, settings.DiagnosticHandler, settings.ProblemRecordHandler, settings.UseStrictParsing);
+            _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode, settings.ProblemRecordHandler, settings.UseStrictParsing);
 
             if (settings.LgpFileName != string.Empty)
             {
@@ -38,7 +38,7 @@ namespace OneSTools.EventLog
 
                 _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate,
                     settings.DiagnosticHandler, settings.UseEventContext ? _eventContext : null,
-                    settings.ProblemRecordHandler);
+                    settings.ProblemRecordHandler, settings.UseStrictParsing);
                 _lgpReader.SetPosition(settings.LgpStartPosition);
                 _lastLgpFileName = settings.LgpFileName;
             }
@@ -157,7 +157,7 @@ namespace OneSTools.EventLog
 
             _lgpReader = new LgpReader(nextFile, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate,
                 _settings.DiagnosticHandler, _settings.UseEventContext ? _eventContext : null,
-                _settings.ProblemRecordHandler);
+                _settings.ProblemRecordHandler, _settings.UseStrictParsing);
             _lastLgpFileName = Path.GetFileName(nextFile);
 
             return true;

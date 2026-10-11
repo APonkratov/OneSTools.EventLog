@@ -27,6 +27,7 @@ namespace OneSTools.EventLog.Exporter.Core
         private int _started;
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useEventContext;
+        private readonly bool _useStrictParsing;
 
         private readonly Action<EventLogDiagnostic> _diagnosticHandler;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
@@ -58,6 +59,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _diagnosticHandler = settings.DiagnosticHandler;
             _problemRecordHandler = settings.ProblemRecordHandler;
             _useEventContext = settings.UseEventContext;
+            _useStrictParsing = settings.UseStrictParsing;
 
             CheckSettings();
         }
@@ -78,6 +80,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -256,6 +259,7 @@ namespace OneSTools.EventLog.Exporter.Core
                 TimeZone = _timeZone,
                 SkipEventsBeforeDate = _skipEventsBeforeDate,
                 UseEventContext = _useEventContext,
+                UseStrictParsing = _useStrictParsing,
                 DiagnosticHandler = ReportParsingDiagnostic,
                 ProblemRecordHandler = _logger != null || _problemRecordHandler != null
                     ? (Action<EventLogProblemRecord>)ReportProblemRecord : null

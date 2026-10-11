@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using OneSTools.EventLog.Exporter.Core;
 using OneSTools.EventLog.Exporter.Manager;
@@ -97,7 +98,7 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
         File.WriteAllText(Path.Combine(Log, "1Cv8.lgf"), "{4,\"_$Data$_.NewPredefinedData\",1}");
         var configuration = Configuration();
         foreach (var obsolete in new[] { "UseCorrectedValueParsing", "UseStructuredDataParsing", "UseCurrentEventNames",
-            "UseLatestDictionaryValues", "UseFinalTransactionStatuses", "UseStrictParsing" })
+            "UseLatestDictionaryValues", "UseFinalTransactionStatuses" })
             configuration["Exporter:" + obsolete] = "false";
         configuration["Exporter:UseEventContext"] = "true";
         var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
@@ -116,8 +117,46 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
         finally { await manager.StopAsync(default).WaitAsync(TimeSpan.FromSeconds(5)); }
     }
 
-    private sealed class TestManager(IServiceProvider services, IConfiguration configuration, Func<IEventLogStorage> storage)
-        : ExportersManager(NullLogger<ExportersManager>.Instance, services, configuration)
+    [Fact]
+    public async Task ManagerPassesDiagnosticStrictModeToItsWorker()
+    {
+        var configuration = Configuration(); configuration["Exporter:UseStrictParsing"] = "true";
+        File.AppendAllText(Path.Combine(Log, "20261011000000.lgp"), ",{bad}");
+        var failure = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var problems = new List<Dictionary<string, object?>>();
+        var logger = new CaptureLogger<EventLogExporter>((level, state, error) =>
+        {
+            if (level == LogLevel.Error)
+                problems.Add(((IEnumerable<KeyValuePair<string, object?>>)state).ToDictionary(p => p.Key, p => p.Value));
+        });
+        var managerLogger = new CaptureLogger<ExportersManager>((level, state, error) =>
+        { if (level == LogLevel.Critical) failure.TrySetResult(error!); });
+        var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
+        using var provider = new ServiceCollection().AddSingleton<ILogger<EventLogExporter>>(logger).BuildServiceProvider();
+        using var manager = new TestManager(provider, configuration, () => storage, managerLogger);
+        await manager.StartAsync(default);
+        typeof(ExportersManager).GetMethod("StartExporter", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(manager, new object[] { Base, "fixture", "fixture" });
+        try
+        {
+            Assert.IsType<EventLogParseException>(await failure.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.Equal(1, storage.Calls);
+            Assert.Equal(false, Assert.Single(problems)["Skipped"]);
+        }
+        finally { await manager.StopAsync(default).WaitAsync(TimeSpan.FromSeconds(5)); }
+    }
+
+    private sealed class CaptureLogger<T>(Action<LogLevel, object, Exception?> capture) : ILogger<T>
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel level, EventId id, TState state, Exception? error, Func<TState, Exception?, string> formatter) =>
+            capture(level, state!, error);
+    }
+
+    private sealed class TestManager(IServiceProvider services, IConfiguration configuration, Func<IEventLogStorage> storage,
+        ILogger<ExportersManager>? logger = null)
+        : ExportersManager(logger ?? NullLogger<ExportersManager>.Instance, services, configuration)
     { protected override IEventLogStorage GetStorage(string dataBaseName) => storage(); }
     private sealed class BlockingStorage : IEventLogStorage
     {

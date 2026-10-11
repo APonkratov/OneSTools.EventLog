@@ -484,6 +484,53 @@ public sealed class ExporterDeliveryTests : IDisposable
         Assert.Equal(new[] { "1", "2" }, storage.Stored.Select(i => i.Comment));
     }
 
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task DiagnosticStrictModeIsPassedByBothConstructorsAndNeverCheckpointsPastTheError(
+        bool configurationConstructor, bool strict, bool context)
+    {
+        File.WriteAllText(Path.Combine(Folder, FileName), Record(1) + ",{bad}," + Record(2));
+        var storage = new Storage(); var logger = new ProblemLogger();
+        var settings = Settings(true); settings.Portion = 100;
+        settings.UseStrictParsing = strict; settings.UseEventContext = context;
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Exporter:LogFolder"] = Folder, ["Exporter:Portion"] = "100", ["Exporter:LoadArchive"] = "true",
+            ["Exporter:CheckpointFile"] = State, ["Exporter:TimeZone"] = "UTC",
+            ["Exporter:UseStrictParsing"] = strict.ToString(), ["Exporter:UseEventContext"] = context.ToString()
+        }).Build();
+        using (var exporter = configurationConstructor
+                   ? new EventLogExporter(logger, configuration, storage)
+                   : new EventLogExporter(settings, storage, logger))
+        using (var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+        {
+            var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
+            if (strict) await Assert.ThrowsAsync<EventLogParseException>(() => run.WaitAsync(TimeSpan.FromSeconds(6)));
+            else await run.WaitAsync(TimeSpan.FromSeconds(6));
+        }
+        Assert.Equal(strict ? new[] { "1" } : new[] { "1", "2" }, storage.Stored.Select(i => i.Comment));
+        var problem = Assert.Single(logger.Problems);
+        Assert.Equal(!strict, problem["Skipped"]);
+        Assert.Equal("{bad}", JsonSerializer.Deserialize<string>((string)problem["RawRecordJson"]!));
+        using (var state = JsonDocument.Parse(File.ReadAllText(State)))
+            Assert.Equal(storage.Stored[^1].EndPosition, state.RootElement.GetProperty("EndPosition").GetInt64());
+        if (strict)
+        {
+            settings.UseStrictParsing = false;
+            await Run(settings, storage, logger);
+            Assert.Equal(new[] { "1", "2" }, storage.Stored.Select(i => i.Comment));
+            Assert.Equal(new long[] { 1, 2 }, storage.Stored.Select(i => i.Id));
+            Assert.Equal(true, logger.Problems[^1]["Skipped"]);
+        }
+    }
+
     [Fact]
     public async Task ExplicitProblemSinkAlsoWorksForLibraryHostsWithoutILogger()
     {

@@ -57,6 +57,7 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly int _writingMaxDop;
         private readonly DateTime _skipEventsBeforeDate;
         private readonly bool _useEventContext;
+        private readonly bool _useStrictParsing;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
             IConfiguration configuration)
@@ -75,6 +76,7 @@ namespace OneSTools.EventLog.Exporter.Manager
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
             _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -211,6 +213,7 @@ namespace OneSTools.EventLog.Exporter.Manager
                             WritingMaxDop = _writingMaxDop,
                             SkipEventsBeforeDate = _skipEventsBeforeDate,
                             UseEventContext = _useEventContext,
+                            UseStrictParsing = _useStrictParsing,
                         };
 
                         run.Task = Task.Run(async () =>

@@ -114,7 +114,7 @@ namespace OneSTools.EventLog
         // must find the SAME root's closing brace; searching for the next '{' would
         // mistake nested data or a quoted comment for a new journal record.
         internal bool TrySkipProblemRecord(string fileName, string stage, Exception error,
-            Action<EventLogProblemRecord> handler, CancellationToken cancellationToken)
+            Action<EventLogProblemRecord> handler, CancellationToken cancellationToken, bool allowSkip = true)
         {
             if (handler == null) return false;
             var start = LastNodeStartPosition;
@@ -152,9 +152,9 @@ namespace OneSTools.EventLog
                         else if (value == '}' && --depth == 0)
                         {
                             bytes.Write(_buffer, segmentStart, _offset - segmentStart);
-                            PublishProblemRecord(bytes, fileName, start, Position, stage, error, handler, skipped: true);
-                            skipped = true;
-                            return true;
+                            PublishProblemRecord(bytes, fileName, start, Position, stage, error, handler, skipped: allowSkip);
+                            skipped = allowSkip;
+                            return skipped;
                         }
                     }
                     bytes.Write(_buffer, segmentStart, _offset - segmentStart);
@@ -162,7 +162,7 @@ namespace OneSTools.EventLog
             }
             finally
             {
-                // EOF without a balanced root must never consume an incomplete tail.
+                // Incomplete tails and diagnostic strict mode retain the failed root.
                 if (!skipped) Position = start;
             }
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +14,7 @@ namespace OneSTools.EventLog
         private FileStream _fileStream;
         private readonly Action<EventLogDiagnostic> _diagnostic;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private readonly bool _useStrictParsing;
         private readonly bool _live;
 
         /// <summary>
@@ -29,11 +30,12 @@ namespace OneSTools.EventLog
             new Dictionary<(ObjectType, int), (string, string)>();
 
         public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null,
-            Action<EventLogProblemRecord> problemRecordHandler = null, bool live = false)
+            Action<EventLogProblemRecord> problemRecordHandler = null, bool live = false, bool useStrictParsing = false)
         {
             LgfPath = lgfPath;
             _diagnostic = EventLogDiagnostic.Guard(diagnostic);
             _problemRecordHandler = problemRecordHandler;
+            _useStrictParsing = useStrictParsing;
             _live = live;
         }
 
@@ -127,7 +129,7 @@ namespace OneSTools.EventLog
                         error is InvalidDataException || error is IndexOutOfRangeException || error is EventLogParseException)) throw;
                     _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDictionary", "1Cv8.lgf", start));
                     if (_bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "dictionary entry", error,
-                        _problemRecordHandler, cancellationToken)) continue;
+                        _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing)) continue;
                     throw new EventLogParseException("1Cv8.lgf", start, "dictionary entry", error);
                 }
             }
@@ -136,7 +138,7 @@ namespace OneSTools.EventLog
             {
                 var error = new EventLogParseException("1Cv8.lgf", _bracketsReader.Position, "incomplete dictionary entry");
                 _bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "incomplete dictionary entry", error,
-                    _problemRecordHandler, cancellationToken);
+                    _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing);
                 throw error;
             }
         }

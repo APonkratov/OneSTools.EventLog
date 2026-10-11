@@ -16,17 +16,19 @@ namespace OneSTools.EventLog
         private readonly bool _live;
         private readonly LgfReader _dictionary;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private readonly bool _useStrictParsing;
         private readonly Dictionary<string, long> _positions = new Dictionary<string, long>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _outcomes = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool _initialized;
 
-        public TransactionOutcomeIndex(string folder, bool live, Action<EventLogProblemRecord> problemRecordHandler = null)
+        public TransactionOutcomeIndex(string folder, bool live, Action<EventLogProblemRecord> problemRecordHandler = null, bool useStrictParsing = false)
         {
             _folder = folder;
             _live = live;
             _problemRecordHandler = problemRecordHandler;
+            _useStrictParsing = useStrictParsing;
             // A separate dictionary must not refresh the legacy presentation cache.
-            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"), problemRecordHandler: problemRecordHandler, live: live);
+            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"), problemRecordHandler: problemRecordHandler, live: live, useStrictParsing: useStrictParsing);
         }
 
         internal static string Key(BracketsNode record) =>
@@ -85,7 +87,7 @@ namespace OneSTools.EventLog
                     {
                         reader.Position = reader.LastNodeStartPosition;
                         if (!reader.TrySkipProblemRecord(Path.GetFileName(file), "transaction index", error,
-                            _problemRecordHandler, cancellationToken)) throw;
+                            _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing)) throw;
                         _positions[file] = reader.Position;
                     }
                 }

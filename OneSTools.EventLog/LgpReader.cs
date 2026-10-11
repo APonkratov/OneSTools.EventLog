@@ -20,10 +20,11 @@ namespace OneSTools.EventLog
         private readonly Action<EventLogDiagnostic> _diagnostic;
         private readonly EventContextReader _context;
         private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private readonly bool _useStrictParsing;
 
         public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
             Action<EventLogDiagnostic> diagnostic = null, EventContextReader context = null,
-            Action<EventLogProblemRecord> problemRecordHandler = null)
+            Action<EventLogProblemRecord> problemRecordHandler = null, bool useStrictParsing = false)
         {
             LgpPath = lgpPath;
             _timeZone = timeZone;
@@ -32,6 +33,7 @@ namespace OneSTools.EventLog
             _diagnostic = EventLogDiagnostic.Guard(diagnostic);
             _context = context;
             _problemRecordHandler = problemRecordHandler;
+            _useStrictParsing = useStrictParsing;
         }
 
         public string LgpPath { get; }
@@ -42,7 +44,7 @@ namespace OneSTools.EventLog
         internal long IncompletePosition => _bracketsReader?.Position ?? 0;
         internal void ReportIncompleteRecord(Exception error, CancellationToken cancellationToken) =>
             _bracketsReader.TrySkipProblemRecord(LgpFileName, "incomplete LGP record", error,
-                _problemRecordHandler, cancellationToken);
+                _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing);
 
         public void Dispose()
         {
@@ -127,7 +129,7 @@ namespace OneSTools.EventLog
                     _bracketsReader.Position = start;
                     _diagnostic?.Invoke(new EventLogDiagnostic("InvalidRecord", LgpFileName, start));
                     if (_bracketsReader.TrySkipProblemRecord(LgpFileName, "LGP record", error,
-                        _problemRecordHandler, cancellationToken)) continue;
+                        _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing)) continue;
                     throw new EventLogParseException(LgpFileName, start, "LGP record", error);
                 }
                 if (eventLogItem != null)
