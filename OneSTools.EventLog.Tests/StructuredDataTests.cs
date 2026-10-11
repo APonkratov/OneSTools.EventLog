@@ -28,9 +28,9 @@ public sealed class StructuredDataTests : IDisposable
 
     [Theory]
     [MemberData(nameof(KnownCases))]
-    public void KnownShapesMatchPlatformObjectAndKeepLegacyOutputByDefault(string ev, string data, string expected, string legacy)
+    public void KnownShapesMatchPlatformByDefaultAndKeepExplicitLegacyOutput(string ev, string data, string expected, string legacy)
     {
-        Assert.Equal(legacy, Read(ev, data).Data);
+        AssertJson(expected, Read(ev, data).Data);
         Assert.Equal(legacy, Read(ev, data, structured: false).Data);
         AssertJson(expected, Read(ev, data, structured: true).Data);
         AssertJson(expected, Read(ev, data, corrected: true, structured: true).Data);

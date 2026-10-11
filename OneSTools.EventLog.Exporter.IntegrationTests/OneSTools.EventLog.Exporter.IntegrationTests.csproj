@@ -15,8 +15,15 @@
     <ProjectReference Include="../OneSTools.EventLog.Exporter.Core/OneSTools.EventLog.Exporter.Core.csproj" />
     <ProjectReference Include="../OneSTools.EventLog.Exporter/OneSTools.EventLog.Exporter.csproj" />
     <ProjectReference Include="../OneSTools.EventLog.Exporter.Manager/OneSTools.EventLog.Exporter.Manager.csproj" />
+    <ProjectReference Include="../OneSTools.EventLog.Exporter.ProcessHarness/OneSTools.EventLog.Exporter.ProcessHarness.csproj" ReferenceOutputAssembly="false" />
     <EmbeddedResource Include="LegacyEventLogItems.sql" />
     <None Include="../OneSTools.EventLog.Tests/Fixtures/positional-data-8.3.27.json"
           Link="Fixtures/positional-data-8.3.27.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="CopyProcessHarness" AfterTargets="Build">
+    <ItemGroup>
+      <HarnessFiles Include="../OneSTools.EventLog.Exporter.ProcessHarness/bin/$(Configuration)/net8.0/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HarnessFiles)" DestinationFolder="$(OutDir)ProcessHarness" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

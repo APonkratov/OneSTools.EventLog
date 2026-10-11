@@ -32,6 +32,7 @@ jobs:
       ONESTOOLS_CLICKHOUSE_URL: http://127.0.0.1:8123/
       ONESTOOLS_CLICKHOUSE_USER: contract
       ONESTOOLS_CLICKHOUSE_PASSWORD: contract-test-only
+      ONESTOOLS_TEST_RUNTIME_IMAGE: mcr.microsoft.com/dotnet/runtime:8.0.31@sha256:47c36b770db8f712ceb03e9220d799b068c769b8bc89c61d62cd41600633d9c2
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

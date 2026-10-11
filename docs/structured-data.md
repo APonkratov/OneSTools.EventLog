@@ -1,7 +1,8 @@
 # Сложные данные ЖР без изменения таблицы ClickHouse
 
-`UseStructuredDataParsing=false` по умолчанию сохраняет прежнее представление
-сложных данных. Настройка независима от `UseCorrectedValueParsing` и передается
+`UseStructuredDataParsing=true` теперь действует по умолчанию; явное `false`
+сохраняет прежнее представление сложных данных. [Правила перехода](defaults-and-upgrade.md).
+Настройка независима от `UseCorrectedValueParsing` и передается
 через EventLogReaderSettings, EventLogExporterSettings, конфигурацию одиночного
 экспортера и Manager.
 

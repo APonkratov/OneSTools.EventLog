@@ -89,13 +89,13 @@ namespace OneSTools.EventLog.Exporter.Core
             _shutdownTimeout = configuration.GetValue("Exporter:ShutdownTimeout", 30);
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
-            _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
-            _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
-            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
-            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
+            _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", true);
+            _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", true);
+            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", true);
+            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", true);
             _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
             _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
-            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", false);
+            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", true);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -136,9 +136,9 @@ namespace OneSTools.EventLog.Exporter.Core
 
             _logger?.LogInformation($"Log folder: {_logFolder}; portion per request: {_portion}");
             if (_loadArchive) _logger?.LogInformation("Archive mode: export will complete at EOF.");
-            _logger?.LogInformation(string.IsNullOrEmpty(_checkpointFile)
-                ? "Local checkpoint is disabled; recovery uses the storage cursor."
-                : "Local acknowledged checkpoint is enabled.");
+            if (string.IsNullOrEmpty(_checkpointFile))
+                _logger?.LogWarning("Local checkpoint is disabled for {LogFolder}; recovery uses the storage cursor and can lose events after a partial INSERT. Configure Exporter:CheckpointFile (standalone) or Exporter:CheckpointDirectory (Manager) on persistent storage.", _logFolder);
+            else _logger?.LogInformation("Local acknowledged checkpoint is enabled.");
             if (_writingMaxDop != 1)
                 _logger?.LogWarning("Writes are serialized per source to preserve contiguous delivery; WritingMaxDegreeOfParallelism is retained for configuration compatibility.");
 

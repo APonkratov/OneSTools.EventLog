@@ -12,7 +12,7 @@ public sealed class EventCatalogTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Names))]
-    public void CatalogNameRequiresExplicitOptIn(string code, string expected)
+    public void CatalogNamesAreDefaultAndExplicitLegacyModeRemainsAvailable(string code, string expected)
     {
         Write(code);
         using var legacy = new EventLogReader(Settings(false));
@@ -20,6 +20,9 @@ public sealed class EventCatalogTests : IDisposable
         using var current = new EventLogReader(Settings(true));
         var after = current.ReadNextEventLogItem();
         Assert.Equal(expected, after.Event);
+        using var defaults = new EventLogReader(new EventLogReaderSettings
+        { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc });
+        Assert.Equal(expected, defaults.ReadNextEventLogItem().Event);
         after.Event = before.Event;
         Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(after));
     }

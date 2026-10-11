@@ -17,14 +17,15 @@ Modes:
 
 | Mode | Enabled flags |
 | --- | --- |
-| default | None |
+| default | All explicitly off: frozen historical/upstream comparison |
+| current | CorrectedValueParsing, StructuredDataParsing, CurrentEventNames, LatestDictionaryValues, FinalTransactionStatuses (new production defaults) |
 | data | UseCorrectedValueParsing, UseStructuredDataParsing |
 | latest | UseLatestDictionaryValues only |
 | strict | UseStrictParsing only |
 | structured | CorrectedValueParsing, StructuredDataParsing, CurrentEventNames, LatestDictionaryValues, StrictParsing |
 | context | All of structured plus UseEventContext |
 
-UseFinalTransactionStatuses is never enabled. Upstream supports only default.
+UseFinalTransactionStatuses is enabled only in current. Upstream supports only default.
 Reflection checks required settings at startup, outside the measured loop.
 
 ```powershell

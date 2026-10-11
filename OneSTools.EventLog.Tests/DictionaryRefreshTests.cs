@@ -12,10 +12,10 @@ public sealed class DictionaryRefreshTests : IDisposable
     private static string Metadata(string value) => $"{{5,11111111-1111-1111-1111-111111111111,\"{value}\",1}}";
 
     [Theory]
-    [InlineData(null, "old")]
+    [InlineData(null, "new")]
     [InlineData(false, "old")]
     [InlineData(true, "new")]
-    public void LatestCompletedValuesAreIndependentAndOptIn(bool? enabled, string expected)
+    public void LatestCompletedValuesAreDefaultAndCanBeDisabled(bool? enabled, string expected)
     {
         File.WriteAllText(Lgf, "{4,\"Test\",1},\n" + Metadata("old") + ",\n" + Metadata("new"));
         File.WriteAllText(Path.Combine(_folder, FileName), JournalCursorTests.Record(metadata: 1));

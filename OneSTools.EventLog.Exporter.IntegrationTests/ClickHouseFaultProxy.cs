@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OneSTools.EventLog.Exporter.IntegrationTests;
 
-internal enum ClickHouseFault { RejectTableInitialization, RejectSecondInsert, DropSecondInsertResponse }
+internal enum ClickHouseFault { RejectTableInitialization, RejectSecondInsert, DropSecondInsertResponse, PauseSecondInsert }
 
 // Loopback-only fault injection against a dedicated real ClickHouse. Kestrel is
 // a test framework reference; production has no new packages or runtime targets.
@@ -23,6 +23,7 @@ internal sealed class ClickHouseFaultProxy(ClickHouseFault fault) : IAsyncDispos
     public int Inserts => Volatile.Read(ref _inserts);
     public Action? BeforeFault { get; set; }
     public TaskCompletionSource<bool> FaultReached { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource<bool> Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public async Task Start()
     {
@@ -61,6 +62,13 @@ internal sealed class ClickHouseFaultProxy(ClickHouseFault fault) : IAsyncDispos
         {
             try { BeforeFault?.Invoke(); }
             catch (Exception error) { FaultReached.TrySetException(error); throw; }
+            if (fault == ClickHouseFault.PauseSecondInsert)
+            {
+                FaultReached.TrySetResult(true);
+                await Release.Task.WaitAsync(context.RequestAborted);
+                context.Abort();
+                return;
+            }
             if (fault != ClickHouseFault.DropSecondInsertResponse)
             {
                 context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

@@ -169,6 +169,7 @@ public sealed class JournalCursorTests : IDisposable
         Assert.Null(reader.ReadNextEventLogItem());
     }
 
-    internal EventLogReaderSettings Settings() => new() { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
+    internal EventLogReaderSettings Settings() => new()
+    { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc, UseCorrectedValueParsing = false };
     public void Dispose() => Directory.Delete(_folder, true);
 }

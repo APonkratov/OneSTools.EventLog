@@ -26,15 +26,15 @@ public sealed class ExporterValueSettingsTests
             File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"),
                 "{20261009123456,C,{0,0},0,0,0,1,1,I,\"\"\"Комментарий\"\"\",0,{\"N\",123.45},\"\",0,0,0,1,0,{0}}", new UTF8Encoding(false));
             var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, enabled, folder, storage);
+            using var exporter = CreateExporter(configurationConstructor, enabled, folder, storage, final: false);
             using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
             try
             {
                 var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                Assert.Equal(enabled == true ? "123.45" : "", item.Data);
-                Assert.Equal(enabled == true ? "Зафиксирована" : "Отменена", item.TransactionStatus);
-                Assert.Equal(enabled == true ? "\"Комментарий\"" : "\"\"Комментарий\"\"", item.Comment);
+                Assert.Equal(enabled != false ? "123.45" : "", item.Data);
+                Assert.Equal(enabled != false ? "Зафиксирована" : "Отменена", item.TransactionStatus);
+                Assert.Equal(enabled != false ? "\"Комментарий\"" : "\"\"Комментарий\"\"", item.Comment);
             }
             finally
             {
@@ -63,13 +63,13 @@ public sealed class ExporterValueSettingsTests
             File.WriteAllText(Path.Combine(folder, "20261009000000.lgp"),
                 "{20261009123456,C,{0,0},0,0,0,1,1,I,\"\"\"Комментарий\"\"\",0,{\"P\",{2,{\"B\",1}}},\"\",0,0,0,1,0,{0}}", new UTF8Encoding(false));
             var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, null, folder, storage, enabled);
+            using var exporter = CreateExporter(configurationConstructor, false, folder, storage, enabled, final: false);
             using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
             try
             {
                 var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                if (enabled == true)
+                if (enabled != false)
                 {
                     using var json = System.Text.Json.JsonDocument.Parse(item.Data);
                     Assert.Equal("true", json.RootElement.GetProperty("ExclusiveMode").GetString());
@@ -111,15 +111,15 @@ public sealed class ExporterValueSettingsTests
             const string row = "{20261011120000,U,{0,1},0,0,0,1,1,I,\"\",1,{\"U\"},\"\",0,0,0,1,0,{0}}";
             File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"), row + ",\n" + row.Replace(",1,I,", ",2,I,"));
             var storage = new RecordingStorage();
-            using var exporter = CreateExporter(configurationConstructor, null, folder, storage,
-                latest: option == "dictionary" ? enabled : null, final: option == "transactions" ? enabled : null);
+            using var exporter = CreateExporter(configurationConstructor, false, folder, storage,
+                latest: option == "dictionary" ? enabled : false, final: option == "transactions" ? enabled : false);
             using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             var run = Task.Run(() => exporter.StartAsync(cancellation.Token));
             try
             {
                 var item = await storage.Received.Task.WaitAsync(TimeSpan.FromSeconds(10));
-                Assert.Equal(option == "dictionary" && enabled == true ? "new" : "old", item.Metadata);
-                Assert.Equal(option == "transactions" && enabled == true ? "Отменена" : "Зафиксирована", item.TransactionStatus);
+                Assert.Equal(option == "dictionary" && enabled != false ? "new" : "old", item.Metadata);
+                Assert.Equal(option == "transactions" && enabled != false ? "Отменена" : "Зафиксирована", item.TransactionStatus);
             }
             finally { cancellation.Cancel(); await run.WaitAsync(TimeSpan.FromSeconds(5)); }
         }

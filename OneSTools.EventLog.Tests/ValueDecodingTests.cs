@@ -39,7 +39,7 @@ public sealed class ValueDecodingTests : IDisposable
     public void ScalarValuesHaveExplicitLegacyAndCorrectedContracts(string data, string legacy, string corrected)
     {
         Write(data);
-        Assert.Equal(legacy, Read().Data);
+        Assert.Equal(corrected, Read().Data);
         Assert.Equal(legacy, Read(false).Data);
         Assert.Equal(corrected, Read(true).Data);
     }
@@ -49,10 +49,10 @@ public sealed class ValueDecodingTests : IDisposable
     [InlineData("U", "Зафиксирована", "Не завершена")]
     [InlineData("C", "Отменена", "Зафиксирована")]
     [InlineData("R", "Не завершена", "Отменена")]
-    public void TransactionStatusCorrectionIsOptIn(string code, string legacy, string corrected)
+    public void TransactionStatusCorrectionIsDefaultAndCanBeDisabled(string code, string legacy, string corrected)
     {
         Write("{\"U\"}", code);
-        Assert.Equal(legacy, Read().TransactionStatus);
+        Assert.Equal(corrected, Read().TransactionStatus);
         Assert.Equal(legacy, Read(false).TransactionStatus);
         Assert.Equal(corrected, Read(true).TransactionStatus);
     }
@@ -65,7 +65,7 @@ public sealed class ValueDecodingTests : IDisposable
     {
         Write("{\"S\",\"  \"\"данные\"\"  \"}");
         var item = Read(enabled);
-        var quotes = enabled == true ? "\"" : "\"\"";
+        var quotes = enabled != false ? "\"" : "\"\"";
         Assert.Equal($"  Пользователь {quotes}Тест{quotes}  ", item.User);
         Assert.Equal($"Компьютер {quotes}Тест{quotes}", item.Computer);
         Assert.Equal($"Приложение {quotes}Тест{quotes}", item.Application);
@@ -145,7 +145,8 @@ public sealed class ValueDecodingTests : IDisposable
     {
         var settings = new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"]
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"],
+            UseStructuredDataParsing = false, UseFinalTransactionStatuses = false
         };
         if (enabled.HasValue) settings.UseCorrectedValueParsing = enabled.Value;
         using var reader = new EventLogReader(settings);

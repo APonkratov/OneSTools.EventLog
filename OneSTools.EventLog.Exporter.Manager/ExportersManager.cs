@@ -80,13 +80,13 @@ namespace OneSTools.EventLog.Exporter.Manager
             _shutdownTimeout = configuration.GetValue("Exporter:ShutdownTimeout", 30);
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
-            _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", false);
-            _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", false);
-            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", false);
-            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", false);
+            _useCorrectedValueParsing = configuration.GetValue("Exporter:UseCorrectedValueParsing", true);
+            _useLatestDictionaryValues = configuration.GetValue("Exporter:UseLatestDictionaryValues", true);
+            _useFinalTransactionStatuses = configuration.GetValue("Exporter:UseFinalTransactionStatuses", true);
+            _useStructuredDataParsing = configuration.GetValue("Exporter:UseStructuredDataParsing", true);
             _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
             _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
-            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", false);
+            _useCurrentEventNames = configuration.GetValue("Exporter:UseCurrentEventNames", true);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 

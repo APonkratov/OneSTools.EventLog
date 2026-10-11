@@ -90,6 +90,7 @@ public sealed class EventContextAndDiagnosticsTests : IDisposable
     public void ContextUpdatesAndRestoresIndependentlyOfLegacyDictionaryNames(bool live)
     {
         var settings = Settings(context: true); settings.LiveMode = live; settings.ReadingTimeout = 0;
+        settings.UseLatestDictionaryValues = false;
         using var reader = new EventLogReader(settings);
         var first = reader.ReadNextEventLogItem();
         File.AppendAllText(Lgf, ",{10,{\"N\",789},1,1},{5,11111111-1111-1111-1111-111111111111,\"new\",1}");
@@ -98,6 +99,7 @@ public sealed class EventContextAndDiagnosticsTests : IDisposable
         Assert.Equal("old", second.Metadata);
         Assert.Equal("789", JsonNode.Parse(second.Data)!["SessionDataSeparation"]!["TenantA"]!.GetValue<string>());
         var restart = Settings(context: true);
+        restart.UseLatestDictionaryValues = false;
         restart.LgpFileName = first.FileName; restart.LgpStartPosition = first.EndPosition;
         restart.LgfStartPosition = first.LgfEndPosition; restart.ItemId = first.Id;
         using var resumed = new EventLogReader(restart);

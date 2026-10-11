@@ -123,13 +123,13 @@ public sealed class EventLogFileRotationTests : IDisposable
     public void ExistingFieldValuesRemainUnchangedByRotationFix()
     {
         Write(First, "20261009120000");
-        using var reader = Reader();
+        using var reader = Reader(settings => settings.UseCorrectedValueParsing = false);
         var item = reader.ReadNextEventLogItem();
         Assert.Equal("Corpus.Test", item.Event);
         Assert.Equal("Информация", item.Severity);
         Assert.Equal("Нет транзакции", item.TransactionStatus);
         Assert.Equal("Комментарий", item.Comment);
-        // Scalar parsing is a separate change: preserve current output in this PR.
+        // Explicit legacy scalar output is independent of file rotation.
         Assert.Equal("Текст \"\"в кавычках\"\"", item.Data);
         Assert.Equal(1, item.Id);
         Assert.Equal(1, item.Session);

@@ -22,6 +22,7 @@ docker run --detach --name onestools-contract --publish 127.0.0.1:18123:8123 --e
 $env:ONESTOOLS_CLICKHOUSE_URL = 'http://127.0.0.1:18123/'
 $env:ONESTOOLS_CLICKHOUSE_USER = 'contract'
 $env:ONESTOOLS_CLICKHOUSE_PASSWORD = 'contract-test-only'
+$env:ONESTOOLS_TEST_RUNTIME_IMAGE = 'mcr.microsoft.com/dotnet/runtime:8.0.31@sha256:47c36b770db8f712ceb03e9220d799b068c769b8bc89c61d62cd41600633d9c2'
 # Wait until the server responds successfully, then run:
 dotnet test OneSTools.EventLog.Exporter.IntegrationTests/OneSTools.EventLog.Exporter.IntegrationTests.csproj --configuration Release
 docker rm --force --volumes onestools-contract
@@ -72,8 +73,21 @@ Checks:
   replay only the unacknowledged packet. Another restart sends no INSERT.
 - The same storage instance retries setup after CREATE TABLE fails. Missing
   databases are created with mixed-case and quoted Database connection settings.
+- An actual child OS process is killed during the second HTTP INSERT and after
+  the driver acknowledges it but before checkpoint publication. A new process
+  acquires the abandoned lock and resumes without losing events; the latter
+  case repeats only that unacknowledged packet.
+- A disposable Linux runtime container fills its own 64-KiB tmpfs to ENOSPC
+  after INSERT. Checkpoint publication fails, the old cursor remains readable,
+  and freeing space permits recovery. This test requires Docker and the runtime
+  image above; without ONESTOOLS_TEST_RUNTIME_IMAGE it explicitly skips. CI runs it.
+- File logging rotates on UTF-8 byte size, preserves oversized messages intact,
+  bounds archive count and reports failed rotation. A missing checkpoint emits
+  an actionable Warning, while a configured checkpoint does not.
 
 See [delivery semantics and configuration](../docs/export-delivery.md) and
 [ClickHouse recovery results](../docs/clickhouse-recovery.md). This does not
-establish exactly-once or power-loss durability. Process kills, network partitions,
-server crashes, disk-full conditions, Elasticsearch and CORP are not exercised here.
+establish exactly-once or power-loss durability. SCM/systemd lifecycle, the net5.0
+service runtime, network partitions, server crashes, ClickHouse disk-full conditions,
+Elasticsearch and CORP are not exercised here. The child harness uses .NET 8 only
+for tests; production targets are unchanged.

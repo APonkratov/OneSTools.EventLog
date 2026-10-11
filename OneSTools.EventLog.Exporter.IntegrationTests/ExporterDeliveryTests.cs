@@ -57,6 +57,27 @@ public sealed class ExporterDeliveryTests : IDisposable
         Assert.Equal((count + 1) / 2, storage.Calls);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingCheckpointProducesAnActionableStartupWarning(bool checkpoint)
+    {
+        Write(1);
+        var path = Path.Combine(_root, "startup.txt");
+        using var logs = LoggerFactory.Create(builder => builder.AddFile(path));
+        await Run(Settings(checkpoint), new Storage(), logs.CreateLogger<EventLogExporter>());
+        var text = File.ReadAllText(path);
+        if (checkpoint) Assert.DoesNotContain("Local checkpoint is disabled", text);
+        else
+        {
+            Assert.Contains("Warning", text);
+            Assert.Contains("can lose events after a partial INSERT", text);
+            Assert.Contains("Exporter:CheckpointFile", text);
+            Assert.Contains("Exporter:CheckpointDirectory", text);
+            Assert.Contains(Folder, text);
+        }
+    }
+
     [Fact]
     public async Task StrictParsingFailureAcknowledgesOnlyTheValidPrefixAndResumesAfterRepair()
     {

@@ -23,7 +23,11 @@ public sealed class JournalOutcomeClickHouseTests
             const string row = "{20261011120000,U,{0,1},0,0,0,1,1,I,\"😀\",1,{\"U\"},\"\",0,0,0,1,0,{0}}";
             var path = Path.Combine(folder, "20261011000000.lgp");
             File.WriteAllText(path, row + ",\n" + row.Replace(",1,I,", ",2,I,"), new UTF8Encoding(false));
-            var settings = new EventLogReaderSettings {LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc};
+            var settings = new EventLogReaderSettings
+            {
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
+                UseCorrectedValueParsing = false, UseFinalTransactionStatuses = false, UseLatestDictionaryValues = false
+            };
             EventLogItem old;
             using (var reader = new EventLogReader(settings)) old = reader.ReadNextEventLogItem();
             old.EndPosition++; // Position produced by the historical decoder at a UTF-8 boundary.

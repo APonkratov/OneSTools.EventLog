@@ -23,7 +23,10 @@ public sealed class TransactionOutcomeTests : IDisposable
         // The same transaction number/time in another connection must not match.
         Write(FileName, Row() + ",\n" + Row(connection: 2));
         Write("20261012000000.lgp", Row(ev: finalizer));
-        using var legacy = new EventLogReader(Settings());
+        var legacySettings = Settings();
+        legacySettings.UseCorrectedValueParsing = false;
+        legacySettings.UseFinalTransactionStatuses = false;
+        using var legacy = new EventLogReader(legacySettings);
         var checkpoint = legacy.ReadNextEventLogItem();
         Assert.Equal("Зафиксирована", checkpoint.TransactionStatus);
         var settings = Settings(); settings.UseFinalTransactionStatuses = true;
