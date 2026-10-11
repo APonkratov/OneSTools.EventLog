@@ -12,6 +12,7 @@ namespace OneSTools.EventLog
         private bool _disposedValue;
         private FileStream _fileStream;
         private readonly Action<EventLogDiagnostic> _diagnostic;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
 
         /// <summary>
         ///     Key tuple - first value is an object type, second value is an object number in the array
@@ -25,10 +26,12 @@ namespace OneSTools.EventLog
         private Dictionary<(ObjectType, int), (string, string)> _referencedObjects =
             new Dictionary<(ObjectType, int), (string, string)>();
 
-        public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null)
+        public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null,
+            Action<EventLogProblemRecord> problemRecordHandler = null)
         {
             LgfPath = lgfPath;
-            _diagnostic = diagnostic;
+            _diagnostic = EventLogDiagnostic.Guard(diagnostic);
+            _problemRecordHandler = problemRecordHandler;
         }
 
         public string LgfPath { get; }
@@ -48,10 +51,10 @@ namespace OneSTools.EventLog
 
             while (!stop && !cancellationToken.IsCancellationRequested)
             {
-                var itemData = _bracketsReader.NextNode(cancellationToken);
-                if (itemData == null) break;
                 try
                 {
+                    var itemData = _bracketsReader.NextNode(cancellationToken);
+                    if (itemData == null) break;
                     var ot = (ObjectType) (int) itemData[0];
 
                     // Skip unknown object types
@@ -109,8 +112,12 @@ namespace OneSTools.EventLog
                 {
                     var start = _bracketsReader.LastNodeStartPosition;
                     _bracketsReader.Position = start;
-                    if (!(error is ArgumentException || error is FormatException || error is OverflowException)) throw;
+                    if (EventLogDiagnostic.IsHandlerFailure(error)) throw;
+                    if (!(error is ArgumentException || error is FormatException || error is OverflowException ||
+                        error is InvalidDataException || error is IndexOutOfRangeException || error is EventLogParseException)) throw;
                     _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDictionary", "1Cv8.lgf", start));
+                    if (_bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "dictionary entry", error,
+                        _problemRecordHandler, cancellationToken)) continue;
                     throw new EventLogParseException("1Cv8.lgf", start, "dictionary entry", error);
                 }
             }

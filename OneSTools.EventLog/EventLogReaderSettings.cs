@@ -33,6 +33,8 @@ namespace OneSTools.EventLog
         public bool UseStrictParsing { get; set; } = false;
         /// <summary>Optional synchronous diagnostics. NodesJson may contain personal information.</summary>
         public Action<EventLogDiagnostic> DiagnosticHandler { get; set; }
+        /// <summary>Opt in to logging and skipping complete malformed records. A throwing handler keeps the cursor for retry.</summary>
+        public Action<EventLogProblemRecord> ProblemRecordHandler { get; set; }
         /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
         public bool UseLatestDictionaryValues { get; set; } = false;
         /// <summary>Resolve transaction outcomes from available Commit/Rollback events. Opt in.</summary>

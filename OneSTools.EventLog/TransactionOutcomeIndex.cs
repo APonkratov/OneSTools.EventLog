@@ -15,16 +15,18 @@ namespace OneSTools.EventLog
         private readonly string _folder;
         private readonly bool _live;
         private readonly LgfReader _dictionary;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
         private readonly Dictionary<string, long> _positions = new Dictionary<string, long>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _outcomes = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool _initialized;
 
-        public TransactionOutcomeIndex(string folder, bool live)
+        public TransactionOutcomeIndex(string folder, bool live, Action<EventLogProblemRecord> problemRecordHandler = null)
         {
             _folder = folder;
             _live = live;
+            _problemRecordHandler = problemRecordHandler;
             // A separate dictionary must not refresh the legacy presentation cache.
-            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"));
+            _dictionary = new LgfReader(Path.Combine(folder, "1Cv8.lgf"), problemRecordHandler: problemRecordHandler);
         }
 
         internal static string Key(BracketsNode record) =>
@@ -58,21 +60,34 @@ namespace OneSTools.EventLog
                     throw new IOException("LGP was truncated; restart the reader to rebuild transaction outcomes.");
                 using var reader = new Utf8BracketsReader(stream);
                 reader.Position = position;
-                BracketsNode record;
-                while ((record = reader.NextNode(cancellationToken)) != null)
+                while (true)
                 {
-                    var code = _dictionary.GetObjectValue(ObjectType.Events, record[7], cancellationToken);
-                    if (code == null)
-                        throw new InvalidDataException("Cannot resolve an LGP event reference while indexing transaction outcomes.");
-                    if (code == "_$Transaction$_.Commit" || code == "_$Transaction$_.Rollback")
+                    try
                     {
-                        var key = Key(record);
-                        var status = code == "_$Transaction$_.Commit" ? "Зафиксирована" : "Отменена";
-                        if (_outcomes.TryGetValue(key, out var existing) && existing != status)
-                            throw new InvalidDataException("Conflicting transaction outcomes in the available journal.");
-                        _outcomes[key] = status;
+                        var record = reader.NextNode(cancellationToken);
+                        if (record == null) break;
+                        var code = _dictionary.GetObjectValue(ObjectType.Events, record[7], cancellationToken);
+                        if (code == null)
+                            throw new InvalidDataException("Cannot resolve an LGP event reference while indexing transaction outcomes.");
+                        if (code == "_$Transaction$_.Commit" || code == "_$Transaction$_.Rollback")
+                        {
+                            var key = Key(record);
+                            var status = code == "_$Transaction$_.Commit" ? "Зафиксирована" : "Отменена";
+                            if (_outcomes.TryGetValue(key, out var existing) && existing != status)
+                                throw new InvalidDataException("Conflicting transaction outcomes in the available journal.");
+                            _outcomes[key] = status;
+                        }
+                        _positions[file] = reader.Position;
                     }
-                    _positions[file] = reader.Position;
+                    catch (Exception error) when (!EventLogDiagnostic.IsHandlerFailure(error) &&
+                        (error is EventLogParseException || error is InvalidDataException || error is ArgumentException ||
+                        error is FormatException || error is OverflowException || error is IndexOutOfRangeException))
+                    {
+                        reader.Position = reader.LastNodeStartPosition;
+                        if (!reader.TrySkipProblemRecord(Path.GetFileName(file), "transaction index", error,
+                            _problemRecordHandler, cancellationToken)) throw;
+                        _positions[file] = reader.Position;
+                    }
                 }
                 _positions[file] = reader.Position;
             }

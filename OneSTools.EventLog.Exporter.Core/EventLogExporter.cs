@@ -35,6 +35,9 @@ namespace OneSTools.EventLog.Exporter.Core
         private readonly bool _useCurrentEventNames;
 
         private readonly Action<EventLogDiagnostic> _diagnosticHandler;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private EventLogPosition _lastSkippedPosition;
+        private EventLogPosition _acknowledgedPosition;
         private readonly HashSet<string> _seenDiagnostics = new HashSet<string>(StringComparer.Ordinal);
         private string _currentLgpFile;
 
@@ -62,6 +65,7 @@ namespace OneSTools.EventLog.Exporter.Core
             _useLatestDictionaryValues = settings.UseLatestDictionaryValues;
             _useFinalTransactionStatuses = settings.UseFinalTransactionStatuses;
             _diagnosticHandler = settings.DiagnosticHandler;
+            _problemRecordHandler = settings.ProblemRecordHandler;
             _useStructuredDataParsing = settings.UseStructuredDataParsing;
             _useStrictParsing = settings.UseStrictParsing;
             _useEventContext = settings.UseEventContext;
@@ -193,7 +197,11 @@ namespace OneSTools.EventLog.Exporter.Core
         private async Task WriteBatchAsync(List<EventLogItem> batch, DeliveryCheckpoint checkpoint,
             Task shutdown, CancellationToken writingToken)
         {
-            if (batch.Count == 0) return;
+            if (batch.Count == 0)
+            {
+                SaveProgressAfterProblems(checkpoint, _acknowledgedPosition);
+                return;
+            }
             // No read-ahead or later INSERT is allowed until this batch is acknowledged.
             var write = _storage.WriteEventLogDataAsync(batch, writingToken);
             if (await Task.WhenAny(write, shutdown) != write)
@@ -209,8 +217,42 @@ namespace OneSTools.EventLog.Exporter.Core
                 throw new TimeoutException("Exporter shutdown deadline expired; the unconfirmed batch must be replayed.");
             }
             var last = batch[batch.Count - 1];
-            checkpoint?.Save(new EventLogPosition(last.FileName, last.EndPosition, last.LgfEndPosition, last.Id));
+            SaveProgressAfterProblems(checkpoint, new EventLogPosition(last.FileName, last.EndPosition, last.LgfEndPosition, last.Id));
             batch.Clear();
+        }
+
+        private void SaveProgressAfterProblems(DeliveryCheckpoint checkpoint, EventLogPosition position)
+        {
+            // A skipped tail has no storage row. Persist it only after the entire
+            // preceding batch has been acknowledged, including an empty batch at EOF.
+            var skipped = _lastSkippedPosition;
+            if (skipped != null && (position == null ||
+                StringComparer.Ordinal.Compare(skipped.FileName, position.FileName) > 0 ||
+                (skipped.FileName == position.FileName && skipped.EndPosition > position.EndPosition)))
+                position = new EventLogPosition(skipped.FileName, skipped.EndPosition,
+                    position?.LgfEndPosition ?? 0, position?.Id ?? 0);
+            if (position == null || (position.FileName == _acknowledgedPosition?.FileName &&
+                position.EndPosition == _acknowledgedPosition.EndPosition && position.Id == _acknowledgedPosition.Id &&
+                position.LgfEndPosition == _acknowledgedPosition.LgfEndPosition)) return;
+            checkpoint?.Save(position);
+            _acknowledgedPosition = position;
+        }
+
+        private void ReportProblemRecord(EventLogProblemRecord problem)
+        {
+            _problemRecordHandler?.Invoke(problem);
+            var canLog = _logger?.IsEnabled(LogLevel.Error) == true;
+            if (canLog)
+                _logger.LogError(problem.Error,
+                    "Problem journal record in {LogFolder}/{FileName} at bytes [{Position}, {EndPosition}); stage {Stage}; {ErrorType}: {Reason}; skipped {Skipped}; encoding {Encoding}; raw {RawRecordJson}",
+                    _logFolder, problem.FileName, problem.Position, problem.EndPosition, problem.Stage,
+                    problem.Error.GetBaseException().GetType().Name, problem.Error.GetBaseException().Message,
+                    problem.Skipped, problem.Encoding, problem.RawRecordJson);
+            else if (_problemRecordHandler == null)
+                throw new IOException("Problem record logging is disabled; refusing to discard journal data.");
+            // Auxiliary dictionary/context/transaction scans can run ahead of delivery.
+            if (problem.Skipped && problem.Stage == "LGP record")
+                _lastSkippedPosition = new EventLogPosition(problem.FileName, problem.EndPosition, 0, 0);
         }
 
         private void ReportParsingDiagnostic(EventLogDiagnostic diagnostic)
@@ -238,7 +280,9 @@ namespace OneSTools.EventLog.Exporter.Core
                 UseCurrentEventNames = _useCurrentEventNames,
                 UseEventContext = _useEventContext,
                 UseStrictParsing = _useStrictParsing,
-                DiagnosticHandler = ReportParsingDiagnostic
+                DiagnosticHandler = ReportParsingDiagnostic,
+                ProblemRecordHandler = _logger != null || _problemRecordHandler != null
+                    ? (Action<EventLogProblemRecord>)ReportProblemRecord : null
             };
 
             EventLogPosition position;
@@ -275,6 +319,7 @@ namespace OneSTools.EventLog.Exporter.Core
             }
             // Persist even an empty starting position before the first INSERT can partially succeed.
             if (!localPosition) checkpoint?.Save(position);
+            _acknowledgedPosition = position;
             _logger?.LogInformation(position == null ? "Reading from the beginning of the available journal." :
                 $"Resuming {position.FileName} at {position.EndPosition}; LGF at {position.LgfEndPosition}; Id {position.Id}.");
             eventLogReaderSettings.LiveMode = !_loadArchive;

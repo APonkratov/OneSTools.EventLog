@@ -8,6 +8,38 @@ namespace OneSTools.EventLog.Exporter.IntegrationTests;
 public sealed class ClickHouseContractTests(ITestOutputHelper output)
 {
     [ClickHouseFact]
+    public async Task LoggedProblemTailResumesWithoutDuplicateRowsOrTableMigration()
+    {
+        await using var server = new ClickHouseServer();
+        await server.CreateLegacyTable();
+        var schema = await server.Schema();
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-problem-contract", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), "{4,\"Test\",1}");
+            const string good = "{20261011120000,N,{0,0},0,0,0,1,1,I,\"good\",0,{\"U\"},\"\",0,0,0,1,0,{0}}";
+            File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"), "{bad}," + good + ",{bad tail}");
+            var problems = new List<EventLogProblemRecord>();
+            var settings = new Core.EventLogExporterSettings
+            {
+                LogFolder = folder, LoadArchive = true, TimeZone = DateTimeZone.Utc,
+                CheckpointFile = Path.Combine(folder, "delivery.json"), ProblemRecordHandler = problems.Add
+            };
+            for (var i = 0; i < 2; i++)
+            {
+                using var exporter = new Core.EventLogExporter(settings, server.Storage());
+                await exporter.StartAsync();
+            }
+            Assert.Equal(2, problems.Count);
+            Assert.Equal("1\t1\tgood", (await server.Query(
+                $"SELECT count(), any(Id), any(Comment) FROM {server.Database}.EventLogItems FORMAT TSVRaw")).Trim());
+            Assert.Equal(schema, await server.Schema());
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
+    [ClickHouseFact]
     public async Task ExistingTableKeepsSchemaAndAll24ValuesAcrossReconnect()
     {
         await using var server = new ClickHouseServer();

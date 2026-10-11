@@ -1,4 +1,6 @@
 using System.Runtime.Serialization;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -35,9 +37,9 @@ public sealed class ExporterDeliveryTests : IDisposable
         LogFolder = Folder, Portion = 2, LoadArchive = true, TimeZone = DateTimeZone.Utc,
         CheckpointFile = checkpoint ? State : "", ShutdownTimeout = 1
     };
-    private async Task Run(EventLogExporterSettings settings, Storage storage)
+    private async Task Run(EventLogExporterSettings settings, Storage storage, ILogger<EventLogExporter>? logger = null)
     {
-        using var exporter = new EventLogExporter(settings, storage);
+        using var exporter = new EventLogExporter(settings, storage, logger);
         using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await Task.Run(() => exporter.StartAsync(cancellation.Token)).WaitAsync(TimeSpan.FromSeconds(6));
     }
@@ -389,6 +391,161 @@ public sealed class ExporterDeliveryTests : IDisposable
         await Assert.ThrowsAnyAsync<Exception>(() => Run(settings, storage));
         Assert.Equal(new long[] {1, 2}, storage.Stored.Select(i => i.Id));
         Assert.Contains("\"Id\":2", File.ReadAllText(State));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(3)]
+    public async Task LoggedTrailingProblemsAreCheckpointedAndNotLoggedAgainAfterRestart(int count)
+    {
+        Write(count);
+        File.AppendAllText(Path.Combine(Folder, FileName), ",{bad},\n{also,bad}");
+        var settings = Settings(true); settings.Portion = 100;
+        var logger = new ProblemLogger(); var storage = new Storage();
+        await Run(settings, storage, logger);
+        Assert.Equal(count, storage.Stored.Count); Assert.Equal(2, logger.Problems.Count);
+        using var state = JsonDocument.Parse(File.ReadAllText(State));
+        Assert.Equal(count, state.RootElement.GetProperty("Id").GetInt64());
+        Assert.Equal(new FileInfo(Path.Combine(Folder, FileName)).Length, state.RootElement.GetProperty("EndPosition").GetInt64());
+        var acknowledged = File.ReadAllText(State);
+        await Run(settings, storage, logger);
+        Assert.Equal(count, storage.Stored.Count); Assert.Equal(2, logger.Problems.Count);
+        Assert.Equal(acknowledged, File.ReadAllText(State));
+        File.AppendAllText(Path.Combine(Folder, FileName), "," + Record(count + 1));
+        await Run(settings, storage, logger);
+        Assert.Equal(Enumerable.Range(1, count + 1).Select(i => (long)i), storage.Stored.Select(i => i.Id));
+    }
+
+    [Fact]
+    public async Task ProblemLoggerReceivesOriginalPayloadOffsetsAndExceptionWithNoSchemaChanges()
+    {
+        var bad = "{\"строка\n{ } \"\"цитата\"\"\"}";
+        var prefix = Record(1) + ",";
+        File.WriteAllText(Path.Combine(Folder, FileName), prefix + bad + "," + Record(2));
+        var logger = new ProblemLogger(); var storage = new Storage();
+        await Run(Settings(true), storage, logger);
+        Assert.Equal(new[] { "1", "2" }, storage.Stored.Select(i => i.Comment));
+        var problem = Assert.Single(logger.Problems);
+        Assert.Equal(FileName, problem["FileName"]);
+        Assert.Equal((long)Encoding.UTF8.GetByteCount(prefix), problem["Position"]);
+        Assert.Equal(bad, JsonSerializer.Deserialize<string>((string)problem["RawRecordJson"]!));
+        Assert.NotNull(Assert.Single(logger.Errors));
+    }
+
+    [Fact]
+    public async Task FailedInsertNeverAcknowledgesLoggedProblemsBeyondTheUnconfirmedPrefix()
+    {
+        File.WriteAllText(Path.Combine(Folder, FileName), Record(1) + ",{bad}");
+        var settings = Settings(true); settings.Portion = 100;
+        var logger = new ProblemLogger(); var storage = new Storage { Behavior = (_, _) => throw new IOException("INSERT failed") };
+        await Assert.ThrowsAsync<IOException>(() => Run(settings, storage, logger));
+        Assert.Contains("\"HasPosition\":false", File.ReadAllText(State));
+        Assert.Empty(storage.Stored); Assert.Single(logger.Problems);
+        storage.Behavior = null;
+        await Run(settings, storage, logger);
+        Assert.Equal("1", Assert.Single(storage.Stored).Comment); Assert.Equal(2, logger.Problems.Count);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task FailedOrDisabledProblemLoggingStopsWithoutSkippingAndFlushesTheValidPrefix(bool disabled)
+    {
+        File.WriteAllText(Path.Combine(Folder, FileName), Record(1) + ",{bad}," + Record(2));
+        var settings = Settings(true); settings.Portion = 100;
+        var logger = new ProblemLogger { Disabled = disabled, Fail = !disabled }; var storage = new Storage();
+        await Assert.ThrowsAsync<IOException>(() => Run(settings, storage, logger));
+        Assert.Equal("1", Assert.Single(storage.Stored).Comment);
+        using (var state = JsonDocument.Parse(File.ReadAllText(State)))
+            Assert.Equal(Encoding.UTF8.GetByteCount(Record(1)), state.RootElement.GetProperty("EndPosition").GetInt64());
+        await Run(settings, storage, new ProblemLogger());
+        Assert.Equal(new[] { "1", "2" }, storage.Stored.Select(i => i.Comment));
+    }
+
+    [Fact]
+    public async Task ExplicitProblemSinkAlsoWorksForLibraryHostsWithoutILogger()
+    {
+        File.WriteAllText(Path.Combine(Folder, FileName), "{bad}," + Record(1));
+        var problems = new List<EventLogProblemRecord>(); var settings = Settings(true);
+        settings.ProblemRecordHandler = problems.Add;
+        var storage = new Storage(); await Run(settings, storage);
+        Assert.Single(problems); Assert.Single(storage.Stored);
+    }
+
+    [Fact]
+    public async Task ExistingFileLoggerActuallyWritesTheRawRecordAndReasonToDisk()
+    {
+        var bad = "{\"строка\n{ }\"}";
+        File.WriteAllText(Path.Combine(Folder, FileName), bad + "," + Record(1));
+        var logPath = Path.Combine(_root, "log.txt");
+        using var factory = LoggerFactory.Create(b => b.AddFile(logPath));
+        var storage = new Storage();
+        await Run(Settings(true), storage, factory.CreateLogger<EventLogExporter>());
+        var text = File.ReadAllText(logPath);
+        Assert.Contains("Problem journal record", text); Assert.Contains(FileName, text);
+        Assert.Contains("InvalidDataException: Invalid LGP record shape.", text);
+        Assert.Contains("encoding utf-8", text);
+        var problemLine = text.Split('\n').Single(line => line.Contains("Problem journal record"));
+        var rawJson = problemLine[(problemLine.IndexOf("; raw ", StringComparison.Ordinal) + 6)..].TrimEnd('\r');
+        Assert.Equal(bad, JsonSerializer.Deserialize<string>(rawJson));
+        Assert.Single(storage.Stored);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task LiveCancellationAfterLoggingFlushesThePrefixBeforeAcknowledgingTheSkippedTail(int count)
+    {
+        Write(count); File.AppendAllText(Path.Combine(Folder, FileName), ",{bad}");
+        var settings = Settings(true); settings.LoadArchive = false; settings.Portion = 100; settings.ReadingTimeout = 0;
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        settings.ProblemRecordHandler = _ => cancellation.Cancel();
+        var storage = new Storage();
+        using var exporter = new EventLogExporter(settings, storage);
+        await Task.Run(() => exporter.StartAsync(cancellation.Token)).WaitAsync(TimeSpan.FromSeconds(6));
+        Assert.Equal(count, storage.Stored.Count);
+        using var state = JsonDocument.Parse(File.ReadAllText(State));
+        Assert.Equal(count, state.RootElement.GetProperty("Id").GetInt64());
+        Assert.Equal(new FileInfo(Path.Combine(Folder, FileName)).Length, state.RootElement.GetProperty("EndPosition").GetInt64());
+    }
+
+    [Fact]
+    public async Task LoggedDictionaryFailuresDoNotCreateFakeStorageRows()
+    {
+        File.WriteAllText(Path.Combine(Folder, "1Cv8.lgf"), "{bad},{4,\"Test\",1}"); Write(2);
+        var storage = new Storage(); var logger = new ProblemLogger();
+        await Run(Settings(true), storage, logger);
+        Assert.Equal(2, storage.Stored.Count); Assert.All(storage.Stored, i => Assert.Equal("Test", i.Event));
+        Assert.All(logger.Problems, p => Assert.Equal("1Cv8.lgf", p["FileName"]));
+    }
+
+    [Fact]
+    public async Task TransactionScanAheadNeverAcknowledgesUndeliveredEvents()
+    {
+        File.WriteAllText(Path.Combine(Folder, FileName), Record(1).Replace(",N,", ",U,") + ",{bad}," + Record(2));
+        var settings = Settings(true); settings.UseFinalTransactionStatuses = true; settings.Portion = 1;
+        var storage = new Storage { Behavior = (_, _) => throw new IOException("INSERT failed") };
+        var logger = new ProblemLogger();
+        await Assert.ThrowsAsync<IOException>(() => Run(settings, storage, logger));
+        Assert.Contains(logger.Problems, p => (string?)p["Stage"] == "transaction index");
+        Assert.Contains("\"HasPosition\":false", File.ReadAllText(State));
+    }
+
+    private sealed class ProblemLogger : ILogger<EventLogExporter>
+    {
+        public bool Disabled, Fail;
+        public List<Dictionary<string, object?>> Problems { get; } = new();
+        public List<Exception?> Errors { get; } = new();
+        public IDisposable? BeginScope<TState>(TState state) => null;
+        public bool IsEnabled(LogLevel level) => !Disabled;
+        public void Log<TState>(LogLevel level, EventId id, TState state, Exception? error, Func<TState, Exception?, string> formatter)
+        {
+            if (level != LogLevel.Error) return;
+            if (Fail) throw new IOException("log unavailable");
+            Problems.Add(((IEnumerable<KeyValuePair<string, object?>>)state!).ToDictionary(p => p.Key, p => p.Value));
+            Errors.Add(error);
+        }
     }
 
     private sealed class Storage : IEventLogStorage, IEventLogStorageIdentity

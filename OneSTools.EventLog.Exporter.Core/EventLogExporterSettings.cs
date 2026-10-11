@@ -29,6 +29,8 @@ namespace OneSTools.EventLog.Exporter.Core
         public bool UseStrictParsing { get; set; } = false;
         /// <summary>Optional synchronous diagnostics. NodesJson may contain personal information.</summary>
         public Action<EventLogDiagnostic> DiagnosticHandler { get; set; }
+        /// <summary>Optional synchronous problem record sink in addition to the exporter logger.</summary>
+        public Action<EventLogProblemRecord> ProblemRecordHandler { get; set; }
         /// <summary>Use the latest completed LGF entries, including renamed and cleared values. Opt in.</summary>
         public bool UseLatestDictionaryValues { get; set; } = false;
         /// <summary>Resolve transaction outcomes from available Commit/Rollback events. Opt in.</summary>

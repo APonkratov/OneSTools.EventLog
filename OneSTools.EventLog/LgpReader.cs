@@ -23,11 +23,13 @@ namespace OneSTools.EventLog
         private readonly bool _useStrictParsing;
         private readonly Action<EventLogDiagnostic> _diagnostic;
         private readonly EventContextReader _context;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
 
         public LgpReader(string lgpPath, DateTimeZone timeZone, LgfReader lgfReader, DateTime skipEventsBeforeDate,
             bool useCorrectedValueParsing = false, bool useStructuredDataParsing = false,
             bool useCurrentEventNames = false, bool useStrictParsing = false,
-            Action<EventLogDiagnostic> diagnostic = null, EventContextReader context = null)
+            Action<EventLogDiagnostic> diagnostic = null, EventContextReader context = null,
+            Action<EventLogProblemRecord> problemRecordHandler = null)
         {
             LgpPath = lgpPath;
             _timeZone = timeZone;
@@ -37,8 +39,9 @@ namespace OneSTools.EventLog
             _useStructuredDataParsing = useStructuredDataParsing;
             _useCurrentEventNames = useCurrentEventNames;
             _useStrictParsing = useStrictParsing;
-            _diagnostic = diagnostic;
+            _diagnostic = EventLogDiagnostic.Guard(diagnostic);
             _context = context;
+            _problemRecordHandler = problemRecordHandler;
         }
 
         public string LgpPath { get; }
@@ -47,6 +50,9 @@ namespace OneSTools.EventLog
         internal string TransactionKey { get; private set; }
         internal bool HasIncompleteRecord => _bracketsReader?.HasIncompleteRecord == true;
         internal long IncompletePosition => _bracketsReader?.Position ?? 0;
+        internal void ReportIncompleteRecord(Exception error, CancellationToken cancellationToken) =>
+            _bracketsReader.TrySkipProblemRecord(LgpFileName, "incomplete LGP record", error,
+                _problemRecordHandler, cancellationToken);
 
         public void Dispose()
         {
@@ -108,6 +114,7 @@ namespace OneSTools.EventLog
         {
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 StringBuilder data;
                 long endPosition;
                 long recordStart = -1;
@@ -124,10 +131,13 @@ namespace OneSTools.EventLog
                 catch (Exception error)
                 {
                     if (recordStart >= 0) _bracketsReader.Position = recordStart;
+                    if (EventLogDiagnostic.IsHandlerFailure(error)) throw;
                     if (!(error is ArgumentException || error is FormatException || error is OverflowException || error is InvalidDataException || error is IndexOutOfRangeException)) throw;
                     var start = _bracketsReader.LastNodeStartPosition;
                     _bracketsReader.Position = start;
                     _diagnostic?.Invoke(new EventLogDiagnostic("InvalidRecord", LgpFileName, start));
+                    if (_bracketsReader.TrySkipProblemRecord(LgpFileName, "LGP record", error,
+                        _problemRecordHandler, cancellationToken)) continue;
                     throw new EventLogParseException(LgpFileName, start, "LGP record", error);
                 }
                 if (eventLogItem != null)
@@ -148,10 +158,20 @@ namespace OneSTools.EventLog
                 dateTime = _timeZone.ToUtc(DateTime.ParseExact(parsedData[0], "yyyyMMddHHmmss",
                     CultureInfo.InvariantCulture));
             }
-            catch
+            catch (Exception error)
             {
                 _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDate", LgpFileName, _bracketsReader.LastNodeStartPosition));
                 if (_useStrictParsing) throw;
+                if (_problemRecordHandler != null)
+                {
+                    try
+                    {
+                        _problemRecordHandler(new EventLogProblemRecord(LgpFileName, _bracketsReader.LastNodeStartPosition,
+                            endPosition, "event date fallback", error, eventLogItemData.ToString(), "utf-8", skipped: false));
+                    }
+                    catch (Exception loggingError)
+                    { throw new IOException("The problem record handler failed; the record was not consumed.", loggingError); }
+                }
                 dateTime = DateTime.MinValue;
             }
 

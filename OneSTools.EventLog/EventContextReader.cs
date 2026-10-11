@@ -14,13 +14,15 @@ namespace OneSTools.EventLog
         private readonly bool _strict;
         private readonly bool _live;
         private readonly Action<EventLogDiagnostic> _diagnostic;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
         private readonly Dictionary<int, BracketsNode> _definitions = new Dictionary<int, BracketsNode>();
         private readonly Dictionary<(int, int), BracketsNode> _values = new Dictionary<(int, int), BracketsNode>();
         private Utf8BracketsReader _reader;
         private FileStream _stream;
 
-        public EventContextReader(string path, bool strict, bool live, Action<EventLogDiagnostic> diagnostic)
-        { _path = path; _strict = strict; _live = live; _diagnostic = diagnostic; }
+        public EventContextReader(string path, bool strict, bool live, Action<EventLogDiagnostic> diagnostic,
+            Action<EventLogProblemRecord> problemRecordHandler = null)
+        { _path = path; _strict = strict; _live = live; _diagnostic = EventLogDiagnostic.Guard(diagnostic); _problemRecordHandler = problemRecordHandler; }
 
         public void Refresh(CancellationToken cancellationToken = default)
         {
@@ -33,12 +35,13 @@ namespace OneSTools.EventLog
             if (length < _reader.Position) throw new EventLogParseException("1Cv8.lgf", _reader.Position, "truncated dictionary");
             cancellationToken.ThrowIfCancellationRequested();
             if (length == _reader.Position) return;
-            BracketsNode node;
-            while ((node = _reader.NextNode(cancellationToken)) != null)
+            while (true)
             {
-                var start = _reader.LastNodeStartPosition;
                 try
                 {
+                    var node = _reader.NextNode(cancellationToken);
+                    if (node == null) break;
+                    var start = _reader.LastNodeStartPosition;
                     if (node.Count == 0 || !Number(node[0], out var type))
                         throw new EventLogParseException("1Cv8.lgf", start, "dictionary type");
                     if (_strict && type >= 1 && type <= 8)
@@ -55,10 +58,21 @@ namespace OneSTools.EventLog
                     else if (type >= 9)
                         _diagnostic?.Invoke(new EventLogDiagnostic("DictionaryRecord", "1Cv8.lgf", start, nodesJson: StructuredEventData.Json(StructuredEventData.TokenTree(node))));
                 }
-                catch { _reader.Position = start; throw; }
+                catch (Exception error)
+                {
+                    _reader.Position = _reader.LastNodeStartPosition;
+                    if (!EventLogDiagnostic.IsHandlerFailure(error) && error is EventLogParseException && _reader.TrySkipProblemRecord("1Cv8.lgf",
+                        "dictionary context", error, _problemRecordHandler, cancellationToken)) continue;
+                    throw;
+                }
             }
             if (_strict && !_live && _reader.HasIncompleteRecord)
-                throw new EventLogParseException("1Cv8.lgf", _reader.Position, "incomplete dictionary entry");
+            {
+                var error = new EventLogParseException("1Cv8.lgf", _reader.Position, "incomplete dictionary entry");
+                _reader.TrySkipProblemRecord("1Cv8.lgf", "incomplete dictionary entry", error,
+                    _problemRecordHandler, cancellationToken);
+                throw error;
+            }
         }
 
         public string Wrap(string eventCode, string applicationCode, string data, BracketsNode record, string fileName, long position)

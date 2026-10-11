@@ -110,6 +110,76 @@ namespace OneSTools.EventLog
             }
         }
 
+        // Recovery is deliberately separate from the fast path. A fresh byte scan
+        // must find the SAME root's closing brace; searching for the next '{' would
+        // mistake nested data or a quoted comment for a new journal record.
+        internal bool TrySkipProblemRecord(string fileName, string stage, Exception error,
+            Action<EventLogProblemRecord> handler, CancellationToken cancellationToken)
+        {
+            if (handler == null) return false;
+            var start = LastNodeStartPosition;
+            Position = start;
+            var skipped = false;
+            try
+            {
+                using var bytes = new MemoryStream();
+                long depth = 0;
+                var quoted = false;
+                var first = true;
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (_offset == _length)
+                    {
+                        _length = _stream.Read(_buffer, 0, _buffer.Length);
+                        _offset = 0;
+                        if (_length == 0)
+                        {
+                            PublishProblemRecord(bytes, fileName, start, Position, stage, error, handler, skipped: false);
+                            return false; // incomplete: keep for retry
+                        }
+                    }
+                    var segmentStart = _offset;
+                    while (_offset < _length)
+                    {
+                        var value = _buffer[_offset++];
+                        _position++;
+                        if (first && value != '{') return false;
+                        first = false;
+                        if (value == '"') quoted = !quoted;
+                        if (quoted) continue;
+                        if (value == '{') depth++;
+                        else if (value == '}' && --depth == 0)
+                        {
+                            bytes.Write(_buffer, segmentStart, _offset - segmentStart);
+                            PublishProblemRecord(bytes, fileName, start, Position, stage, error, handler, skipped: true);
+                            skipped = true;
+                            return true;
+                        }
+                    }
+                    bytes.Write(_buffer, segmentStart, _offset - segmentStart);
+                }
+            }
+            finally
+            {
+                // EOF without a balanced root must never consume an incomplete tail.
+                if (!skipped) Position = start;
+            }
+        }
+
+        private static void PublishProblemRecord(MemoryStream bytes, string fileName, long start, long end,
+            string stage, Exception error, Action<EventLogProblemRecord> handler, bool skipped)
+        {
+            string raw;
+            var encoding = "utf-8";
+            try { raw = StrictUtf8.GetString(bytes.GetBuffer(), 0, checked((int)bytes.Length)); }
+            catch (DecoderFallbackException)
+            { raw = Convert.ToBase64String(bytes.GetBuffer(), 0, checked((int)bytes.Length)); encoding = "base64"; }
+            try { handler(new EventLogProblemRecord(fileName, start, end, stage, error, raw, encoding, skipped)); }
+            catch (Exception loggingError)
+            { throw new IOException("The problem record handler failed; the record was not skipped.", loggingError); }
+        }
+
         public void Dispose() => _stream.Dispose();
     }
 }

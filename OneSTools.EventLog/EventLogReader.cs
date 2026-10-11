@@ -25,13 +25,13 @@ namespace OneSTools.EventLog
         {
             _settings = settings;
 
-            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler);
+            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler, settings.ProblemRecordHandler);
             _lgfReader.SetPosition(settings.LgfStartPosition);
             if (settings.UseEventContext || settings.UseStrictParsing)
                 _eventContext = new EventContextReader(Path.Combine(settings.LogFolder, "1Cv8.lgf"),
-                    settings.UseStrictParsing, settings.LiveMode, settings.DiagnosticHandler);
+                    settings.UseStrictParsing, settings.LiveMode, settings.DiagnosticHandler, settings.ProblemRecordHandler);
             if (settings.UseFinalTransactionStatuses)
-                _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode);
+                _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode, settings.ProblemRecordHandler);
 
             if (settings.LgpFileName != string.Empty)
             {
@@ -39,7 +39,8 @@ namespace OneSTools.EventLog
 
                 _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate,
                     settings.UseCorrectedValueParsing, settings.UseStructuredDataParsing, settings.UseCurrentEventNames,
-                    settings.UseStrictParsing, settings.DiagnosticHandler, settings.UseEventContext ? _eventContext : null);
+                    settings.UseStrictParsing, settings.DiagnosticHandler, settings.UseEventContext ? _eventContext : null,
+                    settings.ProblemRecordHandler);
                 _lgpReader.SetPosition(settings.LgpStartPosition);
                 _lastLgpFileName = settings.LgpFileName;
             }
@@ -66,7 +67,7 @@ namespace OneSTools.EventLog
         public EventLogItem ReadNextEventLogItem(CancellationToken cancellationToken = default)
         {
             if (_lgpReader == null)
-                SetNextLgpReader();
+                SetNextLgpReader(cancellationToken);
 
             if (_settings.LiveMode && _lgpFilesWatcher == null)
                 StartLgpFilesWatcher();
@@ -90,7 +91,7 @@ namespace OneSTools.EventLog
 
                 if (item == null)
                 {
-                    var newReader = SetNextLgpReader();
+                    var newReader = SetNextLgpReader(cancellationToken);
 
                     if (_settings.LiveMode)
                     {
@@ -132,7 +133,7 @@ namespace OneSTools.EventLog
             return item;
         }
 
-        private bool SetNextLgpReader()
+        private bool SetNextLgpReader(CancellationToken cancellationToken)
         {
             // Platform LGP names contain the period in yyyyMMddHHmmss format.
             // Modification times may be equal or reordered after copying/restoring logs.
@@ -146,7 +147,9 @@ namespace OneSTools.EventLog
                 (!_settings.LiveMode || !string.IsNullOrEmpty(nextFile)))
             {
                 _settings.DiagnosticHandler?.Invoke(new EventLogDiagnostic("IncompleteRecord", _lgpReader.LgpFileName, _lgpReader.IncompletePosition));
-                throw new EventLogParseException(_lgpReader.LgpFileName, _lgpReader.IncompletePosition, "incomplete LGP record");
+                var error = new EventLogParseException(_lgpReader.LgpFileName, _lgpReader.IncompletePosition, "incomplete LGP record");
+                _lgpReader.ReportIncompleteRecord(error, cancellationToken);
+                throw error;
             }
 
             if (string.IsNullOrEmpty(nextFile))
@@ -159,7 +162,8 @@ namespace OneSTools.EventLog
 
             _lgpReader = new LgpReader(nextFile, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate,
                 _settings.UseCorrectedValueParsing, _settings.UseStructuredDataParsing, _settings.UseCurrentEventNames,
-                _settings.UseStrictParsing, _settings.DiagnosticHandler, _settings.UseEventContext ? _eventContext : null);
+                _settings.UseStrictParsing, _settings.DiagnosticHandler, _settings.UseEventContext ? _eventContext : null,
+                _settings.ProblemRecordHandler);
             _lastLgpFileName = Path.GetFileName(nextFile);
 
             return true;
