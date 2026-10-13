@@ -34,6 +34,7 @@ namespace OneSTools.EventLog.Exporter.Manager
         // ElasticSearch
         private readonly List<ElasticSearchNode> _nodes;
         private readonly int _portion;
+        private readonly int _batchMaxAge;
         private readonly int _readingTimeout;
         private readonly Dictionary<string, ExportRun> _runExporters = new();
         private bool _stopping;
@@ -68,6 +69,7 @@ namespace OneSTools.EventLog.Exporter.Manager
             _clstFolders = configuration.GetSection("Manager:ClstFolders").Get<List<ClstFolder>>();
             _storageType = configuration.GetValue("Exporter:StorageType", StorageType.None);
             _portion = configuration.GetValue("Exporter:Portion", 10000);
+            _batchMaxAge = configuration.GetValue("Exporter:BatchMaxAge", 5);
             _writingMaxDop = configuration.GetValue("Exporter:WritingMaxDegreeOfParallelism", 1);
             _collectedFactor = configuration.GetValue("Exporter:CollectedFactor", 2);
             _loadArchive = configuration.GetValue("Exporter:LoadArchive", false);
@@ -120,6 +122,7 @@ namespace OneSTools.EventLog.Exporter.Manager
                 throw new Exception($"Clst folder ({clstFolder.Folder}) doesn't exist");
 
             if (_portion <= 0) throw new ArgumentOutOfRangeException("Portion");
+            if (_batchMaxAge <= 0 || _batchMaxAge > 3600) throw new ArgumentOutOfRangeException("BatchMaxAge");
             if (_readingTimeout < -1 || _readingTimeout > int.MaxValue / 1000) throw new ArgumentOutOfRangeException("ReadingTimeout");
             if (_shutdownTimeout <= 0 || _shutdownTimeout > 3600) throw new ArgumentOutOfRangeException("ShutdownTimeout");
             if (_writingMaxDop <= 0)
@@ -208,6 +211,7 @@ namespace OneSTools.EventLog.Exporter.Manager
                             ShutdownTimeout = _shutdownTimeout,
                             CheckpointFile = GetCheckpointFile(logFolder, dataBaseName),
                             Portion = _portion,
+                            BatchMaxAge = _batchMaxAge,
                             ReadingTimeout = _readingTimeout,
                             TimeZone = _timeZone,
                             WritingMaxDop = _writingMaxDop,

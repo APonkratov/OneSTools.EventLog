@@ -118,6 +118,41 @@ public sealed class ExporterServiceLifetimeTests : IDisposable
     }
 
     [Fact]
+    public async Task ManagerPassesBatchAgeToItsWorkerEvenWhenReadingWaitsForever()
+    {
+        var configuration = Configuration();
+        configuration["Exporter:LoadArchive"] = "false";
+        configuration["Exporter:Portion"] = "10000";
+        configuration["Exporter:ReadingTimeout"] = "-1";
+        configuration["Exporter:BatchMaxAge"] = "1";
+        var storage = new BlockingStorage(); storage.Release.TrySetResult(true);
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        using var manager = new TestManager(provider, configuration, () => storage);
+        await manager.StartAsync(default);
+        typeof(ExportersManager).GetMethod("StartExporter", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(manager, new object[] { Base, "fixture", "fixture" });
+        try
+        {
+            await storage.Entered.Task.WaitAsync(TimeSpan.FromSeconds(4));
+            Assert.Equal(1, storage.Item!.Id);
+        }
+        finally { await manager.StopAsync(default).WaitAsync(TimeSpan.FromSeconds(5)); }
+        Assert.Equal(1, storage.Calls);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(3601)]
+    public void ManagerRejectsAnInvalidBatchAgeBeforeStartingWorkers(int age)
+    {
+        var configuration = Configuration(); configuration["Exporter:BatchMaxAge"] = age.ToString();
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        Assert.Equal("BatchMaxAge", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new TestManager(provider, configuration, () => new BlockingStorage())).ParamName);
+    }
+
+    [Fact]
     public async Task ManagerPassesDiagnosticStrictModeToItsWorker()
     {
         var configuration = Configuration(); configuration["Exporter:UseStrictParsing"] = "true";

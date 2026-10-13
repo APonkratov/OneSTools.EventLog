@@ -18,6 +18,7 @@ namespace OneSTools.EventLog.Exporter.Core
         private readonly string _logFolder;
         private readonly ILogger<EventLogExporter> _logger;
         private readonly int _portion;
+        private readonly int _batchMaxAge;
         private readonly int _readingTimeout;
         private readonly IEventLogStorage _storage;
         private readonly DateTimeZone _timeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
@@ -48,6 +49,7 @@ namespace OneSTools.EventLog.Exporter.Core
 
             _logFolder = settings.LogFolder;
             _portion = settings.Portion;
+            _batchMaxAge = settings.BatchMaxAge;
             _writingMaxDop = settings.WritingMaxDop;
             _collectedFactor = settings.CollectedFactor;
             _loadArchive = settings.LoadArchive;
@@ -72,6 +74,7 @@ namespace OneSTools.EventLog.Exporter.Core
 
             _logFolder = configuration.GetValue("Exporter:LogFolder", "");
             _portion = configuration.GetValue("Exporter:Portion", 10000);
+            _batchMaxAge = configuration.GetValue("Exporter:BatchMaxAge", 5);
             _writingMaxDop = configuration.GetValue("Exporter:WritingMaxDegreeOfParallelism", 1);
             _collectedFactor = configuration.GetValue("Exporter:CollectedFactor", 2);
             _loadArchive = configuration.GetValue("Exporter:LoadArchive", false);
@@ -103,6 +106,7 @@ namespace OneSTools.EventLog.Exporter.Core
                 throw new Exception($"Event log folder ({_logFolder}) doesn't exist");
 
             if (_portion <= 0) throw new ArgumentOutOfRangeException("Portion");
+            if (_batchMaxAge <= 0 || _batchMaxAge > 3600) throw new ArgumentOutOfRangeException("BatchMaxAge");
             if (_shutdownTimeout <= 0 || _shutdownTimeout > 3600) throw new ArgumentOutOfRangeException("ShutdownTimeout");
             if (_readingTimeout < -1 || _readingTimeout > int.MaxValue / 1000) throw new ArgumentOutOfRangeException("ReadingTimeout");
             if (_writingMaxDop <= 0)
@@ -133,6 +137,14 @@ namespace OneSTools.EventLog.Exporter.Core
             using var stop = cancellationToken.Register(() => writing.CancelAfter(TimeSpan.FromSeconds(_shutdownTimeout)));
             var shutdown = Task.Delay(Timeout.Infinite, writing.Token);
             var batch = new List<EventLogItem>(_portion);
+            using var batchDeadline = new BatchReadDeadline(cancellationToken, _batchMaxAge);
+            async Task FlushBatchAsync()
+            {
+                // The deadline only interrupts reading. An INSERT has its own
+                // shutdown budget and must be acknowledged before another read.
+                batchDeadline.Reset();
+                await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+            }
             try
             {
                 EventLogReaderSettings settings;
@@ -142,34 +154,47 @@ namespace OneSTools.EventLog.Exporter.Core
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     EventLogItem item;
-                    try { item = _eventLogReader.ReadNextEventLogItem(cancellationToken); }
+                    try { item = _eventLogReader.ReadNextEventLogItem(batchDeadline.Token); }
                     catch (EventLogReaderTimeoutException)
                     {
-                        await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+                        await FlushBatchAsync();
+                        continue;
+                    }
+                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && batchDeadline.IsExpired)
+                    {
+                        await FlushBatchAsync();
                         continue;
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
                     catch
                     {
                         // A valid prefix can be acknowledged before surfacing a later parse failure.
-                        await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+                        await FlushBatchAsync();
                         throw;
                     }
                     if (item == null)
                     {
+                        // A live reader can return null after cooperative cancellation
+                        // rather than throwing. This is not an archive EOF.
+                        if (batchDeadline.IsExpired)
+                        {
+                            await FlushBatchAsync();
+                            continue;
+                        }
                         if (!settings.LiveMode) break;
                         continue;
                     }
                     batch.Add(item);
+                    if (batch.Count == 1) batchDeadline.Start();
                     if (_currentLgpFile != item.FileName)
                     {
                         _logger?.LogInformation($"Reader started reading {item.FileName}");
                         _currentLgpFile = item.FileName;
                     }
                     if (batch.Count == _portion)
-                        await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+                        await FlushBatchAsync();
                 }
-                await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+                await FlushBatchAsync();
             }
             finally
             {
@@ -177,6 +202,38 @@ namespace OneSTools.EventLog.Exporter.Core
                 _eventLogReader = null;
                 writing.Cancel();
             }
+        }
+
+        // One timer per nonempty batch, never per event. Cancellation rewinds an
+        // in-progress read; only the export loop may write or publish a checkpoint.
+        private sealed class BatchReadDeadline : IDisposable
+        {
+            private readonly CancellationToken _stopping;
+            private readonly int _seconds;
+            private CancellationTokenSource _reading;
+            private CancellationToken _token;
+
+            public BatchReadDeadline(CancellationToken stopping, int seconds)
+            { _stopping = stopping; _seconds = seconds; _token = stopping; }
+
+            public CancellationToken Token => _token;
+            public bool IsExpired => _reading?.IsCancellationRequested == true;
+
+            public void Start()
+            {
+                _reading = CancellationTokenSource.CreateLinkedTokenSource(_stopping);
+                _token = _reading.Token;
+                _reading.CancelAfter(TimeSpan.FromSeconds(_seconds));
+            }
+
+            public void Reset()
+            {
+                _reading?.Dispose();
+                _reading = null;
+                _token = _stopping;
+            }
+
+            public void Dispose() => Reset();
         }
 
         private async Task WriteBatchAsync(List<EventLogItem> batch, DeliveryCheckpoint checkpoint,
