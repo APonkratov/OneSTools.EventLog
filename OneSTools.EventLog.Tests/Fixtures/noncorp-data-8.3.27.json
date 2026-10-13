@@ -1,0 +1,1590 @@
+{
+  "platformVersion": "8.3.27.2325",
+  "provenance": "Artificial records with wire layouts from local journals; expected Data exported by ibcmd. No original values or identifiers.",
+  "cases": [
+    {
+      "eventCode": "_$Access$_.AccessDenied",
+      "data": "{\"P\",\n{1,\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {
+        "Right": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{1,\n{\"S\",\"FixtureRole0\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": "FixtureRole0"
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{2,\n{\"S\",\"FixtureRole0\"\n},\n{\"S\",\"FixtureRole1\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": [
+            "FixtureRole0",
+            "FixtureRole1"
+          ]
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "true",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",1\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "true",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",1\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "true",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",1\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "true",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "true",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {
+        "Vendor": "Fixture0",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{1,\n{\"S\",\"FixtureRole0\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": "FixtureRole0"
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{2,\n{\"S\",\"FixtureRole0\"\n},\n{\"S\",\"FixtureRole1\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": [
+            "FixtureRole0",
+            "FixtureRole1"
+          ]
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "true",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",1\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "true",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",1\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "true",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",1\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "true",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "true",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{1,\n{\"S\",\"FixtureRole0\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": "FixtureRole0"
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{2,\n{\"S\",\"FixtureRole0\"\n},\n{\"S\",\"FixtureRole1\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": [
+            "FixtureRole0",
+            "FixtureRole1"
+          ]
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "true",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",1\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "true",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",1\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "true",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",1\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "true",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "true",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{1,\n{\"S\",\"FixtureRole0\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": "FixtureRole0"
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{2,\n{\"S\",\"FixtureRole0\"\n},\n{\"S\",\"FixtureRole1\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": {
+          "Item": [
+            "FixtureRole0",
+            "FixtureRole1"
+          ]
+        },
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "true",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",1\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "true",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",1\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "true",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",1\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "false",
+        "UsedInDistributedInfoBase": "true",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "Active": "false",
+        "DefaultRoles": null,
+        "HashSum": "Fixture4",
+        "Name": "Fixture0",
+        "Purpose": "Адаптация",
+        "SafeMode": "false",
+        "Scope": "Информационная база",
+        "SecurityProfile": "Fixture7",
+        "Synonym": "Fixture5",
+        "UUID": "11111111-2222-3333-4444-555555555555",
+        "UnsafeOperationProtection": "false",
+        "UseDefaultRolesForAllUsers": "true",
+        "UsedInDistributedInfoBase": "false",
+        "Vendor": "Fixture2",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {
+        "Vendor": "Fixture0",
+        "Version": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChange",
+      "data": "{\"P\",\n{2,\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "ExclusiveMode": "false"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChange",
+      "data": "{\"P\",\n{2,\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "ExclusiveMode": "true"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChangeError",
+      "data": "{\"P\",\n{2,\n{\"B\",0\n}\n}\n}",
+      "expected": {
+        "ExclusiveMode": "false"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChangeError",
+      "data": "{\"P\",\n{2,\n{\"B\",1\n}\n}\n}",
+      "expected": {
+        "ExclusiveMode": "true"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\n{518,\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "CurrentOSUser": "Fixture2",
+        "Name": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\n{513,\n{\"S\",\"Fixture1\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "OSUser": "Fixture1"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ConfigExtensionApplyError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n}\n}\n}",
+      "expected": {
+        "Name": "Fixture0"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "false",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "true",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "false",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "false",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "true",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {
+        "LanguageCode": "Fixture5",
+        "Name": "Fixture1",
+        "Path": "Fixture0",
+        "SafeMode": "false",
+        "SecurityProfile": "Fixture3",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\n{513,\n{\"S\",\"FixtureOSUser\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "OSUser": "FixtureOSUser"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\n{518,\n{\"S\",\"FixtureName\"\n},\n{\"S\",\"FixtureOSUser\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "CurrentOSUser": "FixtureOSUser",
+        "Name": "FixtureName"
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{1,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": {
+            "Column0": "Cell0_0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{1,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": [
+            {
+              "Column0": "Cell0_0"
+            },
+            {
+              "Column0": "Cell1_0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{2,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{2,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{2,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{3,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{3,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1",
+            "Column2": "Cell0_2"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{3,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n},\n{\"S\",\"Cell1_2\"\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1",
+              "Column2": "Cell0_2"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1",
+              "Column2": "Cell1_2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": {
+            "Column0": "Cell0_0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": [
+            {
+              "Column0": "Cell0_0"
+            },
+            {
+              "Column0": "Cell1_0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1",
+            "Column2": "Cell0_2"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n},\n{\"S\",\"Cell1_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1",
+              "Column2": "Cell0_2"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1",
+              "Column2": "Cell1_2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": {
+            "Column0": "Cell0_0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": [
+            {
+              "Column0": "Cell0_0"
+            },
+            {
+              "Column0": "Cell1_0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1",
+            "Column2": "Cell0_2"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n},\n{\"S\",\"Cell1_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1",
+              "Column2": "Cell0_2"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1",
+              "Column2": "Cell1_2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": {
+            "Column0": "Cell0_0"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": {
+            "name": "Column0"
+          },
+          "Row": [
+            {
+              "Column0": "Cell0_0"
+            },
+            {
+              "Column0": "Cell1_0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{2,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": {
+            "Column0": "Cell0_0",
+            "Column1": "Cell0_1",
+            "Column2": "Cell0_2"
+          }
+        }
+      }
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{3,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n},\n{\"S\",\"Cell1_2\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {
+        "Data": {
+          "Column": [
+            {
+              "name": "Column0"
+            },
+            {
+              "name": "Column1"
+            },
+            {
+              "name": "Column2"
+            }
+          ],
+          "Row": [
+            {
+              "Column0": "Cell0_0",
+              "Column1": "Cell0_1",
+              "Column2": "Cell0_2"
+            },
+            {
+              "Column0": "Cell1_0",
+              "Column1": "Cell1_1",
+              "Column2": "Cell1_2"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

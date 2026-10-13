@@ -1,3 +1,5 @@
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,7 +26,12 @@ namespace OneSTools.EventLog.Exporter.Manager
                     logging.AddFile(logPath);
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                 })
-                .ConfigureServices((_, services) => { services.AddHostedService<ExportersManager>(); });
+                .ConfigureServices((context, services) =>
+                {
+                    services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(
+                        context.Configuration.GetValue("Exporter:ShutdownTimeout", 30) + 5));
+                    services.AddHostedService<ExportersManager>();
+                });
         }
     }
 }

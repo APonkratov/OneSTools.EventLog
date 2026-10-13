@@ -1,0 +1,43 @@
+name: ClickHouse contract tests
+
+on:
+  push:
+    branches: [master, 'codex/**']
+  pull_request:
+    branches: [master, 'codex/**']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      clickhouse:
+        # Official lts image resolved on 2026-10-10: ClickHouse 26.8.15.10.
+        image: clickhouse:26.8.15.10@sha256:47ef918e86854015f4e75848fe37f893808dd379055b0fcab1adcde583e693d4
+        env:
+          CLICKHOUSE_USER: contract
+          CLICKHOUSE_PASSWORD: contract-test-only
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "clickhouse-client --user contract --password contract-test-only --query 'SELECT 1'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      ONESTOOLS_CLICKHOUSE_URL: http://127.0.0.1:8123/
+      ONESTOOLS_CLICKHOUSE_USER: contract
+      ONESTOOLS_CLICKHOUSE_PASSWORD: contract-test-only
+      ONESTOOLS_TEST_RUNTIME_IMAGE: mcr.microsoft.com/dotnet/runtime:8.0.31@sha256:47c36b770db8f712ceb03e9220d799b068c769b8bc89c61d62cd41600633d9c2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet build OneSTools.EventLog.sln --configuration Release
+      - run: dotnet test OneSTools.EventLog.Tests/OneSTools.EventLog.Tests.csproj --configuration Release --logger "console;verbosity=normal"
+      - run: dotnet test OneSTools.EventLog.Exporter.IntegrationTests/OneSTools.EventLog.Exporter.IntegrationTests.csproj --configuration Release --logger "console;verbosity=normal"

@@ -1,0 +1,99 @@
+EventCode,Presentation,Evidence,NativePresentationVerified
+_$Access$_.Access,Доступ. Доступ,ibcmd 8.3.27.2325 local journal export,True
+_$Access$_.AccessDenied,Доступ. Отказ в доступе,ibcmd 8.3.27.2325 local journal export,True
+_$Data$_.DataHistorySettingsUpdate,Данные.Изменение настроек истории данных,ibcmd 8.3.27.2325 eventlog model export,False
+_$Data$_.New,Данные. Добавление,ibcmd 8.3.27.2325 local journal export,True
+_$Data$_.NewPredefinedData,Данные. Добавление предопределенных данных,ibcmd 8.3.27.2325 local journal export,True
+_$Data$_.PredefinedDataInitialization,Данные. Инициализация предопределенных данных,ibcmd 8.3.27.2325 local journal export,True
+_$Data$_.Update,Данные. Изменение,ibcmd 8.3.27.2325 local journal export,True
+_$Data$_.UpdatePredefinedData,Данные. Изменение предопределенных данных,ibcmd 8.3.27.2325 local journal export,True
+_$Debug$_.DebugTargetAttach,Отладка.Подключение предмета отладки,ibcmd 8.3.27.2325 eventlog model export,False
+_$Debug$_.DebugTargetDetach,Отладка.Отключение предмета отладки,ibcmd 8.3.27.2325 eventlog model export,False
+_$Debug$_.ExpressionEvaluation,Отладка.Вычисление выражения,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.AdditionalAuthenticationSettingsUpdate,Информационная база.Изменение дополнительных настроек аутентификации,8.3.26 expanded payload list,False
+_$InfoBase$_.AdditionalAuthenticationSettingsUpdateError,Информационная база.Ошибка изменения дополнительных настроек аутентификации,8.3.26 expanded payload list,False
+_$InfoBase$_.AdministrationParametersChange,Информационная база.Изменение параметров администрирования,8.3.26 changelog,False
+_$InfoBase$_.ConfigExtensionUpdate,Информационная база. Изменение расширения конфигурации,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.ConfigUpdate,Информационная база. Изменение конфигурации,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.ConfigUpdateError,Информационная база.Ошибка изменения конфигурации,8.3.26 changelog,False
+_$InfoBase$_.DBConfigBackgroundUpdateError,Информационная база.Ошибка фонового обновления,8.3.26 changelog,False
+_$InfoBase$_.DBConfigExtensionDelete,Информационная база. Удаление расширения конфигурации базы данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.DBConfigExtensionDeleteError,Информационная база.Ошибка удаления расширения конфигурации базы данных,8.3.26 changelog,False
+_$InfoBase$_.DBConfigExtensionInsert,Информационная база.Добавление расширения конфигурации базы данных,8.3.26 changelog,False
+_$InfoBase$_.DBConfigExtensionInsertError,Информационная база.Ошибка добавления расширения конфигурации базы данных,8.3.26 changelog,False
+_$InfoBase$_.DBConfigExtensionUpdate,Информационная база. Изменение расширения конфигурации базы данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.DBConfigExtensionUpdateError,Информационная база. Ошибка изменения расширения конфигурации базы данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.DBConfigUpdate,Информационная база. Изменение конфигурации базы данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.DBConfigUpdateError,Информационная база.Ошибка изменения конфигурации базы данных,8.3.26 expanded payload list,False
+_$InfoBase$_.DBConfigUpdateStart,Информационная база. Запуск обновления конфигурации базы данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.EraseDataError,Информационная база.Ошибка удаления данных,8.3.26 changelog,False
+_$InfoBase$_.ExclusiveModeChange,Информационная база. Изменение режима монопольного доступа к текущей области,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.ExclusiveModeChangeError,Информационная база. Ошибка изменения режима монопольного доступа к текущей области,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.ParametersUpdate,Информационная база. Изменение параметров информационной базы,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.ParametersUpdateError,Информационная база.Ошибка изменения параметров,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.PasswordCompromiseCheckListUpdate,Информационная база.Обновление списка скомпрометированных паролей,8.3.26 changelog,False
+_$InfoBase$_.PasswordCompromiseCheckListUpdateError,Информационная база.Ошибка обновления списка скомпрометированных паролей,8.3.26 changelog,False
+_$InfoBase$_.PasswordCompromiseCheckServiceError,Информационная база.Ошибка сервиса проверки скомпрометированных паролей,8.3.26 changelog,False
+_$InfoBase$_.PredefinedDataUpdate,Информационная база. Обновление предопределенных данных,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.RegionalSettingsChange,Информационная база.Изменение региональных установок,8.3.26 changelog,False
+_$InfoBase$_.RegionalSettingsChangeError,Информационная база.Ошибка изменения региональных установок,8.3.26 changelog,False
+_$InfoBase$_.RegionalSettingsUpdateError,Информационная база.Ошибка изменения региональных установок,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.RoleUpdate,Информационная база.Изменение ролей,8.3.26 changelog,False
+_$InfoBase$_.SecondAuthenticationFactorTemplateDelete,Информационная база.Удаление шаблона второго фактора аутентификации,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.SecondAuthenticationFactorTemplateNew,Информационная база.Создание шаблона второго фактора аутентификации,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate,Информационная база.Изменение шаблона второго фактора аутентификации,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.SecurityProfileChange,Информационная база.Изменение профиля безопасности,8.3.26 changelog,False
+_$InfoBase$_.SessionLockChange,Информационная база.Изменение блокировки сеансов,8.3.26 changelog,False
+_$InfoBase$_.SessionLockChangeError,Информационная база.Ошибка изменения блокировки сеансов,8.3.26 changelog,False
+_$InfoBase$_.UserPasswordPolicyDelete,Информационная база.Удаление политики паролей пользователей,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.UserPasswordPolicyDeleteError,Информационная база.Ошибка удаления политики паролей пользователей,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.UserPasswordPolicyNew,Информационная база. Добавление политики паролей пользователей,ibcmd 8.3.27.2325 local journal export,True
+_$InfoBase$_.UserPasswordPolicyNewError,Информационная база.Ошибка создания политики паролей пользователей,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.UserPasswordPolicyUpdate,Информационная база.Изменение политики паролей пользователей,8.3.26 expanded payload list,False
+_$InfoBase$_.UserPasswordPolicyUpdateError,Информационная база.Ошибка изменения политики паролей пользователей,ibcmd 8.3.27.2325 eventlog model export,False
+_$InfoBase$_.VerifyAndRepairImportant,Информационная база.Тестирование и исправление.Важное сообщение,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.VerifyAndRepairInfo,Информационная база.Тестирование и исправление.Информация,8.3.18 rename section in 8.3.27 changelog,False
+_$InfoBase$_.VerifyAndRepairMessage,Информационная база.Тестирование и исправление.Сообщение,8.3.18 rename section in 8.3.27 changelog,False
+_$Job$_.Cancel,Фоновое задание. Отмена,ibcmd 8.3.27.2325 local journal export,True
+_$Job$_.Error,Фоновое задание. Ошибка выполнения,ibcmd 8.3.27.2325 local journal export,True
+_$Job$_.Finish,Фоновое задание. Успешное завершение,ibcmd 8.3.27.2325 local journal export,True
+_$Job$_.Start,Фоновое задание. Запуск,ibcmd 8.3.27.2325 local journal export,True
+_$PerformError$_,Ошибка выполнения,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.AddInAttach,Сеанс.Подключение внешней компоненты,8.3.26 changelog,False
+_$Session$_.AddInAttachError,Сеанс.Ошибка подключения внешней компоненты,8.3.26 changelog,False
+_$Session$_.Authentication,Сеанс. Аутентификация,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.AuthenticationError,Сеанс. Ошибка аутентификации,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.ConfigExtensionApplyError,Сеанс. Ошибка применения расширения конфигурации,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.DataZoneChange,Сеанс. Изменение текущей области,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.DataZoneChangeError,Сеанс.Ошибка изменения разделения данных,8.3.26 changelog,False
+_$Session$_.ExternalDataProcessorConnect,Сеанс. Подключение внешней обработки,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.ExternalDataProcessorConnectError,Сеанс.Ошибка подключения внешней обработки,8.3.26 changelog,False
+_$Session$_.ExternalReportConnect,Сеанс. Подключение внешнего отчета,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.ExternalReportConnectError,Сеанс.Ошибка подключения внешнего отчёта,8.3.26 changelog,False
+_$Session$_.Finish,Сеанс. Завершение,ibcmd 8.3.27.2325 local journal export,True
+_$Session$_.PasswordChangeError,Сеанс.Ошибка изменения пароля,8.3.26 expanded payload list,False
+_$Session$_.PasswordCompromiseCheckServiceErrorOnAuthentication,Сеанс.Ошибка сервиса проверки скомпрометированных паролей при аутентификации,8.3.26 changelog,False
+_$Session$_.PasswordRecoveryAttempt,Сеанс.Попытка восстановления пароля,ibcmd 8.3.27.2325 eventlog model export,False
+_$Session$_.PasswordRecoveryAttemptError,Сеанс.Ошибка попытки восстановления пароля,ibcmd 8.3.27.2325 eventlog model export,False
+_$Session$_.PasswordRequirementsViolationOnAuthentication,Сеанс.Нарушение требований к паролю при аутентификации,8.3.26 changelog,False
+_$Session$_.SecurityProfileRestrictionAccessRightsExtension,Сеанс.Ограничение профиля безопасности: расширения прав доступа,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionCOMObjectAccess,Сеанс.Ограничение профиля безопасности: доступа к COM-объектам,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionCryptographyOperations,Сеанс.Ограничение профиля безопасности: криптографических операций,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionExternalComponentAccess,Сеанс.Ограничение профиля безопасности: доступа к внешним компонентам,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionExternalModuleAccess,Сеанс.Ограничение профиля безопасности: доступа к внешним модулям,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionFileSystemAccess,Сеанс.Ограничение профиля безопасности: доступа к файловой системе,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionInternetResourceAccess,Сеанс.Ограничение профиля безопасности: доступа к ресурсам Интернета,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionModuleExtension,Сеанс.Ограничение профиля безопасности: расширения модулей,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionOSApplicationStart,Сеанс.Ограничение профиля безопасности: запуска приложений ОС,8.5.4 changelog,False
+_$Session$_.SecurityProfileRestrictionPrivilegedMode,Сеанс.Ограничение профиля безопасности: привилегированного режима,8.5.4 changelog,False
+_$Session$_.Start,Сеанс. Начало,ibcmd 8.3.27.2325 local journal export,True
+_$Transaction$_.Begin,Транзакция. Начало,ibcmd 8.3.27.2325 local journal export,True
+_$Transaction$_.Commit,Транзакция. Фиксация,ibcmd 8.3.27.2325 local journal export,True
+_$Transaction$_.Rollback,Транзакция. Отмена,ibcmd 8.3.27.2325 local journal export,True
+_$User$_.AuthenticationUnlockError,Пользователи.Ошибка разблокировки аутентификации,8.3.16 changelog,False
+_$User$_.New,Пользователи. Добавление,ibcmd 8.3.27.2325 local journal export,True
+_$User$_.NewError,Пользователи. Ошибка добавления,ibcmd 8.3.27.2325 local journal export,True
+_$User$_.PermissionChange,Пользователи.Изменение прав,8.3.26 changelog,False
+_$User$_.SecurityProfileChange,Пользователи.Изменение профиля безопасности,ibcmd 8.3.27.2325 eventlog model export,False
+_$User$_.Update,Пользователи. Изменение,ibcmd 8.3.27.2325 local journal export,True
+_$User$_.UpdateError,Пользователи. Ошибка изменения,ibcmd 8.3.27.2325 local journal export,True

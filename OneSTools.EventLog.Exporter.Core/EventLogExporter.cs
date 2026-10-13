@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -19,20 +18,28 @@ namespace OneSTools.EventLog.Exporter.Core
         private readonly string _logFolder;
         private readonly ILogger<EventLogExporter> _logger;
         private readonly int _portion;
+        private readonly int _batchMaxAge;
         private readonly int _readingTimeout;
         private readonly IEventLogStorage _storage;
         private readonly DateTimeZone _timeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         private readonly int _writingMaxDop;
-        private BatchBlock<EventLogItem> _batchBlock;
+        private readonly string _checkpointFile;
+        private readonly int _shutdownTimeout;
+        private int _started;
         private readonly DateTime _skipEventsBeforeDate;
+        private readonly bool _useEventContext;
+        private readonly bool _useStrictParsing;
 
+        private readonly Action<EventLogDiagnostic> _diagnosticHandler;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private EventLogPosition _lastSkippedPosition;
+        private EventLogPosition _acknowledgedPosition;
+        private readonly HashSet<string> _seenDiagnostics = new HashSet<string>(StringComparer.Ordinal);
         private string _currentLgpFile;
 
         private bool _disposedValue;
 
-        // DataFlow blocks
         private EventLogReader _eventLogReader;
-        private ActionBlock<EventLogItem[]> _writeBlock;
 
         public EventLogExporter(EventLogExporterSettings settings, IEventLogStorage storage,
             ILogger<EventLogExporter> logger = null)
@@ -42,12 +49,19 @@ namespace OneSTools.EventLog.Exporter.Core
 
             _logFolder = settings.LogFolder;
             _portion = settings.Portion;
+            _batchMaxAge = settings.BatchMaxAge;
             _writingMaxDop = settings.WritingMaxDop;
             _collectedFactor = settings.CollectedFactor;
             _loadArchive = settings.LoadArchive;
+            _checkpointFile = settings.CheckpointFile;
+            _shutdownTimeout = settings.ShutdownTimeout;
             _timeZone = settings.TimeZone;
             _readingTimeout = settings.ReadingTimeout;
             _skipEventsBeforeDate = settings.SkipEventsBeforeDate;
+            _diagnosticHandler = settings.DiagnosticHandler;
+            _problemRecordHandler = settings.ProblemRecordHandler;
+            _useEventContext = settings.UseEventContext;
+            _useStrictParsing = settings.UseStrictParsing;
 
             CheckSettings();
         }
@@ -60,11 +74,16 @@ namespace OneSTools.EventLog.Exporter.Core
 
             _logFolder = configuration.GetValue("Exporter:LogFolder", "");
             _portion = configuration.GetValue("Exporter:Portion", 10000);
+            _batchMaxAge = configuration.GetValue("Exporter:BatchMaxAge", 5);
             _writingMaxDop = configuration.GetValue("Exporter:WritingMaxDegreeOfParallelism", 1);
             _collectedFactor = configuration.GetValue("Exporter:CollectedFactor", 2);
             _loadArchive = configuration.GetValue("Exporter:LoadArchive", false);
+            _checkpointFile = configuration.GetValue("Exporter:CheckpointFile", "");
+            _shutdownTimeout = configuration.GetValue("Exporter:ShutdownTimeout", 30);
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
+            _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -86,6 +105,10 @@ namespace OneSTools.EventLog.Exporter.Core
             if (!Directory.Exists(_logFolder))
                 throw new Exception($"Event log folder ({_logFolder}) doesn't exist");
 
+            if (_portion <= 0) throw new ArgumentOutOfRangeException("Portion");
+            if (_batchMaxAge <= 0 || _batchMaxAge > 3600) throw new ArgumentOutOfRangeException("BatchMaxAge");
+            if (_shutdownTimeout <= 0 || _shutdownTimeout > 3600) throw new ArgumentOutOfRangeException("ShutdownTimeout");
+            if (_readingTimeout < -1 || _readingTimeout > int.MaxValue / 1000) throw new ArgumentOutOfRangeException("ReadingTimeout");
             if (_writingMaxDop <= 0)
                 throw new Exception("WritingMaxDegreeOfParallelism cannot be equal to or less than 0");
 
@@ -95,157 +118,249 @@ namespace OneSTools.EventLog.Exporter.Core
 
         public async Task StartAsync(CancellationToken cancellationToken = default)
         {
-            _logger?.LogInformation($"Log folder: {_logFolder}");
+            if (_disposedValue) throw new ObjectDisposedException(nameof(EventLogExporter));
+            if (Interlocked.Exchange(ref _started, 1) != 0)
+                throw new InvalidOperationException("An exporter instance can only be started once.");
+            if (cancellationToken.IsCancellationRequested) return;
 
-            if (_loadArchive)
-                _logger?.LogWarning("\"Load archive\" mode enabled");
+            _logger?.LogInformation($"Log folder: {_logFolder}; portion per request: {_portion}");
+            if (_loadArchive) _logger?.LogInformation("Archive mode: export will complete at EOF.");
+            if (string.IsNullOrEmpty(_checkpointFile))
+                _logger?.LogWarning("Local checkpoint is disabled for {LogFolder}; recovery uses the storage cursor and can lose events after a partial INSERT. Configure Exporter:CheckpointFile (standalone) or Exporter:CheckpointDirectory (Manager) on persistent storage.", _logFolder);
+            else _logger?.LogInformation("Local acknowledged checkpoint is enabled.");
+            if (_writingMaxDop != 1)
+                _logger?.LogWarning("Writes are serialized per source to preserve contiguous delivery; WritingMaxDegreeOfParallelism is retained for configuration compatibility.");
 
-            _logger?.LogInformation($"Portion per request: {_portion}");
-
-            InitializeDataflow(cancellationToken);
-
+            using var checkpoint = string.IsNullOrEmpty(_checkpointFile) ? null : new DeliveryCheckpoint(_checkpointFile,
+                _logFolder, (_storage as IEventLogStorageIdentity)?.CheckpointIdentity ?? _storage.GetType().FullName);
+            using var writing = new CancellationTokenSource();
+            using var stop = cancellationToken.Register(() => writing.CancelAfter(TimeSpan.FromSeconds(_shutdownTimeout)));
+            var shutdown = Task.Delay(Timeout.Infinite, writing.Token);
+            var batch = new List<EventLogItem>(_portion);
+            using var batchDeadline = new BatchReadDeadline(cancellationToken, _batchMaxAge);
+            async Task FlushBatchAsync()
+            {
+                // The deadline only interrupts reading. An INSERT has its own
+                // shutdown budget and must be acknowledged before another read.
+                batchDeadline.Reset();
+                await WriteBatchAsync(batch, checkpoint, shutdown, writing.Token);
+            }
             try
             {
-                var settings = await GetReaderSettingsAsync(cancellationToken);
+                EventLogReaderSettings settings;
+                try { settings = await GetReaderSettingsAsync(checkpoint, cancellationToken); }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { return; }
                 _eventLogReader = new EventLogReader(settings);
-
-                while (!cancellationToken.IsCancellationRequested && !_writeBlock.Completion.IsCompleted)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    var forceSending = false;
-
-                    EventLogItem item = null;
-
-                    try
-                    {
-                        item = _eventLogReader.ReadNextEventLogItem(cancellationToken);
-                    }
+                    EventLogItem item;
+                    try { item = _eventLogReader.ReadNextEventLogItem(batchDeadline.Token); }
                     catch (EventLogReaderTimeoutException)
                     {
-                        forceSending = true;
+                        await FlushBatchAsync();
+                        continue;
                     }
-                    catch (Exception)
+                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && batchDeadline.IsExpired)
                     {
-                        _batchBlock.Complete();
+                        await FlushBatchAsync();
+                        continue;
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { break; }
+                    catch
+                    {
+                        // A valid prefix can be acknowledged before surfacing a later parse failure.
+                        await FlushBatchAsync();
                         throw;
                     }
-
-                    if (item != null)
+                    if (item == null)
                     {
-                        await SendAsync(_batchBlock, item, cancellationToken);
-
-                        if (!string.IsNullOrEmpty(_eventLogReader.LgpFileName) &&
-                            _currentLgpFile != _eventLogReader.LgpFileName)
+                        // A live reader can return null after cooperative cancellation
+                        // rather than throwing. This is not an archive EOF.
+                        if (batchDeadline.IsExpired)
                         {
-                            _logger?.LogInformation($"Reader started reading {_eventLogReader.LgpFileName}");
-
-                            _currentLgpFile = _eventLogReader.LgpFileName;
+                            await FlushBatchAsync();
+                            continue;
                         }
+                        if (!settings.LiveMode) break;
+                        continue;
                     }
-                    else if (!settings.LiveMode)
+                    batch.Add(item);
+                    if (batch.Count == 1) batchDeadline.Start();
+                    if (_currentLgpFile != item.FileName)
                     {
-                        forceSending = true;
+                        _logger?.LogInformation($"Reader started reading {item.FileName}");
+                        _currentLgpFile = item.FileName;
                     }
-
-                    if (forceSending)
-                        _batchBlock.TriggerBatch();
+                    if (batch.Count == _portion)
+                        await FlushBatchAsync();
                 }
+                await FlushBatchAsync();
             }
-            catch (TaskCanceledException)
+            finally
             {
+                _eventLogReader?.Dispose();
+                _eventLogReader = null;
+                writing.Cancel();
             }
         }
 
-        private void InitializeDataflow(CancellationToken cancellationToken = default)
+        // One timer per nonempty batch, never per event. Cancellation rewinds an
+        // in-progress read; only the export loop may write or publish a checkpoint.
+        private sealed class BatchReadDeadline : IDisposable
         {
-            var writeBlockSettings = new ExecutionDataflowBlockOptions
-            {
-                CancellationToken = cancellationToken,
-                BoundedCapacity = _collectedFactor,
-                MaxDegreeOfParallelism = _writingMaxDop
-            };
+            private readonly CancellationToken _stopping;
+            private readonly int _seconds;
+            private CancellationTokenSource _reading;
+            private CancellationToken _token;
 
-            var batchBlockSettings = new GroupingDataflowBlockOptions
-            {
-                CancellationToken = cancellationToken,
-                BoundedCapacity = _portion * _collectedFactor
-            };
+            public BatchReadDeadline(CancellationToken stopping, int seconds)
+            { _stopping = stopping; _seconds = seconds; _token = stopping; }
 
-            _writeBlock = new ActionBlock<EventLogItem[]>(async c =>
-            {
-                try
-                {
-                    await _storage.WriteEventLogDataAsync(c.ToList(), cancellationToken);
-                }
-                catch (Exception)
-                {
-                    _batchBlock.Complete();
-                    _writeBlock.Complete();
-                    throw;
-                }
-            },
-            writeBlockSettings);
+            public CancellationToken Token => _token;
+            public bool IsExpired => _reading?.IsCancellationRequested == true;
 
-            _batchBlock = new BatchBlock<EventLogItem>(_portion, batchBlockSettings);
-            _batchBlock.LinkTo(_writeBlock, new DataflowLinkOptions { PropagateCompletion = true });
+            public void Start()
+            {
+                _reading = CancellationTokenSource.CreateLinkedTokenSource(_stopping);
+                _token = _reading.Token;
+                _reading.CancelAfter(TimeSpan.FromSeconds(_seconds));
+            }
+
+            public void Reset()
+            {
+                _reading?.Dispose();
+                _reading = null;
+                _token = _stopping;
+            }
+
+            public void Dispose() => Reset();
         }
 
-        private async Task<EventLogReaderSettings> GetReaderSettingsAsync(CancellationToken cancellationToken = default)
+        private async Task WriteBatchAsync(List<EventLogItem> batch, DeliveryCheckpoint checkpoint,
+            Task shutdown, CancellationToken writingToken)
+        {
+            if (batch.Count == 0)
+            {
+                SaveProgressAfterProblems(checkpoint, _acknowledgedPosition);
+                return;
+            }
+            // No read-ahead or later INSERT is allowed until this batch is acknowledged.
+            var write = _storage.WriteEventLogDataAsync(batch, writingToken);
+            if (await Task.WhenAny(write, shutdown) != write)
+            {
+                // Observe late failure of a non-cooperative custom storage without advancing its checkpoint.
+                _ = write.ContinueWith(t => { var ignored = t.Exception; }, CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+                throw new TimeoutException("Exporter shutdown deadline expired; the unconfirmed batch must be replayed.");
+            }
+            try { await write; }
+            catch (OperationCanceledException) when (writingToken.IsCancellationRequested)
+            {
+                throw new TimeoutException("Exporter shutdown deadline expired; the unconfirmed batch must be replayed.");
+            }
+            var last = batch[batch.Count - 1];
+            SaveProgressAfterProblems(checkpoint, new EventLogPosition(last.FileName, last.EndPosition, last.LgfEndPosition, last.Id));
+            batch.Clear();
+        }
+
+        private void SaveProgressAfterProblems(DeliveryCheckpoint checkpoint, EventLogPosition position)
+        {
+            // A skipped tail has no storage row. Persist it only after the entire
+            // preceding batch has been acknowledged, including an empty batch at EOF.
+            var skipped = _lastSkippedPosition;
+            if (skipped != null && (position == null ||
+                StringComparer.Ordinal.Compare(skipped.FileName, position.FileName) > 0 ||
+                (skipped.FileName == position.FileName && skipped.EndPosition > position.EndPosition)))
+                position = new EventLogPosition(skipped.FileName, skipped.EndPosition,
+                    position?.LgfEndPosition ?? 0, position?.Id ?? 0);
+            if (position == null || (position.FileName == _acknowledgedPosition?.FileName &&
+                position.EndPosition == _acknowledgedPosition.EndPosition && position.Id == _acknowledgedPosition.Id &&
+                position.LgfEndPosition == _acknowledgedPosition.LgfEndPosition)) return;
+            checkpoint?.Save(position);
+            _acknowledgedPosition = position;
+        }
+
+        private void ReportProblemRecord(EventLogProblemRecord problem)
+        {
+            _problemRecordHandler?.Invoke(problem);
+            var canLog = _logger?.IsEnabled(LogLevel.Error) == true;
+            if (canLog)
+                _logger.LogError(problem.Error,
+                    "Problem journal record in {LogFolder}/{FileName} at bytes [{Position}, {EndPosition}); stage {Stage}; {ErrorType}: {Reason}; skipped {Skipped}; encoding {Encoding}; raw {RawRecordJson}",
+                    _logFolder, problem.FileName, problem.Position, problem.EndPosition, problem.Stage,
+                    problem.Error.GetBaseException().GetType().Name, problem.Error.GetBaseException().Message,
+                    problem.Skipped, problem.Encoding, problem.RawRecordJson);
+            else if (_problemRecordHandler == null)
+                throw new IOException("Problem record logging is disabled; refusing to discard journal data.");
+            // Auxiliary dictionary/context/transaction scans can run ahead of delivery.
+            if (problem.Skipped && problem.Stage == "LGP record")
+                _lastSkippedPosition = new EventLogPosition(problem.FileName, problem.EndPosition, 0, 0);
+        }
+
+        private void ReportParsingDiagnostic(EventLogDiagnostic diagnostic)
+        {
+            _diagnosticHandler?.Invoke(diagnostic);
+            // Keep normal exporter logs free of payloads and repeated per-event warnings.
+            if (_seenDiagnostics.Count < 1000 && _seenDiagnostics.Add(diagnostic.Code + "|" + diagnostic.EventCode))
+                _logger?.LogWarning("Journal diagnostic {Code} in {FileName} at byte {Position}; event {EventCode}.",
+                    diagnostic.Code, diagnostic.FileName, diagnostic.Position, diagnostic.EventCode);
+        }
+
+        private async Task<EventLogReaderSettings> GetReaderSettingsAsync(DeliveryCheckpoint checkpoint, CancellationToken cancellationToken = default)
         {
             var eventLogReaderSettings = new EventLogReaderSettings
             {
                 LogFolder = _logFolder,
                 LiveMode = true,
-                ReadingTimeout = _readingTimeout * 1000,
+                ReadingTimeout = _readingTimeout == -1 ? Timeout.Infinite : _readingTimeout * 1000,
                 TimeZone = _timeZone,
-                SkipEventsBeforeDate = _skipEventsBeforeDate
+                SkipEventsBeforeDate = _skipEventsBeforeDate,
+                UseEventContext = _useEventContext,
+                UseStrictParsing = _useStrictParsing,
+                DiagnosticHandler = ReportParsingDiagnostic,
+                ProblemRecordHandler = _logger != null || _problemRecordHandler != null
+                    ? (Action<EventLogProblemRecord>)ReportProblemRecord : null
             };
 
-            if (!_loadArchive)
-            {
-                var position = await _storage.ReadEventLogPositionAsync(cancellationToken);
-
-                if (position != null)
-                {
-                    var lgpFilePath = Path.Combine(_logFolder, position.FileName);
-
-                    if (!File.Exists(lgpFilePath))
-                    {
-                        _logger?.LogWarning(
-                            $"Lgp file ({lgpFilePath}) doesn't exist. The reading will be started from the first found file");
-                    }
-                    else
-                    {
-                        eventLogReaderSettings.LgpFileName = position.FileName;
-                        eventLogReaderSettings.LgpStartPosition = position.EndPosition;
-                        eventLogReaderSettings.LgfStartPosition = position.LgfEndPosition;
-                        eventLogReaderSettings.ItemId = position.Id;
-
-                        _logger?.LogInformation(
-                            $"File {position.FileName} will be read from {position.EndPosition} position, LGF file will be read from {position.LgfEndPosition} position");
-                    }
-                }
-                else
-                {
-                    _logger?.LogInformation(
-                        "There're no log items in the database, first found log file will be read from 0 position");
-                }
-            }
+            EventLogPosition position;
+            var localPosition = checkpoint != null && checkpoint.Exists;
+            if (localPosition) position = checkpoint.Read();
             else
             {
-                _logger?.LogWarning("LoadArchive parameter is true. Live mode will not be used");
-
-                eventLogReaderSettings.LiveMode = false;
+                position = _loadArchive ? null : await _storage.ReadEventLogPositionAsync(cancellationToken);
             }
-
+            if (position != null)
+            {
+                if (string.IsNullOrEmpty(position.FileName) || position.FileName.IndexOfAny(new[] {'/', '\\'}) >= 0)
+                    throw new InvalidDataException("Invalid saved journal file name.");
+                var path = Path.Combine(_logFolder, position.FileName);
+                if (!File.Exists(path))
+                    throw new FileNotFoundException("The acknowledged journal file is missing; restore the journal or explicitly start a new archive import.", path);
+                var lgpLength = new FileInfo(path).Length;
+                if (position.EndPosition < 0 || position.EndPosition > lgpLength + (localPosition ? 0 : 1) || position.LgfEndPosition < 0 || position.Id < 0)
+                    throw new InvalidDataException("Saved journal position is outside the available journal.");
+                var dictionary = Path.Combine(_logFolder, "1Cv8.lgf");
+                if (!File.Exists(dictionary))
+                    throw new InvalidDataException("The acknowledged LGF dictionary is missing.");
+                var lgfLength = new FileInfo(dictionary).Length;
+                if (position.LgfEndPosition > lgfLength + (localPosition ? 0 : 1))
+                    throw new InvalidDataException("The acknowledged LGF position is outside the available dictionary.");
+                // Historical StreamReader cursors could be one byte past EOF. Accept them only when
+                // bootstrapping from storage, and persist exact offsets in the new local format.
+                position = new EventLogPosition(position.FileName, Math.Min(position.EndPosition, lgpLength),
+                    Math.Min(position.LgfEndPosition, lgfLength), position.Id);
+                eventLogReaderSettings.LgpFileName = position.FileName;
+                eventLogReaderSettings.LgpStartPosition = position.EndPosition;
+                eventLogReaderSettings.LgfStartPosition = position.LgfEndPosition;
+                eventLogReaderSettings.ItemId = position.Id;
+            }
+            // Persist even an empty starting position before the first INSERT can partially succeed.
+            if (!localPosition) checkpoint?.Save(position);
+            _acknowledgedPosition = position;
+            _logger?.LogInformation(position == null ? "Reading from the beginning of the available journal." :
+                $"Resuming {position.FileName} at {position.EndPosition}; LGF at {position.LgfEndPosition}; Id {position.Id}.");
+            eventLogReaderSettings.LiveMode = !_loadArchive;
             return eventLogReaderSettings;
-        }
-
-        private static async Task SendAsync(ITargetBlock<EventLogItem> nextBlock, EventLogItem item,
-            CancellationToken stoppingToken = default)
-        {
-            while (!stoppingToken.IsCancellationRequested && !nextBlock.Completion.IsCompleted)
-                if (await nextBlock.SendAsync(item, stoppingToken))
-                    break;
         }
 
         protected virtual void Dispose(bool disposing)
