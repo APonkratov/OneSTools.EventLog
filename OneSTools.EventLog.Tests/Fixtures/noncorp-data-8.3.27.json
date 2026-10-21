@@ -1,0 +1,551 @@
+{
+  "platformVersion": "8.3.27.2325",
+  "provenance": "Artificial records from local journals and controlled 8.3.27.2325 writes. Expected Data independently exported by ibcmd or administrator UnloadEventLog XML. Error aliases use the documented same payload; the actual error was not reproduced. No private journal values or identifiers.",
+  "cases": [
+    {
+      "eventCode": "_$Access$_.AccessDenied",
+      "data": "{\"P\",\n{1,\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {"Right":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{1,\n{\"S\",\"FixtureRole0\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":{"Item":"FixtureRole0"},"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{2,\n{\"S\",\"FixtureRole0\"\n},\n{\"S\",\"FixtureRole1\"\n}\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":{"Item":["FixtureRole0","FixtureRole1"]},"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"true","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",1\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"true","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",1\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"true","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",1\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"true","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",1\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"true","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {"Vendor":"Fixture0","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDelete",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionUpdateError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"S\",\"11111111-2222-3333-4444-555555555555\"\n},\n{\"S\",\"Fixture4\"\n},\n{\"S\",\"Fixture5\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture7\"\n},\n{\"B\",0\n},\n{\"B\",0\n},\n{\"S\",\"Адаптация\"\n},\n{\"B\",0\n},\n{\"S\",\"Информационная база\"\n},\n{\"A\",\n{0\n}\n},\n{\"B\",0\n}\n}\n}",
+      "expected": {"Active":"false","DefaultRoles":null,"HashSum":"Fixture4","Name":"Fixture0","Purpose":"Адаптация","SafeMode":"false","Scope":"Информационная база","SecurityProfile":"Fixture7","Synonym":"Fixture5","UUID":"11111111-2222-3333-4444-555555555555","UnsafeOperationProtection":"false","UseDefaultRolesForAllUsers":"false","UsedInDistributedInfoBase":"false","Vendor":"Fixture2","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigUpdate",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n}\n}\n}",
+      "expected": {"Vendor":"Fixture0","Version":"Fixture1"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChange",
+      "data": "{\"P\",\n{2,\n{\"B\",0\n}\n}\n}",
+      "expected": {"ExclusiveMode":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChange",
+      "data": "{\"P\",\n{2,\n{\"B\",1\n}\n}\n}",
+      "expected": {"ExclusiveMode":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.ExclusiveModeChangeError",
+      "data": "{\"P\",\n{2,\n{\"B\",0\n}\n}\n}",
+      "expected": {"ExclusiveMode":"false"}
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\n{518,\n{\"S\",\"Fixture1\"\n},\n{\"S\",\"Fixture2\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {"AuthenticationMethod":"1","CurrentOSUser":"Fixture2","Name":"Fixture1"}
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\n{513,\n{\"S\",\"Fixture1\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {"AuthenticationMethod":"1","OSUser":"Fixture1"}
+    },
+    {
+      "eventCode": "_$Session$_.ConfigExtensionApplyError",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n}\n}\n}",
+      "expected": {"Name":"Fixture0"}
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {"LanguageCode":"Fixture5","Name":"Fixture1","Path":"Fixture0","SafeMode":"false","SecurityProfile":"Fixture3","UnsafeOperationProtection":"false"}
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {"LanguageCode":"Fixture5","Name":"Fixture1","Path":"Fixture0","SafeMode":"true","SecurityProfile":"Fixture3","UnsafeOperationProtection":"false"}
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",1\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {"LanguageCode":"Fixture5","Name":"Fixture1","Path":"Fixture0","SafeMode":"false","SecurityProfile":"Fixture3","UnsafeOperationProtection":"true"}
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnect",
+      "data": "{\"P\",\n{\n{\"S\",\"Fixture0\"\n},\n{\"S\",\"Fixture1\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture3\"\n},\n{\"B\",0\n},\n{\"S\",\"Fixture5\"\n}\n}\n}",
+      "expected": {"LanguageCode":"Fixture5","Name":"Fixture1","Path":"Fixture0","SafeMode":"false","SecurityProfile":"Fixture3","UnsafeOperationProtection":"false"}
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\n{518,\n{\"S\",\"FixtureName\"\n},\n{\"S\",\"FixtureOSUser\"\n},\n{\"N\",1\n}\n}\n}",
+      "expected": {"AuthenticationMethod":"1","CurrentOSUser":"FixtureOSUser","Name":"FixtureName"}
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":{"name":"Column0"}}}
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{1,1,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":{"name":"Column0"},"Row":{"Column0":"Cell0_0"}}}
+    },
+    {
+      "eventCode": "_$Access$_.Access",
+      "data": "{\"P\",\n{1,\n{\"Z\",\n{3,2,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column1\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\"Column2\",\n{\"Pattern\",\n{\"S\"\n}\n}\n},\n{\n{\"S\",\"Cell0_0\"\n},\n{\"S\",\"Cell0_1\"\n},\n{\"S\",\"Cell0_2\"\n}\n},\n{\n{\"S\",\"Cell1_0\"\n},\n{\"S\",\"Cell1_1\"\n},\n{\"S\",\"Cell1_2\"\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":[{"name":"Column0"},{"name":"Column1"},{"name":"Column2"}],"Row":[{"Column0":"Cell0_0","Column1":"Cell0_1","Column2":"Cell0_2"},{"Column0":"Cell1_0","Column1":"Cell1_1","Column2":"Cell1_2"}]}}
+    },
+    {
+      "eventCode": "_$InfoBase$_.PredefinedDataUpdate",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":{"name":"Column0"}}}
+    },
+    {
+      "eventCode": "_$Data$_.PredefinedDataInitialization",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":{"name":"Column0"}}}
+    },
+    {
+      "eventCode": "_$Data$_.UpdatePredefinedData",
+      "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
+      "expected": {"Data":{"Column":{"name":"Column0"}}}
+    },
+    {
+      "eventCode": "_$InfoBase$_.RegionalSettingsChange",
+      "data": "{\"P\",{{\"S\",\"en_US\"},{\"B\",\"0\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"-1\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"0\"}}}",
+      "expected": {"LocaleCode":"en_US","UseCurrentSessionSettings":"false","NumbersDecimalSeparator":"","NumbersDigitGroupSeparator":"","NumbersDigitGroupFormat":"","NegativeNumberPresentation":"-1","BooleanFalsePresentation":"","BooleanTruePresentation":"","DatePresentationFormat":"","TimePresentationFormat":"","FirstDayOfWeek":"0"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.RegionalSettingsChange",
+      "data": "{\"P\",{{\"S\",\"en_US\"},{\"B\",\"0\"},{\"S\",\",\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"-1\"},{\"S\",\"FixtureFalse\"},{\"S\",\"FixtureTrue\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"0\"}}}",
+      "expected": {"LocaleCode":"en_US","UseCurrentSessionSettings":"false","NumbersDecimalSeparator":",","NumbersDigitGroupSeparator":"","NumbersDigitGroupFormat":"","NegativeNumberPresentation":"-1","BooleanFalsePresentation":"FixtureFalse","BooleanTruePresentation":"FixtureTrue","DatePresentationFormat":"","TimePresentationFormat":"","FirstDayOfWeek":"0"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateNew",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate\"}}}}",
+      "expected": {"Name":"FixtureTemplate"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate2\"}}}}",
+      "expected": {"Name":"FixtureTemplate2"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateDelete",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate2\"}}}}",
+      "expected": {"Name":"FixtureTemplate2"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyDelete",
+      "data": "{\"P\",{{\"S\",\"FixturePolicy\"}}}",
+      "expected": {"Name":"FixturePolicy"}
+    },
+    {
+      "eventCode": "_$User$_.Delete",
+      "data": "{\"P\",{{\"S\",\"FixtureDelete\"}}}",
+      "expected": {"Name":"FixtureDelete"}
+    },
+    {
+      "eventCode": "_$Session$_.PasswordRequirementsViolationOnAuthentication",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTarget\"}}}}",
+      "expected": {"Name":"FixtureTarget"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2\",{\"S\",\"https://fixture.example.invalid/recover\"}}}",
+      "expected": {"PasswordRecoveryURL":"https://fixture.example.invalid/recover"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4096\",{\"S\",\"https://fixture.example.invalid/help\"}}}",
+      "expected": {"HelpURL":"https://fixture.example.invalid/help"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2048\",{\"B\",\"1\"}}}",
+      "expected": {"ShowHelpHyperlink":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4\",{\"N\",\"7\"}}}",
+      "expected": {"VerificationCodeLength":"7"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8\",{\"N\",\"4\"}}}",
+      "expected": {"MaxUnsuccessfulVerificationCodeValidationAttemptsCount":"4"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8192\",{\"N\",\"41\"}}}",
+      "expected": {"VerificationCodeRefreshRequestLockDuration":"41"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16\",{\"S\",\"smtp.example.invalid\"}}}",
+      "expected": {"SMTPServerAddress":"smtp.example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"32\",{\"S\",\"FixtureSMTP\"}}}",
+      "expected": {"SMTPUser":"FixtureSMTP"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"64\",{\"B\",\"1\"}}}",
+      "expected": {"SMTPPasswordChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"128\",{\"N\",\"2525\"}}}",
+      "expected": {"SMTPPort":"2525"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"35184372088832\",{\"S\",\"fixture@example.invalid\"}}}",
+      "expected": {"PasswordRecoveryFrom":"fixture@example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"256\",{\"S\",\"Fixture Sender\"}}}",
+      "expected": {"SenderName":"Fixture Sender"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"512\",{\"S\",\"Fixture Header\"}}}",
+      "expected": {"Header":"Fixture Header"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1024\",{\"S\",\"<p>Fixture &VerificationCode</p>\"}}}",
+      "expected": {"HTMLMessageText":"<p>Fixture &VerificationCode</p>"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16777216\",{\"N\",\"241\"}}}",
+      "expected": {"VerificationCodeEffectivePeriod":"241"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"549755813888\",{\"B\",\"1\"}}}",
+      "expected": {"PasswordRecoverySMTPSecureAuthenticationOnly":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2199023255552\",{\"B\",\"1\"}}}",
+      "expected": {"PasswordRecoveryAccessTokenChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"32768\",{\"B\",\"1\"}}}",
+      "expected": {"AllowAutoSaveAuthentication":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"65536\",{\"B\",\"1\"}}}",
+      "expected": {"AutoSaveAuthenticationByDefault":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"131072\",{\"N\",\"271\"}}}",
+      "expected": {"AutoSavedAuthenticationLifeTime":"271"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"524288\",{\"B\",\"1\"}}}",
+      "expected": {"UseSpecifiedPasswordCompromiseCheckList":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2097152\",{\"S\",\"https://fixture.example.invalid/check\"}}}",
+      "expected": {"PasswordCompromiseCheckServiceURL":"https://fixture.example.invalid/check"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4194304\",{\"N\",\"17\"}}}",
+      "expected": {"PasswordCompromiseCheckServiceRequestTimeout":"17"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"67108864\",{\"N\",\"7\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeLength":"7"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"134217728\",{\"N\",\"4\"}}}",
+      "expected": {"EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount":"4"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"34359738368\",{\"N\",\"41\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeRefreshRequestLockDuration":"41"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"268435456\",{\"S\",\"smtp.example.invalid\"}}}",
+      "expected": {"EmailAuthenticationSMTPServerAddress":"smtp.example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"536870912\",{\"S\",\"FixtureSMTP\"}}}",
+      "expected": {"EmailAuthenticationSMTPUser":"FixtureSMTP"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1073741824\",{\"B\",\"1\"}}}",
+      "expected": {"EmailAuthenticationSMTPPasswordChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2147483648\",{\"N\",\"2525\"}}}",
+      "expected": {"EmailAuthenticationSMTPPort":"2525"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"70368744177664\",{\"S\",\"fixture@example.invalid\"}}}",
+      "expected": {"EmailAuthenticationFrom":"fixture@example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4294967296\",{\"S\",\"Fixture Sender\"}}}",
+      "expected": {"EmailAuthenticationSenderName":"Fixture Sender"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8589934592\",{\"S\",\"Fixture Header\"}}}",
+      "expected": {"EmailAuthenticationHeader":"Fixture Header"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"17179869184\",{\"S\",\"<p>Fixture &VerificationCode</p>\"}}}",
+      "expected": {"EmailAuthenticationHTMLMessageText":"<p>Fixture &VerificationCode</p>"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"137438953472\",{\"N\",\"241\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeEffectivePeriod":"241"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"17592186044416\",{\"B\",\"1\"}}}",
+      "expected": {"EmailAuthenticationAccessTokenChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"0\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"1\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogReduce",
+      "data": "{\"P\",{{\"D\",\"20000102000000\"}}}",
+      "expected": {"Date":"2000-01-02T00:00:00"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"1\"}}}",
+      "expected": {"Levels":"Информация, Предупреждение, Ошибка"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"0\"}}}",
+      "expected": {"Levels":"Примечание, Информация, Предупреждение, Ошибка"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16384\",{\"B\",\"0\"}}}",
+      "expected": {"UseSSL":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"0\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Переход по навигационной ссылке"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"262144\",{\"B\",\"0\"}}}",
+      "expected": {"UseStandardPasswordCompromiseCheckList":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8388608\",{\"B\",\"0\"}}}",
+      "expected": {"IgnorePasswordCompromiseCheckServiceErrors":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1048576\",{\"B\",\"1\"}}}",
+      "expected": {"UsePasswordCompromiseCheckService":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"68719476736\",{\"B\",\"0\"}}}",
+      "expected": {"EmailAuthenticationUseSSLWhenSendingVerificationCode":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2564\",{\"N\",\"9\"},{\"S\",\"Fixture Combined\"},{\"B\",\"1\"}}}",
+      "expected": {"VerificationCodeLength":"9","Header":"Fixture Combined","ShowHelpHyperlink":"true"}
+    },
+    {
+      "eventCode": "_$Data$_.DataHistorySettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"Данные\",{\"Z\",{\"3\",\"1\",{\"Метаданные\",{\"Pattern\",{\"S\"}}},{\"Поле\",{\"Pattern\",{\"S\"}}},{\"Использование\",{\"Pattern\",{\"S\"}}},{{\"S\",\"Справочник.FixtureItems\"},{\"S\",\"\"},{\"S\",\"Да\"}}}}}}}",
+      "expected": {"Data":{"Column":[{"name":"Метаданные"},{"name":"Поле"},{"name":"Использование"}],"Row":{"Использование":"Да","Метаданные":"Справочник.FixtureItems","Поле":""}}}
+    },
+    {
+      "eventCode": "_$Data$_.DataHistorySettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"Данные\",{\"Z\",{\"3\",\"0\",{\"Метаданные\",{\"Pattern\",{\"S\"}}},{\"Поле\",{\"Pattern\",{\"S\"}}},{\"Использование\",{\"Pattern\",{\"S\"}}}}}}}}",
+      "expected": {"Data":{"Column":[{"name":"Метаданные"},{"name":"Поле"},{"name":"Использование"}]}}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"2\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Отправка кода подтверждения по заданным параметрам учетной записи"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"3\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Нет"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"1\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Отправка кода подтверждения через стандартный сервис"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"2\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Отправка кода подтверждения по заданным параметрам учетной записи"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"3\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Нет"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"1\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Отправка кода подтверждения через стандартный сервис"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"1\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"1\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"0\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Не использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"0\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Не использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"2\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Авто"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"2\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Авто"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdateError",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"0\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogReduceError",
+      "data": "{\"P\",{{\"D\",\"20000102000000\"}}}",
+      "expected": {"Date":"2000-01-02T00:00:00"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsertError",
+      "data": "{\"P\",{{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"0000000000000000000000000000000000000000\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Адаптация\"},{\"B\",\"0\"},{\"S\",\"\"},{\"A\",{\"0\"}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"0000000000000000000000000000000000000000","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Адаптация","UsedInDistributedInfoBase":"false","Scope":"","DefaultRoles":null,"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsertError",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Разделение данных\"},{\"A\",{\"1\",{\"S\",\"Роль.ОсновнаяРоль\"}}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Разделение данных","DefaultRoles":{"Item":"Роль.ОсновнаяРоль"},"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyDeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureLockPolicy\"}}}",
+      "expected": {"Name":"FixtureLockPolicy"}
+    },
+    {
+      "eventCode": "_$User$_.DeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureLockUser\"}}}",
+      "expected": {"Name":"FixtureLockUser"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsert",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Информационная база\"},{\"A\",{\"1\",{\"S\",\"Роль.ОсновнаяРоль\"}}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Информационная база","DefaultRoles":{"Item":"Роль.ОсновнаяРоль"},"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"11111111-2222-3333-4444-555555555555\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Информационная база\"},{\"A\",{\"0\"}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"11111111-2222-3333-4444-555555555555","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Информационная база","DefaultRoles":null,"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    }
+  ]
+}

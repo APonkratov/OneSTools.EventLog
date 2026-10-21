@@ -11,7 +11,7 @@ using Nest;
 
 namespace OneSTools.EventLog.Exporter.Core.ElasticSearch
 {
-    public class ElasticSearchStorage : IEventLogStorage
+    public class ElasticSearchStorage : IEventLogStorage, IEventLogStorageIdentity
     {
         public static int DefaultMaximumRetries = 2;
         public static int DefaultMaxRetryTimeoutSec = 30;
@@ -52,6 +52,13 @@ namespace OneSTools.EventLog.Exporter.Core.ElasticSearch
 
             CheckSettings();
         }
+
+        public string CheckpointIdentity => "ElasticSearch:" + _eventLogItemsIndex + ":" + _separation + ":" +
+            string.Join("|", _nodes.Select(node =>
+            {
+                var uri = new UriBuilder(node.Host) { UserName = "", Password = "" };
+                return uri.Uri.GetLeftPart(UriPartial.Path);
+            }).OrderBy(host => host, StringComparer.Ordinal));
 
         public async Task<EventLogPosition> ReadEventLogPositionAsync(CancellationToken cancellationToken = default)
         {
@@ -102,8 +109,7 @@ namespace OneSTools.EventLog.Exporter.Core.ElasticSearch
 
             for (var i = 0; i < data.Count; i++)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    return;
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var item = data[i];
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,20 +16,31 @@ namespace OneSTools.EventLog
         private ManualResetEvent _lgpChangedCreated;
         private FileSystemWatcher _lgpFilesWatcher;
         private LgpReader _lgpReader;
+        private string _lastLgpFileName = string.Empty;
+        private readonly TransactionOutcomeIndex _transactionOutcomes;
+        private EventLogItem _pendingItem;
+        private readonly EventContextReader _eventContext;
 
         public EventLogReader(EventLogReaderSettings settings)
         {
             _settings = settings;
 
-            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"));
+            _lgfReader = new LgfReader(Path.Combine(_settings.LogFolder, "1Cv8.lgf"), settings.DiagnosticHandler, settings.ProblemRecordHandler, settings.LiveMode, settings.UseStrictParsing);
             _lgfReader.SetPosition(settings.LgfStartPosition);
+            if (settings.UseEventContext)
+                _eventContext = new EventContextReader(Path.Combine(settings.LogFolder, "1Cv8.lgf"),
+                    settings.LiveMode, settings.DiagnosticHandler, settings.ProblemRecordHandler, settings.UseStrictParsing);
+            _transactionOutcomes = new TransactionOutcomeIndex(settings.LogFolder, settings.LiveMode, settings.ProblemRecordHandler, settings.UseStrictParsing);
 
             if (settings.LgpFileName != string.Empty)
             {
                 var file = Path.Combine(_settings.LogFolder, settings.LgpFileName);
 
-                _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate);
+                _lgpReader = new LgpReader(file, settings.TimeZone, _lgfReader, settings.SkipEventsBeforeDate,
+                    settings.DiagnosticHandler, settings.UseEventContext ? _eventContext : null,
+                    settings.ProblemRecordHandler, settings.UseStrictParsing);
                 _lgpReader.SetPosition(settings.LgpStartPosition);
+                _lastLgpFileName = settings.LgpFileName;
             }
         }
 
@@ -55,7 +65,7 @@ namespace OneSTools.EventLog
         public EventLogItem ReadNextEventLogItem(CancellationToken cancellationToken = default)
         {
             if (_lgpReader == null)
-                SetNextLgpReader();
+                SetNextLgpReader(cancellationToken);
 
             if (_settings.LiveMode && _lgpFilesWatcher == null)
                 StartLgpFilesWatcher();
@@ -66,7 +76,9 @@ namespace OneSTools.EventLog
             {
                 try
                 {
-                    item = _lgpReader.ReadNextEventLogItem(cancellationToken);
+                    _eventContext?.Refresh(cancellationToken);
+                    _lgfReader.Refresh(cancellationToken);
+                    item = _pendingItem ?? _lgpReader?.ReadNextEventLogItem(cancellationToken);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -77,7 +89,7 @@ namespace OneSTools.EventLog
 
                 if (item == null)
                 {
-                    var newReader = SetNextLgpReader();
+                    var newReader = SetNextLgpReader(cancellationToken);
 
                     if (_settings.LiveMode)
                     {
@@ -102,6 +114,10 @@ namespace OneSTools.EventLog
                 }
                 else
                 {
+                    _pendingItem = item;
+                    item.TransactionStatus = _transactionOutcomes.Resolve(_lgpReader.TransactionMarker,
+                        _lgpReader.TransactionKey, cancellationToken);
+                    _pendingItem = null;
                     _settings.ItemId++;
                     item.Id = _settings.ItemId;
 
@@ -112,35 +128,26 @@ namespace OneSTools.EventLog
             return item;
         }
 
-        private bool SetNextLgpReader()
+        private bool SetNextLgpReader(CancellationToken cancellationToken)
         {
-            var currentReaderLastWriteDateTime = DateTime.MinValue;
+            // Platform LGP names contain the period in yyyyMMddHHmmss format.
+            // Modification times may be equal or reordered after copying/restoring logs.
+            // SkipEventsBeforeDate is applied to event timestamps by LgpReader, not mtime.
+            var nextFile = Directory.GetFiles(_settings.LogFolder, "*.lgp")
+                .OrderBy(Path.GetFileName, StringComparer.Ordinal)
+                .FirstOrDefault(file => string.IsNullOrEmpty(_lastLgpFileName) ||
+                    StringComparer.Ordinal.Compare(Path.GetFileName(file), _lastLgpFileName) > 0);
 
-            if (_lgpReader != null)
-                currentReaderLastWriteDateTime = new FileInfo(_lgpReader.LgpPath).LastWriteTime;
-            else if(_settings.SkipEventsBeforeDate != DateTime.MinValue)
-                currentReaderLastWriteDateTime = _settings.SkipEventsBeforeDate.AddSeconds(-1);
+            if (_lgpReader?.HasIncompleteRecord == true &&
+                (!_settings.LiveMode || !string.IsNullOrEmpty(nextFile)))
+            {
+                _settings.DiagnosticHandler?.Invoke(new EventLogDiagnostic("IncompleteRecord", _lgpReader.LgpFileName, _lgpReader.IncompletePosition));
+                var error = new EventLogParseException(_lgpReader.LgpFileName, _lgpReader.IncompletePosition, "incomplete LGP record");
+                _lgpReader.ReportIncompleteRecord(error, cancellationToken);
+                throw error;
+            }
 
-            var filesDateTime = new List<(string, DateTime)>();
-
-            var files = Directory.GetFiles(_settings.LogFolder, "*.lgp");
-
-            foreach (var file in files)
-                if (_lgpReader != null)
-                {
-                    if (_lgpReader.LgpPath != file)
-                        filesDateTime.Add((file, new FileInfo(file).LastWriteTime));
-                }
-                else
-                {
-                    filesDateTime.Add((file, new FileInfo(file).LastWriteTime));
-                }
-
-            var orderedFiles = filesDateTime.OrderBy(c => c.Item2).ToList();
-
-            var (item1, _) = orderedFiles.FirstOrDefault(c => c.Item2 > currentReaderLastWriteDateTime);
-
-            if (string.IsNullOrEmpty(item1))
+            if (string.IsNullOrEmpty(nextFile))
             {
                 return false;
             }
@@ -148,7 +155,10 @@ namespace OneSTools.EventLog
             _lgpReader?.Dispose();
             _lgpReader = null;
 
-            _lgpReader = new LgpReader(item1, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate);
+            _lgpReader = new LgpReader(nextFile, _settings.TimeZone, _lgfReader, _settings.SkipEventsBeforeDate,
+                _settings.DiagnosticHandler, _settings.UseEventContext ? _eventContext : null,
+                _settings.ProblemRecordHandler, _settings.UseStrictParsing);
+            _lastLgpFileName = Path.GetFileName(nextFile);
 
             return true;
         }
@@ -169,7 +179,12 @@ namespace OneSTools.EventLog
         private void LgpFilesWatcher_Event(object sender, FileSystemEventArgs e)
         {
             if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Changed)
-                _lgpChangedCreated.Set();
+            {
+                // FileSystemWatcher can have a callback in flight after Dispose returns.
+                var signal = _lgpChangedCreated;
+                try { signal?.Set(); }
+                catch (ObjectDisposedException) { }
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -181,6 +196,8 @@ namespace OneSTools.EventLog
                 _lgpChangedCreated?.Dispose();
                 _lgpChangedCreated = null;
                 _lgfReader?.Dispose();
+                _eventContext?.Dispose();
+                _transactionOutcomes?.Dispose();
                 _lgfReader = null;
                 _lgpReader?.Dispose();
                 _lgpReader = null;

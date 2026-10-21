@@ -1,0 +1,31 @@
+{
+  "platformVersion": "8.3.27.2325",
+  "provenance": "Artificial named wire records; expected Data exported independently by ibcmd. No original journal values.",
+  "cases": [
+    {
+      "eventCode": "_$User$_.AuthenticationLock",
+      "data": "{\"P\",\r\n{1,\r\n{\"Имя\",\r\n{\"S\",\"FixtureUser\"\r\n}\r\n}\r\n}\r\n}",
+      "expected": {"Name":"FixtureUser"}
+    },
+    {
+      "eventCode": "_$User$_.AuthenticationLock",
+      "data": "{\"P\",\r\n{1,\r\n{\"Имя\",\r\n{\"S\",\"\"\r\n}\r\n}\r\n}\r\n}",
+      "expected": {"Name":""}
+    },
+    {
+      "eventCode": "_$User$_.AuthenticationLock",
+      "data": "{\"P\",\r\n{1,\r\n{\"Имя\",\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\user\r\n日本語😀  \"\r\n}\r\n}\r\n}\r\n}",
+      "expected": {"Name":"  Fixture \"quoted\"\\user\r\n日本語😀  "}
+    },
+    {
+      "eventCode": "_$User$_.AuthenticationUnlock",
+      "data": "{\"P\",\r\n{1,\r\n{\"Имя\",\r\n{\"S\",\"FixtureUser\"\r\n}\r\n}\r\n}\r\n}",
+      "expected": {"Name":"FixtureUser"}
+    },
+    {
+      "eventCode": "_$User$_.AuthenticationUnlockError",
+      "data": "{\"P\",\r\n{1,\r\n{\"Имя\",\r\n{\"S\",\"FixtureUser\"\r\n}\r\n}\r\n}\r\n}",
+      "expected": {"Name":"FixtureUser"}
+    }
+  ]
+}

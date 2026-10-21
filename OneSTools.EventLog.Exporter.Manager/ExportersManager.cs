@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -32,8 +34,20 @@ namespace OneSTools.EventLog.Exporter.Manager
         // ElasticSearch
         private readonly List<ElasticSearchNode> _nodes;
         private readonly int _portion;
+        private readonly int _batchMaxAge;
         private readonly int _readingTimeout;
-        private readonly Dictionary<string, CancellationTokenSource> _runExporters = new();
+        private readonly Dictionary<string, ExportRun> _runExporters = new();
+        private bool _stopping;
+        private readonly string _checkpointDirectory;
+        private readonly int _shutdownTimeout;
+
+        private sealed class ExportRun
+        {
+            public readonly CancellationTokenSource Cancellation = new();
+            public Task Task;
+            public bool StopRequested;
+            public bool Completed;
+        }
         private readonly string _separation;
 
         private readonly IServiceProvider _serviceProvider;
@@ -43,6 +57,8 @@ namespace OneSTools.EventLog.Exporter.Manager
         private readonly DateTimeZone _timeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
         private readonly int _writingMaxDop;
         private readonly DateTime _skipEventsBeforeDate;
+        private readonly bool _useEventContext;
+        private readonly bool _useStrictParsing;
 
         public ExportersManager(ILogger<ExportersManager> logger, IServiceProvider serviceProvider,
             IConfiguration configuration)
@@ -53,11 +69,16 @@ namespace OneSTools.EventLog.Exporter.Manager
             _clstFolders = configuration.GetSection("Manager:ClstFolders").Get<List<ClstFolder>>();
             _storageType = configuration.GetValue("Exporter:StorageType", StorageType.None);
             _portion = configuration.GetValue("Exporter:Portion", 10000);
+            _batchMaxAge = configuration.GetValue("Exporter:BatchMaxAge", 5);
             _writingMaxDop = configuration.GetValue("Exporter:WritingMaxDegreeOfParallelism", 1);
             _collectedFactor = configuration.GetValue("Exporter:CollectedFactor", 2);
             _loadArchive = configuration.GetValue("Exporter:LoadArchive", false);
+            _checkpointDirectory = configuration.GetValue("Exporter:CheckpointDirectory", "");
+            _shutdownTimeout = configuration.GetValue("Exporter:ShutdownTimeout", 30);
             _readingTimeout = configuration.GetValue("Exporter:ReadingTimeout", 1);
             _skipEventsBeforeDate = configuration.GetValue("Exporter:SkipEventsBeforeDate", DateTime.MinValue);
+            _useEventContext = configuration.GetValue("Exporter:UseEventContext", false);
+            _useStrictParsing = configuration.GetValue("Exporter:UseStrictParsing", false);
 
             var timeZone = configuration.GetValue("Exporter:TimeZone", "");
 
@@ -100,6 +121,10 @@ namespace OneSTools.EventLog.Exporter.Manager
             foreach (var clstFolder in _clstFolders.Where(clstFolder => !Directory.Exists(clstFolder.Folder)))
                 throw new Exception($"Clst folder ({clstFolder.Folder}) doesn't exist");
 
+            if (_portion <= 0) throw new ArgumentOutOfRangeException("Portion");
+            if (_batchMaxAge <= 0 || _batchMaxAge > 3600) throw new ArgumentOutOfRangeException("BatchMaxAge");
+            if (_readingTimeout < -1 || _readingTimeout > int.MaxValue / 1000) throw new ArgumentOutOfRangeException("ReadingTimeout");
+            if (_shutdownTimeout <= 0 || _shutdownTimeout > 3600) throw new ArgumentOutOfRangeException("ShutdownTimeout");
             if (_writingMaxDop <= 0)
                 throw new Exception("WritingMaxDegreeOfParallelism cannot be equal to or less than 0");
 
@@ -109,29 +134,42 @@ namespace OneSTools.EventLog.Exporter.Manager
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            stoppingToken.Register(() =>
+            try
             {
+                foreach (var clstFolder in _clstFolders)
+                {
+                    var watcher = new ClstWatcher(clstFolder.Folder, clstFolder.Templates);
+                    _clstWatchers.Add(watcher);
+                    foreach (var (key, (name, dataBaseName)) in watcher.InfoBases)
+                        StartExporter(key, name, dataBaseName);
+                    watcher.InfoBasesAdded += ClstWatcher_InfoBasesAdded;
+                    watcher.InfoBasesDeleted += ClstWatcher_InfoBasesDeleted;
+                }
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+            finally
+            {
+                Task[] tasks;
                 lock (_runExporters)
                 {
-                    foreach (var ib in _runExporters)
-                        ib.Value.Cancel();
+                    _stopping = true;
+                    foreach (var run in _runExporters.Values)
+                    {
+                        run.StopRequested = true;
+                        if (!run.Completed) run.Cancellation.Cancel();
+                    }
+                    tasks = _runExporters.Values.Select(run => run.Task).ToArray();
                 }
-            });
-
-            foreach (var clstFolder in _clstFolders)
-            {
-                var clstWatcher = new ClstWatcher(clstFolder.Folder, clstFolder.Templates);
-
-                foreach (var (key, (name, dataBaseName)) in clstWatcher.InfoBases)
-                    StartExporter(key, name, dataBaseName);
-
-                clstWatcher.InfoBasesAdded += ClstWatcher_InfoBasesAdded;
-                clstWatcher.InfoBasesDeleted += ClstWatcher_InfoBasesDeleted;
-
-                _clstWatchers.Add(clstWatcher);
+                foreach (var watcher in _clstWatchers)
+                {
+                    watcher.InfoBasesAdded -= ClstWatcher_InfoBasesAdded;
+                    watcher.InfoBasesDeleted -= ClstWatcher_InfoBasesDeleted;
+                    watcher.Dispose();
+                }
+                // Await the actual async workers, including any predecessor still draining after deletion/re-addition.
+                await Task.WhenAll(tasks);
             }
-
-            await Task.Factory.StartNew(stoppingToken.WaitHandle.WaitOne, stoppingToken);
         }
 
         private void ClstWatcher_InfoBasesDeleted(object sender, ClstEventArgs args)
@@ -157,9 +195,11 @@ namespace OneSTools.EventLog.Exporter.Manager
             {
                 lock (_runExporters)
                 {
-                    if (!_runExporters.ContainsKey(path))
+                    if (!_stopping && (!_runExporters.TryGetValue(path, out var current) || current.StopRequested))
                     {
-                        var cts = new CancellationTokenSource();
+                        var previous = _runExporters.TryGetValue(path, out var old) ? old.Task : Task.CompletedTask;
+                        var run = new ExportRun();
+                        var token = run.Cancellation.Token;
                         var logger =
                             (ILogger<EventLogExporter>)_serviceProvider.GetService(typeof(ILogger<EventLogExporter>));
 
@@ -168,34 +208,56 @@ namespace OneSTools.EventLog.Exporter.Manager
                             LogFolder = logFolder,
                             CollectedFactor = _collectedFactor,
                             LoadArchive = _loadArchive,
+                            ShutdownTimeout = _shutdownTimeout,
+                            CheckpointFile = GetCheckpointFile(logFolder, dataBaseName),
                             Portion = _portion,
+                            BatchMaxAge = _batchMaxAge,
                             ReadingTimeout = _readingTimeout,
                             TimeZone = _timeZone,
                             WritingMaxDop = _writingMaxDop,
-                            SkipEventsBeforeDate = _skipEventsBeforeDate
+                            SkipEventsBeforeDate = _skipEventsBeforeDate,
+                            UseEventContext = _useEventContext,
+                            UseStrictParsing = _useStrictParsing,
                         };
 
-                        Task.Factory.StartNew(async () =>
+                        run.Task = Task.Run(async () =>
                         {
-                            while (!cts.Token.IsCancellationRequested)
+                            try
                             {
-                                try
+                                // A re-added IB must not overlap a previous worker's final INSERT.
+                                await previous;
+                                while (!token.IsCancellationRequested)
                                 {
-                                    using var storage = GetStorage(dataBaseName);
-                                    using var exporter = new EventLogExporter(settings, storage, logger);
-                                    await exporter.StartAsync(cts.Token);
+                                    try
+                                    {
+                                        using var storage = GetStorage(dataBaseName);
+                                        using var exporter = new EventLogExporter(settings, storage, logger);
+                                        await exporter.StartAsync(token);
+                                        if (_loadArchive) break;
+                                    }
+                                    catch (OperationCanceledException) when (token.IsCancellationRequested) { break; }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogCritical(ex,
+                                            "Failed to execute EventLogExporter for {LogFolder} to {Database}; {ErrorType}: {Reason}. Retry delay: {RetryDelayMs} ms.",
+                                            logFolder, dataBaseName, ex.GetBaseException().GetType().Name,
+                                            ex.GetBaseException().Message, 5000);
+                                    }
+                                    if (token.IsCancellationRequested) break;
+                                    await Task.Delay(5000, token);
                                 }
-                                catch (TaskCanceledException)
-                                {
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogCritical(ex, "Failed to execute EventLogExporter");
-                                }
-                                await Task.Delay(5000);
                             }
-                        }, cts.Token);
-                        _runExporters.Add(path, cts);
+                            catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+                            finally
+                            {
+                                lock (_runExporters)
+                                {
+                                    run.Completed = true;
+                                    run.Cancellation.Dispose();
+                                }
+                            }
+                        });
+                        _runExporters[path] = run;
 
                         _logger?.LogInformation(
                             $"Event log exporter for \"{name}\" information base to \"{dataBaseName}\" is started");
@@ -213,15 +275,27 @@ namespace OneSTools.EventLog.Exporter.Manager
         {
             lock (_runExporters)
             {
-                if (_runExporters.TryGetValue(id, out var cts))
+                if (_runExporters.TryGetValue(id, out var run))
                 {
-                    cts.Cancel();
-                    _logger?.LogInformation($"Event log exporter for \"{name}\" information base is stopped");
+                    run.StopRequested = true;
+                    if (!run.Completed) run.Cancellation.Cancel();
+                    _logger?.LogInformation($"Event log exporter for \"{name}\" information base stop requested");
                 }
             }
         }
 
-        private IEventLogStorage GetStorage(string dataBaseName)
+        private string GetCheckpointFile(string logFolder, string database)
+        {
+            if (string.IsNullOrEmpty(_checkpointDirectory)) return "";
+            using var sha = SHA256.Create();
+            var source = Path.GetFullPath(logFolder);
+            if (Path.DirectorySeparatorChar == '\\') source = source.ToUpperInvariant();
+            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(source + "\n" + database));
+            var name = string.Concat(hash.Select(value => value.ToString("x2")));
+            return Path.Combine(_checkpointDirectory, name + ".json");
+        }
+
+        protected virtual IEventLogStorage GetStorage(string dataBaseName)
         {
             switch (_storageType)
             {
@@ -257,14 +331,5 @@ namespace OneSTools.EventLog.Exporter.Manager
             }
         }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            foreach (var clstWatcher in _clstWatchers)
-                clstWatcher?.Dispose();
-
-            GC.SuppressFinalize(this);
-        }
     }
 }

@@ -1,0 +1,279 @@
+{
+  "platformVersion": "8.3.27.2325",
+  "provenance": "Artificial values. Original fixtures use controlled 8.3.27.2325 property assignments; new fields and masks also match an administrator UnloadEventLog XML export. Historical 65534 omits DefaultInterface. Existing JSON field names and representations remain compatible. User.NewError and UserPasswordPolicyNewError are real permission/lock failures checked against administrator XML.",
+  "cases": [
+    {
+      "operation": "Baseline",
+      "eventCode": "_$User$_.New",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S",""],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureTarget","PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Baseline (65534)",
+      "eventCode": "_$User$_.New",
+      "nodes": ["P",["65534",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S",""],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureTarget","PasswordChanged":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Roles.Empty",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","0"],["B","0"],["S","FixtureRenamed"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000001"]],["B","0"],["B","0"],["B","0"],["S","Fixture Full"],["S",""],["S","УправляемоеПриложение"],["A",["0"]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S","fixture@example.invalid"],["B","0"],["B","0"],["A",["0"]],["S","FixturePolicy"],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureRenamed","FullName":"Fixture Full","Language":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000001"},"Email":"fixture@example.invalid","PasswordPolicyName":"FixturePolicy","PasswordSettingDate":"2026-01-02T03:04:05","RunMode":"УправляемоеПриложение","StandardAuthentication":"false","OSAuthentication":"false","OpenIDAuthentication":"false","OpenIDConnectAuthentication":"false","ShowInList":"false","CannotChangePassword":"false","QRCodeAuthentication":"false","EmailAuthentication":"false","AccessTokenAuthentication":"false","Roles":[],"PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "OSUser.Valid",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","0"],["B","0"],["S","FixtureRenamed"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000001"]],["B","0"],["B","0"],["B","0"],["S","Fixture Full"],["S","\\\\FixtureDomain\\FixtureUser"],["S","УправляемоеПриложение"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S","fixture@example.invalid"],["B","0"],["B","0"],["A",["0"]],["S","FixturePolicy"],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureRenamed","FullName":"Fixture Full","Language":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000001"},"Email":"fixture@example.invalid","PasswordPolicyName":"FixturePolicy","PasswordSettingDate":"2026-01-02T03:04:05","RunMode":"УправляемоеПриложение","StandardAuthentication":"false","OSAuthentication":"false","OpenIDAuthentication":"false","OpenIDConnectAuthentication":"false","ShowInList":"false","CannotChangePassword":"false","QRCodeAuthentication":"false","EmailAuthentication":"false","AccessTokenAuthentication":"false","Roles":[{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"11111111-2222-3333-4444-555555555555"}],"PasswordIsSet":"false","OSUser":"\\\\FixtureDomain\\FixtureUser","PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "OSUser.Valid (65534)",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65534",["B","0"],["B","0"],["B","0"],["S","FixtureRenamed"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000001"]],["B","0"],["B","0"],["B","0"],["S","Fixture Full"],["S","\\\\FixtureDomain\\FixtureUser"],["S","УправляемоеПриложение"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S","fixture@example.invalid"],["B","0"],["B","0"],["A",["0"]],["S","FixturePolicy"],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureRenamed","FullName":"Fixture Full","Language":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000001"},"Email":"fixture@example.invalid","PasswordPolicyName":"FixturePolicy","PasswordSettingDate":"2026-01-02T03:04:05","RunMode":"УправляемоеПриложение","StandardAuthentication":"false","OSAuthentication":"false","OpenIDAuthentication":"false","OpenIDConnectAuthentication":"false","ShowInList":"false","CannotChangePassword":"false","QRCodeAuthentication":"false","EmailAuthentication":"false","AccessTokenAuthentication":"false","Roles":[{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"11111111-2222-3333-4444-555555555555"}],"PasswordIsSet":"false","OSUser":"\\\\FixtureDomain\\FixtureUser","PasswordChanged":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.Attempts",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["64",["N","7"]]],
+      "expectedValues": {"MaxUnsuccessfulAttemptsCount":"7"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.Duration",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["128",["N","61"]]],
+      "expectedValues": {"LockDuration":"61"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.Both",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["192",["N","3"],["N","300"]]],
+      "expectedValues": {"MaxUnsuccessfulAttemptsCount":"3","LockDuration":"300"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.LockWaitTime",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["1",["N","47"]]],
+      "expectedValues": {"LockWaitTime":"47"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.IdleTerminate",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["131072",["N","1200"]]],
+      "expectedValues": {"InactivityTimeForTerminateSession":"1200"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Parameters.IdleNotification",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["65536",["N","37"]]],
+      "expectedValues": {"InactivityTimeForTerminateSessionNotification":"37"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Policy.Baseline",
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyNew",
+      "nodes": ["P",["255",["S","FixturePolicy"],["N","0"],["N","0"],["N","0"],["N","0"],["B","0"],["N","432000"],["B","0"],["N","2"]]],
+      "expectedValues": {"Name":"FixturePolicy","ActionOnPasswordRequirementsViolationOnAuthenticationCode":"2"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Policy.PasswordCompromiseCheck",
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyUpdate",
+      "nodes": ["P",["255",["S","FixturePolicy"],["N","100000"],["N","11"],["N","9"],["N","3"],["B","1"],["N","17"],["B","1"],["N","2"]]],
+      "expectedValues": {"Name":"FixturePolicy","ActionOnPasswordRequirementsViolationOnAuthenticationCode":"2","PasswordMaxEffectivePeriod":"100000","PasswordMinEffectivePeriod":"11","PasswordMinLength":"9","PasswordReuseLimit":"3","PasswordStrengthCheck":"true","PasswordExpirationNotificationPeriod":"17","PasswordCompromiseCheck":"true"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "User.New denied by permissions (native error)",
+      "eventCode": "_$User$_.NewError",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureDenied"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S",""],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","44444444-5555-6666-7777-888888888888"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","00010101000000"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"OSAuthentication":"false","StandardAuthentication":"true","CannotChangePassword":"false","Name":"FixtureDenied","Language":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"PasswordChanged":"false","PasswordIsSet":"false","ShowInList":"true","FullName":"","OSUser":"","RunMode":"Авто","Roles":[{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"44444444-5555-6666-7777-888888888888"}],"DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"OpenIDAuthentication":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","Email":"","OpenIDConnectAuthentication":"false","AccessTokenAuthentication":"false","UserMatchingKeys":[],"PasswordPolicyName":"","PasswordSettingDate":"0001-01-01T00:00:00","PasswordHashAlgorithmType":"SHA1","QRCodeAuthentication":"false","PasswordDoesNotSatisfyRequirements":"false","EmailAuthentication":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "synthetic error layout",
+      "eventCode": "_$User$_.UpdateError",
+      "nodes": ["P",["65534",["B","0"],["B","1"],["B","0"],["S","FixtureRenamed"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S","Fixture Full"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"Name":"FixtureRenamed","PasswordChanged":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "MatchingKeys.Two",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["B","1"],["S","Fixture Full"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["2",["S","FixtureIssuer:FixtureSubject"],["S","FixtureIssuer2:FixtureSubject2"]]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":["FixtureIssuer:FixtureSubject","FixtureIssuer2:FixtureSubject2"],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "SecondFactorSettings.One",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["B","1"],["S","Fixture Full"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["1",["S","FixtureTemplate"]]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":["FixtureTemplate"],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "DefaultInterface.Value",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["B","1"],["S","Fixture Full"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","22222222-3333-4444-5555-666666666666"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"22222222-3333-4444-5555-666666666666"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordDoesNotSatisfyRequirements.True",
+      "eventCode": "_$User$_.Update",
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureTarget"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["B","1"],["S","After authentication"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","22222222-3333-4444-5555-666666666666"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S","fixture@example.invalid"],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","PBKDF2SHA256"],["B","0"],["B","1"],["B","0"]]],
+      "expectedValues": {"PasswordChanged":"false","DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"22222222-3333-4444-5555-666666666666"},"UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"PBKDF2SHA256","PasswordDoesNotSatisfyRequirements":"true"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordMaxEffectivePeriod",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["1024",["N","345600"]]],
+      "expectedValues": {"UserPasswordMaxEffectivePeriod":"345600"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordMinEffectivePeriod",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["512",["N","19"]]],
+      "expectedValues": {"UserPasswordMinEffectivePeriod":"19"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordMinLength",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["2",["N","8"]]],
+      "expectedValues": {"UserPasswordMinLength":"8"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordReuseLimit",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["2048",["N","3"]]],
+      "expectedValues": {"UserPasswordReuseLimit":"3"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordStrengthCheck.True",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["4",["N","3"]]],
+      "expectedValues": {"UserPasswordStrengthCheck":"true"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordStrengthCheck.False",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["4",["N","0"]]],
+      "expectedValues": {"UserPasswordStrengthCheck":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordExpirationNotificationPeriod",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["4096",["N","43200"]]],
+      "expectedValues": {"UserPasswordExpirationNotificationPeriod":"43200"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PassiveSessionSleepTime",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["8",["N","47"]]],
+      "expectedValues": {"PassiveSessionHibernateTime":"47"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "HibernateSessionTerminateTime",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["16",["N","83"]]],
+      "expectedValues": {"HibernateSessionTerminateTime":"83"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "UserNameAdditionCodes",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["256",["S","FixtureCode;FixtureCode2"]]],
+      "expectedValues": {"UserNameAdditionCodes":"FixtureCode;FixtureCode2"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "HashAlgorithm.SHA256",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["8192",["S","SHA256"]]],
+      "expectedValues": {"UserPasswordHashAlgorithmType":"SHA256"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordAction.Require",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["32768",["N","0"]]],
+      "expectedValues": {"ActionOnUserPasswordRequirementsViolationOnAuthentication":"Потребовать смену пароля"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordAction.Suggest",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["32768",["N","1"]]],
+      "expectedValues": {"ActionOnUserPasswordRequirementsViolationOnAuthentication":"Предложить смену пароля"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordAction.None",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["32768",["N","2"]]],
+      "expectedValues": {"ActionOnUserPasswordRequirementsViolationOnAuthentication":"Нет"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordCompromiseCheck.True",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["16384",["B","1"]]],
+      "expectedValues": {"UserPasswordCompromiseCheck":"true"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "PasswordCompromiseCheck.Reset",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["16384",["B","0"]]],
+      "expectedValues": {"UserPasswordCompromiseCheck":"false"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "AuthenticationLock.All",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["448",["N","7"],["N","61"],["S","FixtureCode3"]]],
+      "expectedValues": {"MaxUnsuccessfulAttemptsCount":"7","LockDuration":"61","UserNameAdditionCodes":"FixtureCode3"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "AuthenticationLock.AttemptsAndCodes",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["320",["N","11"],["S","FixtureCode4"]]],
+      "expectedValues": {"MaxUnsuccessfulAttemptsCount":"11","UserNameAdditionCodes":"FixtureCode4"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "AuthenticationLock.DurationAndCodes",
+      "eventCode": "_$InfoBase$_.ParametersUpdate",
+      "nodes": ["P",["384",["N","89"],["S","FixtureCode5"]]],
+      "expectedValues": {"LockDuration":"89","UserNameAdditionCodes":"FixtureCode5"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Policy.New lock timeout (native error)",
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyNewError",
+      "nodes": ["P",["255",["S","FixtureLockedNew"],["N","0"],["N","0"],["N","0"],["N","0"],["B","0"],["N","432000"],["B","0"],["N","2"]]],
+      "expectedValues": {"Name":"FixtureLockedNew","PasswordMaxEffectivePeriod":"0","PasswordMinEffectivePeriod":"0","PasswordMinLength":"0","PasswordReuseLimit":"0","PasswordStrengthCheck":"false","PasswordExpirationNotificationPeriod":"432000","PasswordCompromiseCheck":"false","ActionOnPasswordRequirementsViolationOnAuthenticationCode":"2"},
+      "unnamedFields": []
+    }
+  ]
+}

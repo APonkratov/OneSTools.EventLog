@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using OneSTools.BracketsFile;
 
@@ -8,9 +9,13 @@ namespace OneSTools.EventLog
 {
     internal class LgfReader : IDisposable
     {
-        private BracketsListReader _bracketsReader;
+        private Utf8BracketsReader _bracketsReader;
         private bool _disposedValue;
         private FileStream _fileStream;
+        private readonly Action<EventLogDiagnostic> _diagnostic;
+        private readonly Action<EventLogProblemRecord> _problemRecordHandler;
+        private readonly bool _useStrictParsing;
+        private readonly bool _live;
 
         /// <summary>
         ///     Key tuple - first value is an object type, second value is an object number in the array
@@ -24,9 +29,14 @@ namespace OneSTools.EventLog
         private Dictionary<(ObjectType, int), (string, string)> _referencedObjects =
             new Dictionary<(ObjectType, int), (string, string)>();
 
-        public LgfReader(string lgfPath)
+        public LgfReader(string lgfPath, Action<EventLogDiagnostic> diagnostic = null,
+            Action<EventLogProblemRecord> problemRecordHandler = null, bool live = false, bool useStrictParsing = false)
         {
             LgfPath = lgfPath;
+            _diagnostic = EventLogDiagnostic.Guard(diagnostic);
+            _problemRecordHandler = problemRecordHandler;
+            _useStrictParsing = useStrictParsing;
+            _live = live;
         }
 
         public string LgfPath { get; }
@@ -44,58 +54,92 @@ namespace OneSTools.EventLog
 
             var stop = false;
 
-            while (!stop && !_bracketsReader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            while (!stop && !cancellationToken.IsCancellationRequested)
             {
-                var itemData = _bracketsReader.NextNode();
-
-                var ot = (ObjectType) (int) itemData[0];
-
-                // Skip unknown object types
-                if (ot >= ObjectType.Unknown)
-                    continue;
-
-                switch (ot)
+                try
                 {
-                    case ObjectType.Users:
-                    case ObjectType.Metadata:
-                        var key = (ot, (int) itemData[3]);
-                        var value = ((string) itemData[2], (string) itemData[1]);
+                    var itemData = _bracketsReader.NextNode(cancellationToken);
+                    if (itemData == null) break;
+                    var ot = (ObjectType) (int) itemData[0];
 
-                        if (_referencedObjects.ContainsKey(key))
-                            _referencedObjects.Remove(key);
+                    if (ot >= ObjectType.Users && ot < ObjectType.Unknown)
+                    {
+                        var count = ot == ObjectType.Users || ot == ObjectType.Metadata ? 4 : 3;
+                        if (itemData.Count != count || itemData.Any(node => !node.IsValueNode))
+                            throw new InvalidDataException("Invalid LGF record shape.");
+                    }
 
-                        _referencedObjects.Add(key, value);
+                    // Skip unknown object types
+                    if (ot >= ObjectType.Unknown)
+                    {
+                        _diagnostic?.Invoke(new EventLogDiagnostic("DictionaryRecord", "1Cv8.lgf", _bracketsReader.LastNodeStartPosition,
+                            nodesJson: StructuredEventData.Json(StructuredEventData.TokenTree(itemData))));
+                        continue;
+                    }
 
-                        if (objectType == ObjectType.None && GetPosition() >= position)
-                        {
-                            stop = true;
+                    switch (ot)
+                    {
+                        case ObjectType.Users:
+                        case ObjectType.Metadata:
+                            var key = (ot, (int) itemData[3]);
+                            var value = ((string) itemData[2], (string) itemData[1]);
+
+                            if (_referencedObjects.ContainsKey(key))
+                                _referencedObjects.Remove(key);
+
+                            _referencedObjects.Add(key, value);
+
+                            if (objectType == ObjectType.None && GetPosition() >= position - 1)
+                            {
+                                stop = true;
+                                break;
+                            }
+
+                            if (ot == objectType && key.Item2 == number)
+                                stop = true;
+
                             break;
-                        }
+                        default:
+                            var key1 = (ot, (int) itemData[2]);
+                            var value1 = (string) itemData[1];
 
-                        if (ot == objectType && key.Item2 == number)
-                            stop = true;
+                            if (_objects.ContainsKey(key1))
+                                _objects.Remove(key1);
 
-                        break;
-                    default:
-                        var key1 = (ot, (int) itemData[2]);
-                        var value1 = (string) itemData[1];
+                            _objects.Add(key1, value1);
 
-                        if (_objects.ContainsKey(key1))
-                            _objects.Remove(key1);
+                            if (objectType == ObjectType.None && GetPosition() >= position - 1)
+                            {
+                                stop = true;
+                                break;
+                            }
 
-                        _objects.Add(key1, value1);
+                            if (ot == objectType && key1.Item2 == number)
+                                stop = true;
 
-                        if (objectType == ObjectType.None && GetPosition() >= position)
-                        {
-                            stop = true;
                             break;
-                        }
-
-                        if (ot == objectType && key1.Item2 == number)
-                            stop = true;
-
-                        break;
+                    }
                 }
+                catch (Exception error)
+                {
+                    var start = _bracketsReader.LastNodeStartPosition;
+                    _bracketsReader.Position = start;
+                    if (EventLogDiagnostic.IsHandlerFailure(error)) throw;
+                    if (!(error is ArgumentException || error is FormatException || error is OverflowException ||
+                        error is InvalidDataException || error is IndexOutOfRangeException || error is EventLogParseException)) throw;
+                    _diagnostic?.Invoke(new EventLogDiagnostic("InvalidDictionary", "1Cv8.lgf", start));
+                    if (_bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "dictionary entry", error,
+                        _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing)) continue;
+                    throw new EventLogParseException("1Cv8.lgf", start, "dictionary entry", error);
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_live && _bracketsReader.HasIncompleteRecord)
+            {
+                var error = new EventLogParseException("1Cv8.lgf", _bracketsReader.Position, "incomplete dictionary entry");
+                _bracketsReader.TrySkipProblemRecord("1Cv8.lgf", "incomplete dictionary entry", error,
+                    _problemRecordHandler, cancellationToken, allowSkip: !_useStrictParsing);
+                throw error;
             }
         }
 
@@ -139,13 +183,29 @@ namespace OneSTools.EventLog
 
                 _fileStream = new FileStream(LgfPath, FileMode.Open, FileAccess.Read,
                     FileShare.ReadWrite | FileShare.Delete);
-                _bracketsReader = new BracketsListReader(_fileStream);
+                _bracketsReader = new Utf8BracketsReader(_fileStream);
             }
         }
 
         public void SetPosition(long position, CancellationToken cancellationToken = default)
         {
             ReadTill(ObjectType.None, 0, position, cancellationToken);
+        }
+
+        // Read completed appended entries, including updates of already cached keys.
+        // An incomplete trailing entry is left at its opening brace for the next call.
+        public void Refresh(CancellationToken cancellationToken = default)
+        {
+            InitializeStreams();
+            var length = _fileStream.Length;
+            if (length < _bracketsReader.Position)
+                throw new IOException("LGF was truncated; restart the reader to rebuild its dictionary.");
+            cancellationToken.ThrowIfCancellationRequested();
+            // Position is the consumed byte cursor, not the buffered stream position.
+            // An incomplete entry rewinds it, so its tail is still retried.
+            if (length == _bracketsReader.Position) return;
+            ReadTill(ObjectType.None, 0, long.MaxValue, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         public long GetPosition()

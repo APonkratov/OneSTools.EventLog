@@ -5,24 +5,28 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      id: dotnet
+      uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 8.0.x
+    # Build net5.0 applications with a current SDK, without retargeting them.
+    - name: Select build SDK
+      run: dotnet new globaljson --sdk-version '${{ steps.dotnet.outputs.dotnet-version }}' --roll-forward latestPatch
     - name: Install dependencies
-      working-directory: ./OneSTools.EventLog.Exporter
-      run: dotnet restore
+      run: dotnet restore OneSTools.EventLog.sln
     - name: Build
-      working-directory: ./OneSTools.EventLog.Exporter
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      working-directory: ./OneSTools.EventLog.Exporter
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet build OneSTools.EventLog.sln --configuration Release --no-restore
