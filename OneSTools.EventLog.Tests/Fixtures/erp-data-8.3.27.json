@@ -1,0 +1,254 @@
+{
+  "platformVersion": "8.3.27.2325",
+  "provenance": "Artificial records based on six observed ERP wire layouts; expected Data independently exported by ibcmd. Includes error aliases and value variations. No original journal values.",
+  "cases": [
+    {
+      "eventCode": "_$Session$_.AddInAttach",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"FixtureComponent\"\r\n},\r\n{\"S\",\"CommonTemplate.Fixture\"\r\n},\r\n{\"U\"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "AttachmentType": null,
+        "Location": "CommonTemplate.Fixture",
+        "Name": "FixtureComponent",
+        "Type": null
+      }
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\r\n{514,\r\n{\"S\",\"FixtureUser\"\r\n},\r\n{\"N\",1\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "Name": "FixtureUser"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\r\n{513,\r\n{\"S\",\"FixtureDomain\\FixtureUser\"\r\n},\r\n{\"N\",0\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "0",
+        "OSUser": "FixtureDomain\\FixtureUser"
+      }
+    },
+    {
+      "eventCode": "_$Access$_.AccessDenied",
+      "data": "{\"P\",\r\n{6,\r\n{\"S\",\"Read\"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Action": "Read",
+        "Data": null
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.SessionLockChange",
+      "data": "{\"P\",\r\n{\r\n{\"B\",0\r\n},\r\n{\"D\",20261021010000\r\n},\r\n{\"D\",20261021020000\r\n},\r\n{\"S\",\"Fixture message\"\r\n},\r\n{\"S\",\"Fixture code\"\r\n},\r\n{\"S\",\"Fixture parameters\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Begin": "2026-10-21T01:00:00",
+        "End": "2026-10-21T02:00:00",
+        "KeyCode": "Fixture code",
+        "Message": "Fixture message",
+        "Parameter": "Fixture parameters",
+        "Use": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnectError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"C:\\Fixture\\processor.epf\"\r\n},\r\n{\"S\",\"FixtureProcessor\"\r\n},\r\n{\"B\",0\r\n},\r\n{\"S\",\"FixtureProfile\"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"en\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "LanguageCode": "en",
+        "Name": "FixtureProcessor",
+        "Path": "C:\\Fixture\\processor.epf",
+        "SafeMode": "false",
+        "SecurityProfile": "FixtureProfile",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigUpdateError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"FixtureVendor\"\r\n},\r\n{\"S\",\"1.2.3\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Vendor": "FixtureVendor",
+        "Version": "1.2.3"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AddInAttachError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"FixtureComponent\"\r\n},\r\n{\"S\",\"CommonTemplate.Fixture\"\r\n},\r\n{\"U\"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "AttachmentType": null,
+        "Location": "CommonTemplate.Fixture",
+        "Name": "FixtureComponent",
+        "Type": null
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\r\n{514,\r\n{\"S\",\"FixtureUser\"\r\n},\r\n{\"N\",1\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "1",
+        "Name": "FixtureUser"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\r\n{513,\r\n{\"S\",\"FixtureDomain\\FixtureUser\"\r\n},\r\n{\"N\",0\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "0",
+        "OSUser": "FixtureDomain\\FixtureUser"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.SessionLockChangeError",
+      "data": "{\"P\",\r\n{\r\n{\"B\",0\r\n},\r\n{\"D\",20261021010000\r\n},\r\n{\"D\",20261021020000\r\n},\r\n{\"S\",\"Fixture message\"\r\n},\r\n{\"S\",\"Fixture code\"\r\n},\r\n{\"S\",\"Fixture parameters\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Begin": "2026-10-21T01:00:00",
+        "End": "2026-10-21T02:00:00",
+        "KeyCode": "Fixture code",
+        "Message": "Fixture message",
+        "Parameter": "Fixture parameters",
+        "Use": "false"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnectError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"C:\\Fixture\\processor.epf\"\r\n},\r\n{\"S\",\"FixtureProcessor\"\r\n},\r\n{\"B\",0\r\n},\r\n{\"S\",\"FixtureProfile\"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"en\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "LanguageCode": "en",
+        "Name": "FixtureProcessor",
+        "Path": "C:\\Fixture\\processor.epf",
+        "SafeMode": "false",
+        "SecurityProfile": "FixtureProfile",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigUpdateError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"FixtureVendor\"\r\n},\r\n{\"S\",\"1.2.3\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Vendor": "FixtureVendor",
+        "Version": "1.2.3"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AddInAttach",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"U\"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "AttachmentType": null,
+        "Location": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Type": null
+      }
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\r\n{514,\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"N\",2\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "2",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    },
+    {
+      "eventCode": "_$Session$_.Authentication",
+      "data": "{\"P\",\r\n{513,\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"N\",2\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "2",
+        "OSUser": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    },
+    {
+      "eventCode": "_$Access$_.AccessDenied",
+      "data": "{\"P\",\r\n{6,\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Action": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Data": null
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.SessionLockChange",
+      "data": "{\"P\",\r\n{\r\n{\"B\",1\r\n},\r\n{\"D\",00010101000000\r\n},\r\n{\"D\",00010101000000\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Begin": "0001-01-01T00:00:00",
+        "End": "0001-01-01T00:00:00",
+        "KeyCode": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Message": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Parameter": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Use": "true"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalDataProcessorConnectError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "LanguageCode": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Path": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "SafeMode": "true",
+        "SecurityProfile": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigUpdateError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Vendor": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Version": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AddInAttachError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"U\"\r\n},\r\n{\"U\"\r\n}\r\n}\r\n}",
+      "expected": {
+        "AttachmentType": null,
+        "Location": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Type": null
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\r\n{514,\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"N\",2\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "2",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    },
+    {
+      "eventCode": "_$Session$_.AuthenticationError",
+      "data": "{\"P\",\r\n{513,\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"N\",2\r\n}\r\n}\r\n}",
+      "expected": {
+        "AuthenticationMethod": "2",
+        "OSUser": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.SessionLockChangeError",
+      "data": "{\"P\",\r\n{\r\n{\"B\",1\r\n},\r\n{\"D\",00010101000000\r\n},\r\n{\"D\",00010101000000\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Begin": "0001-01-01T00:00:00",
+        "End": "0001-01-01T00:00:00",
+        "KeyCode": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Message": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Parameter": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Use": "true"
+      }
+    },
+    {
+      "eventCode": "_$Session$_.ExternalReportConnectError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"B\",1\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "LanguageCode": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Name": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Path": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "SafeMode": "true",
+        "SecurityProfile": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "UnsafeOperationProtection": "true"
+      }
+    },
+    {
+      "eventCode": "_$InfoBase$_.ConfigUpdateError",
+      "data": "{\"P\",\r\n{\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n},\r\n{\"S\",\"  Fixture \"\"quoted\"\"\\path\r\n日本語😀  \"\r\n}\r\n}\r\n}",
+      "expected": {
+        "Vendor": "  Fixture \"quoted\"\\path\r\n日本語😀  ",
+        "Version": "  Fixture \"quoted\"\\path\r\n日本語😀  "
+      }
+    }
+  ]
+}

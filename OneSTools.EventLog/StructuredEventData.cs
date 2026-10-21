@@ -53,12 +53,18 @@ namespace OneSTools.EventLog
                             ["CurrentOSUser"] = Text(body[2]),
                             ["AuthenticationMethod"] = body[3][1].Text
                         };
-                    if (eventCode == "_$Session$_.AuthenticationError" && List(body, 3) &&
-                        Literal(body[0], "513") && Typed(body[1], "S") && Typed(body[2], "N"))
+                    if (List(body, 3) && Literal(body[0], "514") && Typed(body[1], "S") && Typed(body[2], "N"))
+                        return new Dictionary<string, object>
+                        {
+                            ["Name"] = Text(body[1]), ["AuthenticationMethod"] = body[2][1].Text
+                        };
+                    if (List(body, 3) && Literal(body[0], "513") && Typed(body[1], "S") && Typed(body[2], "N"))
                         return new Dictionary<string, object> { ["OSUser"] = Text(body[1]), ["AuthenticationMethod"] = body[2][1].Text };
                     break;
                 case "_$InfoBase$_.ConfigUpdate":
                 case "_$InfoBase$_.DBConfigUpdate":
+                case "_$InfoBase$_.ConfigUpdateError":
+                case "_$InfoBase$_.DBConfigUpdateError":
                     // This layout has no numeric subtype before the two values.
                     if (List(body, 2) && Typed(body[0], "S") && Typed(body[1], "S"))
                         return new Dictionary<string, object>
@@ -85,14 +91,26 @@ namespace OneSTools.EventLog
                 case "_$Access$_.AccessDenied":
                     if (List(body, 2) && Literal(body[0], "1") && Typed(body[1], "S"))
                         return new Dictionary<string, object> { ["Right"] = Text(body[1]) };
+                    if (List(body, 3) && Literal(body[0], "6") && Typed(body[1], "S") &&
+                        List(body[2], 1) && Literal(body[2][0], "U"))
+                        return new Dictionary<string, object> { ["Action"] = Text(body[1]), ["Data"] = null };
                     break;
                 case "_$Session$_.ConfigExtensionApplyError":
                     if (List(body, 1) && Typed(body[0], "S"))
                         return new Dictionary<string, object> { ["Name"] = Text(body[0]) };
                     break;
                 case "_$Session$_.ExternalDataProcessorConnect":
+                case "_$Session$_.ExternalDataProcessorConnectError":
                 case "_$Session$_.ExternalReportConnect":
+                case "_$Session$_.ExternalReportConnectError":
                     return Fields(body, new[] { "Path", "Name", "SafeMode", "SecurityProfile", "UnsafeOperationProtection", "LanguageCode" }, "SSBSBS");
+                case "_$Session$_.AddInAttach":
+                case "_$Session$_.AddInAttachError":
+                    // Only the observed undefined Type/AttachmentType layout is verified.
+                    return Fields(body, new[] { "Name", "Location", "Type", "AttachmentType" }, "SSUU");
+                case "_$InfoBase$_.SessionLockChange":
+                case "_$InfoBase$_.SessionLockChangeError":
+                    return Fields(body, new[] { "Use", "Begin", "End", "Message", "KeyCode", "Parameter" }, "BDDSSS");
                 case "_$InfoBase$_.ConfigExtensionUpdate":
                 case "_$InfoBase$_.DBConfigExtensionUpdate":
                 case "_$InfoBase$_.DBConfigExtensionUpdateError":
@@ -197,7 +215,12 @@ namespace OneSTools.EventLog
             for (var i = 0; i < names.Length; i++)
             {
                 var node = body[i];
-                if (types[i] == 'A')
+                if (types[i] == 'U')
+                {
+                    if (!List(node, 1) || !Literal(node[0], "U")) return null;
+                    result[names[i]] = null;
+                }
+                else if (types[i] == 'A')
                 {
                     if (!List(node, 2) || !Literal(node[0], "A") || node[1].IsValueNode || node[1].Count == 0 ||
                         !Count(node[1][0], out var count) || (long)count + 1 != node[1].Count) return null;
@@ -216,6 +239,13 @@ namespace OneSTools.EventLog
                     {
                         if (!Literal(node[1], "0") && !Literal(node[1], "1")) return null;
                         result[names[i]] = Literal(node[1], "1") ? "true" : "false";
+                    }
+                    else if (types[i] == 'D')
+                    {
+                        if (!DateTime.TryParseExact(node[1].Text, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
+                            DateTimeStyles.None, out var date)) return null;
+                        // Payload dates are local 1C values; only the event timestamp is UTC.
+                        result[names[i]] = date.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
                     }
                     else result[names[i]] = Text(node);
                 }

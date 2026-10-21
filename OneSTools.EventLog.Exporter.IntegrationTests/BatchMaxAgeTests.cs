@@ -255,14 +255,21 @@ public sealed class BatchMaxAgeTests : IDisposable
 
     private long CheckpointId()
     {
-        using var state = JsonDocument.Parse(File.ReadAllText(State));
+        using var file = new FileStream(State, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var state = JsonDocument.Parse(file);
         return state.RootElement.TryGetProperty("Id", out var id) ? id.GetInt64() : 0;
     }
 
     private async Task WaitForCheckpoint(long id)
     {
         using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-        while (CheckpointId() != id) await Task.Delay(10, limit.Token);
+        while (true)
+        {
+            try { if (CheckpointId() == id) return; }
+            // Publication atomically moves/replaces the file; Windows may briefly deny a reader.
+            catch (IOException) when (!limit.IsCancellationRequested) { }
+            await Task.Delay(10, limit.Token);
+        }
     }
 
     private sealed class ReadLogger : ILogger<EventLogExporter>
