@@ -59,6 +59,7 @@ public sealed class StructuredDataTests : IDisposable
     public void ScalarAndStructuredDataAreBothDecodedWithoutOptions()
     {
         Assert.Equal("123.45", Read("Corpus.Test", "{\"N\",123.45}").Data);
+        Assert.Equal("", Read("_$User$_.DeleteError", "{U}").Data);
         AssertJson("{\"ExclusiveMode\":\"true\"}", Read("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",1}}}").Data);
     }
 

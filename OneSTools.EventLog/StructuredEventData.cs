@@ -157,7 +157,9 @@ namespace OneSTools.EventLog
                     break;
                 case "_$Session$_.ConfigExtensionApplyError":
                 case "_$InfoBase$_.UserPasswordPolicyDelete":
+                case "_$InfoBase$_.UserPasswordPolicyDeleteError":
                 case "_$User$_.Delete":
+                case "_$User$_.DeleteError":
                     if (List(body, 1) && Typed(body[0], "S"))
                         return new Dictionary<string, object> { ["Name"] = Text(body[0]) };
                     break;
@@ -202,6 +204,9 @@ namespace OneSTools.EventLog
                 case "_$InfoBase$_.SessionLockChangeError":
                     return Fields(body, new[] { "Use", "Begin", "End", "Message", "KeyCode", "Parameter" }, "BDDSSS");
                 case "_$InfoBase$_.ConfigExtensionUpdate":
+                case "_$InfoBase$_.DBConfigExtensionInsert":
+                case "_$InfoBase$_.DBConfigExtensionInsertError":
+                case "_$InfoBase$_.DBConfigExtensionDeleteError":
                 case "_$InfoBase$_.DBConfigExtensionUpdate":
                 case "_$InfoBase$_.DBConfigExtensionUpdateError":
                 case "_$InfoBase$_.DBConfigExtensionDelete":

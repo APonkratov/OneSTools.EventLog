@@ -1,6 +1,6 @@
 {
   "platformVersion": "8.3.27.2325",
-  "provenance": "Artificial values. Original fixtures use controlled 8.3.27.2325 property assignments; new fields and masks also match an administrator UnloadEventLog XML export. Historical 65534 omits DefaultInterface. Existing JSON field names and representations remain compatible.",
+  "provenance": "Artificial values. Original fixtures use controlled 8.3.27.2325 property assignments; new fields and masks also match an administrator UnloadEventLog XML export. Historical 65534 omits DefaultInterface. Existing JSON field names and representations remain compatible. User.NewError and UserPasswordPolicyNewError are real permission/lock failures checked against administrator XML.",
   "cases": [
     {
       "operation": "Baseline",
@@ -94,10 +94,10 @@
       "unnamedFields": []
     },
     {
-      "operation": "synthetic error layout",
+      "operation": "User.New denied by permissions (native error)",
       "eventCode": "_$User$_.NewError",
-      "nodes": ["P",["65534",["B","0"],["B","1"],["B","0"],["S","FixtureRenamed"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S","Fixture Full"],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","11111111-2222-3333-4444-555555555555"]]]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","20260102030405"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
-      "expectedValues": {"Name":"FixtureRenamed","PasswordChanged":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","UserMatchingKeys":[],"PasswordHashAlgorithmType":"SHA1","PasswordDoesNotSatisfyRequirements":"false"},
+      "nodes": ["P",["65535",["B","0"],["B","1"],["B","0"],["S","FixtureDenied"],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","0"],["B","1"],["S",""],["S",""],["S","Авто"],["A",["1",["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","44444444-5555-6666-7777-888888888888"]]]],["O",["#","fc01b5df-97fe-449b-83d4-218a090e681e","00000000-0000-0000-0000-000000000000"]],["B","0"],["B","1"],["A",["0"]],["S","НеИспользовать"],["B","1"],["S",""],["B","0"],["B","0"],["A",["0"]],["S",""],["D","00010101000000"],["S","SHA1"],["B","0"],["B","0"],["B","0"]]],
+      "expectedValues": {"OSAuthentication":"false","StandardAuthentication":"true","CannotChangePassword":"false","Name":"FixtureDenied","Language":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"PasswordChanged":"false","PasswordIsSet":"false","ShowInList":"true","FullName":"","OSUser":"","RunMode":"Авто","Roles":[{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"44444444-5555-6666-7777-888888888888"}],"DefaultInterface":{"$type":"O","typeId":"fc01b5df-97fe-449b-83d4-218a090e681e","value":"00000000-0000-0000-0000-000000000000"},"OpenIDAuthentication":"false","UnsafeOperationProtection":"true","SecondAuthenticationFactorSettings":[],"SecondAuthenticationFactorSettingsProcessing":"НеИспользовать","CannotRecoveryPassword":"true","Email":"","OpenIDConnectAuthentication":"false","AccessTokenAuthentication":"false","UserMatchingKeys":[],"PasswordPolicyName":"","PasswordSettingDate":"0001-01-01T00:00:00","PasswordHashAlgorithmType":"SHA1","QRCodeAuthentication":"false","PasswordDoesNotSatisfyRequirements":"false","EmailAuthentication":"false"},
       "unnamedFields": []
     },
     {
@@ -266,6 +266,13 @@
       "eventCode": "_$InfoBase$_.ParametersUpdate",
       "nodes": ["P",["384",["N","89"],["S","FixtureCode5"]]],
       "expectedValues": {"LockDuration":"89","UserNameAdditionCodes":"FixtureCode5"},
+      "unnamedFields": []
+    },
+    {
+      "operation": "Policy.New lock timeout (native error)",
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyNewError",
+      "nodes": ["P",["255",["S","FixtureLockedNew"],["N","0"],["N","0"],["N","0"],["N","0"],["B","0"],["N","432000"],["B","0"],["N","2"]]],
+      "expectedValues": {"Name":"FixtureLockedNew","PasswordMaxEffectivePeriod":"0","PasswordMinEffectivePeriod":"0","PasswordMinLength":"0","PasswordReuseLimit":"0","PasswordStrengthCheck":"false","PasswordExpirationNotificationPeriod":"432000","PasswordCompromiseCheck":"false","ActionOnPasswordRequirementsViolationOnAuthenticationCode":"2"},
       "unnamedFields": []
     }
   ]

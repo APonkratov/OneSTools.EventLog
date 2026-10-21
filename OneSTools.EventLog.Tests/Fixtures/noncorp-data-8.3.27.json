@@ -516,6 +516,36 @@
       "eventCode": "_$InfoBase$_.EventLogReduceError",
       "data": "{\"P\",{{\"D\",\"20000102000000\"}}}",
       "expected": {"Date":"2000-01-02T00:00:00"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsertError",
+      "data": "{\"P\",{{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"0000000000000000000000000000000000000000\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Адаптация\"},{\"B\",\"0\"},{\"S\",\"\"},{\"A\",{\"0\"}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"0000000000000000000000000000000000000000","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Адаптация","UsedInDistributedInfoBase":"false","Scope":"","DefaultRoles":null,"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsertError",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Разделение данных\"},{\"A\",{\"1\",{\"S\",\"Роль.ОсновнаяРоль\"}}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Разделение данных","DefaultRoles":{"Item":"Роль.ОсновнаяРоль"},"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyDeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureLockPolicy\"}}}",
+      "expected": {"Name":"FixtureLockPolicy"}
+    },
+    {
+      "eventCode": "_$User$_.DeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureLockUser\"}}}",
+      "expected": {"Name":"FixtureLockUser"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionInsert",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"00000000-0000-0000-0000-000000000000\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Информационная база\"},{\"A\",{\"1\",{\"S\",\"Роль.ОсновнаяРоль\"}}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"00000000-0000-0000-0000-000000000000","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Информационная база","DefaultRoles":{"Item":"Роль.ОсновнаяРоль"},"UseDefaultRolesForAllUsers":"true","Synonym":""}
+    },
+    {
+      "eventCode": "_$InfoBase$_.DBConfigExtensionDeleteError",
+      "data": "{\"P\",{{\"S\",\"FixtureExtension\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"11111111-2222-3333-4444-555555555555\"},{\"S\",\"1111111111111111111111111111111111111111\"},{\"S\",\"\"},{\"B\",\"1\"},{\"S\",\"\"},{\"B\",\"1\"},{\"B\",\"1\"},{\"S\",\"Дополнение\"},{\"B\",\"0\"},{\"S\",\"Информационная база\"},{\"A\",{\"0\"}},{\"B\",\"1\"}}}",
+      "expected": {"Name":"FixtureExtension","Version":"","Vendor":"","UUID":"11111111-2222-3333-4444-555555555555","HashSum":"1111111111111111111111111111111111111111","SafeMode":"true","SecurityProfile":"","Active":"true","UnsafeOperationProtection":"true","Purpose":"Дополнение","UsedInDistributedInfoBase":"false","Scope":"Информационная база","DefaultRoles":null,"UseDefaultRolesForAllUsers":"true","Synonym":""}
     }
   ]
 }

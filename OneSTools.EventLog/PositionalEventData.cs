@@ -47,6 +47,7 @@ namespace OneSTools.EventLog
                     }
                     break;
                 case "_$InfoBase$_.UserPasswordPolicyNew":
+                case "_$InfoBase$_.UserPasswordPolicyNewError":
                 case "_$InfoBase$_.UserPasswordPolicyUpdate":
                     if (body.Count == 10 && Literal(body[0], "255"))
                         return Layout(node, PolicyNames, "SNNNNBNBN");

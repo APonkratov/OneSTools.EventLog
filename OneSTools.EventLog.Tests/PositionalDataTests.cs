@@ -96,6 +96,9 @@ public sealed class PositionalDataTests : IDisposable
     [InlineData("_$InfoBase$_.UserPasswordPolicyNew", "{P,{254,{S,Fixture},{N,0},{N,0},{N,0},{N,0},{B,0},{N,0},{B,0},{N,2}}}")]
     [InlineData("_$InfoBase$_.DBConfigUpdate", "{P,{}}")]
     [InlineData("_$InfoBase$_.DBConfigExtensionUpdate", "{P,{}}")]
+    [InlineData("_$InfoBase$_.UserPasswordPolicyNewError", "{P,{254,{S,Fixture},{N,0},{N,0},{N,0},{N,0},{B,0},{N,0},{B,0},{N,2}}}")]
+    [InlineData("_$InfoBase$_.UserPasswordPolicyNewError", "{P,{255,{S,Fixture},{N,0},{N,0},{N,0},{N,0},{B,0},{N,0},{B,0},{S,2}}}")]
+    [InlineData("_$InfoBase$_.UserPasswordPolicyUpdateError", "{P,{255,{S,Fixture},{N,0},{N,0},{N,0},{N,0},{B,0},{N,0},{B,0},{N,2}}}")]
     public void UnverifiedMasksAndEmptyPayloadsRemainUninterpreted(string code, string wire)
     {
         Assert.Equal("1c-brackets-v1", JsonNode.Parse(Read(code, wire).Data)!["$format"]!.ToString());

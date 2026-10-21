@@ -84,6 +84,10 @@ public sealed class ErpDataTests : IDisposable
     [InlineData("_$InfoBase$_.EventLogReduce", "{P,{{D,20260230000000}}}")]
     [InlineData("_$InfoBase$_.EventLogReduce", "{P,{{D,20261021000000},{S,extra}}}")]
     [InlineData("_$Data$_.DataHistorySettingsUpdate", "{P,{1,{Данные,{Z,{1,1,{Field,{Pattern,{S}}},{{N,1}}}}}}}")]
+    [InlineData("_$User$_.DeleteError", "{P,{{S,Fixture},{S,extra}}}")]
+    [InlineData("_$InfoBase$_.UserPasswordPolicyDeleteError", "{P,{{N,7}}}")]
+    [InlineData("_$InfoBase$_.DBConfigExtensionInsertError", "{P,{{S,Name},{S,Version},{S,Vendor},{S,uuid},{S,hash},{S,Synonym},{B,2},{S,Profile},{B,1},{B,1},{S,Addon},{B,0},{S,InfoBase},{A,{0}},{B,1}}}")]
+    [InlineData("_$InfoBase$_.DBConfigExtensionDeleteError", "{P,{{S,Name},{S,Version},{S,Vendor},{S,uuid},{S,hash},{S,Synonym},{B,1},{S,Profile},{B,1},{B,1},{S,Addon},{B,0},{S,InfoBase},{A,{0}}}}")]
     public void ChangedLayoutsPreserveTheEntireTree(string code, string wire)
     {
         var diagnostics = new List<EventLogDiagnostic>();
