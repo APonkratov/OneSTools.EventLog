@@ -5,7 +5,7 @@ namespace OneSTools.EventLog
 {
     internal static class CurrentEventNames
     {
-        // Exact Russian EventPresentation from offline ibcmd exports; see docs/event-catalog.md.
+        // Exact Russian EventPresentation from offline ibcmd 8.3.27.2325 exports.
         // Only known system codes are translated. Application names and unknown codes are verbatim.
         private static readonly Dictionary<string, string> Names = new Dictionary<string, string>(StringComparer.Ordinal)
         {

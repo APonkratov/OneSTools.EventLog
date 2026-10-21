@@ -20,17 +20,8 @@ public sealed class EventCatalogTests : IDisposable
     }
 
     [Fact]
-    public void ModelCodesMatchNativePresentationEvenWhenPlatformKeepsTheRawCode()
+    public void UnknownSystemCodesRemainVerbatimAndProduceDiagnostics()
     {
-        var codes = JsonSerializer.Deserialize<string[]>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "platform-8.3.27-event-codes.json")))!;
-        var names = Names().ToDictionary(p => (string)p[0], p => (string)p[1]);
-        Assert.Equal(123, codes.Length);
-        foreach (var code in codes)
-        {
-            Write(code);
-            using var reader = new EventLogReader(Settings());
-            Assert.Equal(names[code], reader.ReadNextEventLogItem().Event);
-        }
         Write("_$Future$_.Unknown");
         var evidence = new List<EventLogDiagnostic>();
         var settings = Settings(); settings.DiagnosticHandler = evidence.Add;

@@ -105,7 +105,7 @@ public sealed class StructuredClickHouseTests
             File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), string.Join(",\n", cases.Select((c, i) =>
                 "{4,\"" + c.GetProperty("eventCode").GetString() + "\"," + (i + 1) + "}")));
             File.WriteAllText(Path.Combine(folder, "20261011000000.lgp"), string.Join(",\n", cases.Select((c, i) =>
-                "{20261011120000,N,{0,0},0,0,0,1," + (i + 1) + ",I,\"\",0," + c.GetProperty("data").GetString() + ",\"\",0,0,0,1,0,{0}}")));
+                "{20261011120000,N,{0,0},0,0,0,1," + (i + 1) + ",I,\"\",0," + Wire(c.GetProperty("nodes")) + ",\"\",0,0,0,1,0,{0}}")));
             var items = new List<EventLogItem>();
             using (var reader = new EventLogReader(new EventLogReaderSettings
             {
@@ -130,6 +130,10 @@ public sealed class StructuredClickHouseTests
         }
         finally { Directory.Delete(folder, true); }
     }
+
+    private static string Wire(JsonElement node) => node.ValueKind == JsonValueKind.Array
+        ? "{" + string.Join(",", node.EnumerateArray().Select(Wire)) + "}"
+        : "\"" + node.GetString() + "\"";
 
     [ClickHouseFact]
     public async Task ContextAndTypedReferencesUseExistingColumnsAndRemainQueryable()

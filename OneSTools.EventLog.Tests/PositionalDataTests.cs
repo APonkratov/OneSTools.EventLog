@@ -24,7 +24,7 @@ public sealed class PositionalDataTests : IDisposable
     {
         var sample = JsonNode.Parse(fixture)!;
         var code = sample["eventCode"]!.ToString();
-        var data = sample["data"]!.ToString();
+        var data = Wire(sample["nodes"]!);
         var item = Read(code, data);
         var parsed = JsonNode.Parse(item.Data)!;
         Assert.Equal("1c-positional-data-v1", parsed["$format"]!.ToString());

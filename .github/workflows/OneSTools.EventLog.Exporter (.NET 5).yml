@@ -1,4 +1,4 @@
-name: EventLogExporter build
+name: EventLogExporter .NET 5
 
 on:
   push:
@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: 5.0.100
     - name: Install dependencies
       working-directory: ./OneSTools.EventLog.Exporter
       run: dotnet restore
