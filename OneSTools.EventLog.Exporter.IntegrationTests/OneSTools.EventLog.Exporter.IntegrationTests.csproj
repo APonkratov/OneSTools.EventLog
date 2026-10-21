@@ -21,6 +21,8 @@
           Link="Fixtures/positional-data-8.3.27.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../OneSTools.EventLog.Tests/Fixtures/known-named-data-8.3.27.json"
           Link="Fixtures/known-named-data-8.3.27.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../OneSTools.EventLog.Tests/Fixtures/event-catalog.json"
+          Link="Fixtures/event-catalog.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="CopyProcessHarness" AfterTargets="Build">
     <ItemGroup>

@@ -8,6 +8,46 @@ namespace OneSTools.EventLog.Exporter.IntegrationTests;
 public sealed class StructuredClickHouseTests
 {
     [ClickHouseFact]
+    public async Task NativeSystemNamesAndVerbatimApplicationNamesUseTheExistingEventColumn()
+    {
+        await using var server = new ClickHouseServer();
+        await server.CreateLegacyTable();
+        var schema = await server.Schema();
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-native-names", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var names = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(
+                Path.Combine(AppContext.BaseDirectory, "Fixtures", "event-catalog.json")))!;
+            foreach (var application in new[] { "Обмен.Ошибка", "Обмен.  Ошибка", " Обмен.Ошибка ",
+                "Сеанс.Подключение внешней компоненты", "Обмен.\"Ошибка\"\r\n日本語😀" })
+                names.Add(application, application);
+            var cases = names.ToArray();
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), string.Join(",\n", cases.Select((c, i) =>
+                "{4,\"" + c.Key.Replace("\"", "\"\"") + "\"," + (i + 1) + "}")));
+            File.WriteAllText(Path.Combine(folder, "20261021000000.lgp"), string.Join(",\n", cases.Select((c, i) =>
+                "{20261021120000,N,{0,0},0,0,0,1," + (i + 1) + ",I,\"\",0,{U},\"\",0,0,0,1,0,{0}}")));
+            var items = new List<EventLogItem>();
+            using (var reader = new EventLogReader(new EventLogReaderSettings
+            { LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc }))
+                while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
+            Assert.Equal(cases.Length, items.Count);
+            using (var storage = server.Storage()) await storage.WriteEventLogDataAsync(items);
+            var rows = (await server.Query($"SELECT * FROM {server.Database}.EventLogItems ORDER BY Id FORMAT JSONEachRow"))
+                .TrimEnd().Split('\n');
+            Assert.Equal(cases.Length, rows.Length);
+            for (var i = 0; i < rows.Length; i++)
+            {
+                using var row = JsonDocument.Parse(rows[i]);
+                Assert.Equal(24, row.RootElement.EnumerateObject().Count());
+                Assert.Equal(cases[i].Value, row.RootElement.GetProperty("Event").GetString());
+            }
+            Assert.Equal(schema, await server.Schema());
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
+    [ClickHouseFact]
     public async Task KnownNamedPayloadsMatchPlatformWithoutChangingTheExistingTable()
     {
         await using var server = new ClickHouseServer();
