@@ -4,7 +4,7 @@
 **8.3.27.2325**. В таблице 151 код из контрольного каталога названий: 146 получают
 русское представление штатной выгрузки, ещё 5 сохраняют исходный код. Это не
 исчерпывающий список событий всех версий платформы. Специальный разбор сложного
-`Data` реализован для **44 кодов**, в пределах перечисленных форм.
+`Data` реализован для **50 кодов**, в пределах перечисленных форм.
 
 Колонка `Data` в ClickHouse остаётся `String`. Ниже перечислены ключи JSON внутри
 этой строки. Числа и логические значения сохраняются **JSON-строками** (`"15"`,
@@ -40,7 +40,7 @@
 |---|---|---|
 | `_$Access$_.Access` | Доступ. Доступ | [Таблица](#table-data) в `Data`: `P/1` + `Z`; обычный JSON |
 | `_$Access$_.AccessDenied` | Доступ. Отказ в доступе | `Right`: `P/1` + строка; либо `Action`, `Data: null`: `P/6` + строка и `U`; обычный JSON |
-| `_$Data$_.DataHistorySettingsUpdate` | Данные. Изменение настроек истории данных | [Общий разбор](#generic) |
+| `_$Data$_.DataHistorySettingsUpdate` | Данные. Изменение настроек истории данных | [Таблица](#table-data) в `Data`: `P/1`, именованное `Данные` с типом `Z`; обычный JSON |
 | `_$Data$_.Delete` | Данные. Удаление | [Общий разбор](#generic) |
 | `_$Data$_.DeletePredefinedData` | Данные. Удаление предопределенных данных | [Общий разбор](#generic) |
 | `_$Data$_.DeleteVersions` | Данные. Удаление версий | [Общий разбор](#generic) |
@@ -62,7 +62,7 @@
 | `_$Debug$_.DebugTargetAttach` | Отладка. Подключение предмета отладки | [Общий разбор](#generic) |
 | `_$Debug$_.DebugTargetDetach` | Отладка. Отключение предмета отладки | [Общий разбор](#generic) |
 | `_$Debug$_.ExpressionEvaluation` | Отладка. Вычисление выражения | [Общий разбор](#generic) |
-| `_$InfoBase$_.AdditionalAuthenticationSettingsUpdate` | Информационная база. Изменение дополнительных настроек аутентификации | [Общий разбор](#generic) |
+| `_$InfoBase$_.AdditionalAuthenticationSettingsUpdate` | Информационная база. Изменение дополнительных настроек аутентификации | [Дополнительные настройки аутентификации](#authentication-settings): 45 одиночных масок и `P/2564`; обычный JSON |
 | `_$InfoBase$_.AdditionalAuthenticationSettingsUpdateError` | Информационная база. Ошибка изменения дополнительных настроек аутентификации | [Общий разбор](#generic) |
 | `_$InfoBase$_.AdministrationParametersChange` | Информационная база. Изменение административных параметров | [Общий разбор](#generic) |
 | `_$InfoBase$_.ConfigExtensionUpdate` | Информационная база. Изменение расширения конфигурации | [Расширение](#extension): 15 значений в `P` без маски; обычный JSON |
@@ -88,10 +88,10 @@
 | `_$InfoBase$_.DumpStart` | Информационная база. Начало выгрузки в файл | [Общий разбор](#generic) |
 | `_$InfoBase$_.EraseData` | Информационная база. Удаление данных информационной базы | [Общий разбор](#generic) |
 | `_$InfoBase$_.EraseDataError` | Информационная база. Ошибка удаление данных информационной базы | [Общий разбор](#generic) |
-| `_$InfoBase$_.EventLogReduce` | Информационная база. Сокращение журнала регистрации | [Общий разбор](#generic) |
-| `_$InfoBase$_.EventLogReduceError` | Информационная база. Ошибка сокращения журнала регистрации | [Общий разбор](#generic) |
-| `_$InfoBase$_.EventLogSettingsUpdate` | Информационная база. Изменение настроек журнала регистрации | [Общий разбор](#generic) |
-| `_$InfoBase$_.EventLogSettingsUpdateError` | Информационная база. Ошибка изменения настроек журнала регистрации | [Общий разбор](#generic) |
+| `_$InfoBase$_.EventLogReduce` | Информационная база. Сокращение журнала регистрации | `Date`: единственная дата `D` в `P` без маски; обычный JSON |
+| `_$InfoBase$_.EventLogReduceError` | Информационная база. Ошибка сокращения журнала регистрации | `Date`: та же форма, алиас ошибки; обычный JSON |
+| `_$InfoBase$_.EventLogSettingsUpdate` | Информационная база. Изменение настроек журнала регистрации | [Настройки ЖР](#event-log-settings): `P/1` и `P/24`; обычный JSON |
+| `_$InfoBase$_.EventLogSettingsUpdateError` | Информационная база. Ошибка изменения настроек журнала регистрации | [Настройки ЖР](#event-log-settings): те же проверенные формы, алиас ошибки; обычный JSON |
 | `_$InfoBase$_.ExclusiveModeChange` | Информационная база. Изменение режима монопольного доступа к текущей области | `ExclusiveMode`: `P/2`, логическое значение; обычный JSON |
 | `_$InfoBase$_.ExclusiveModeChangeError` | Информационная база. Ошибка изменения режима монопольного доступа к текущей области | `ExclusiveMode`: `P/2`, логическое значение; обычный JSON |
 | `_$InfoBase$_.InfoBaseAdmParamsUpdate` | Информационная база. Изменение параметров информационной базы | [Общий разбор](#generic) |
@@ -203,6 +203,95 @@
 аутентификации не считаются позиционно разобранными на основании одного кода
 события. Справка называет поле `AuthenticationMode`; существующий ключ JSON
 сохранён для совместимости.
+
+<a id="authentication-settings"></a>
+## Дополнительные настройки аутентификации
+
+Обычный JSON для `AdditionalAuthenticationSettingsUpdate`. Подтверждены
+перечисленные одиночные маски и одна составная. Маски хранятся строками и не
+ограничены 32 битами. Нулевая маска `P/{0}` остаётся общим деревом: значений для
+восстановления полей в ней нет.
+
+| Маска | Ключ обычного JSON | Тип |
+|---|---|---|
+| `1` | `PasswordRecoveryMethod` | Перечисление, см. ниже |
+| `2` | `PasswordRecoveryURL` | Строка |
+| `4` | `VerificationCodeLength` | Число |
+| `8` | `MaxUnsuccessfulVerificationCodeValidationAttemptsCount` | Число |
+| `16` | `SMTPServerAddress` | Строка |
+| `32` | `SMTPUser` | Строка |
+| `64` | `SMTPPasswordChanged` | Логическое |
+| `128` | `SMTPPort` | Число |
+| `256` | `SenderName` | Строка |
+| `512` | `Header` | Строка |
+| `1024` | `HTMLMessageText` | Строка |
+| `2048` | `ShowHelpHyperlink` | Логическое |
+| `4096` | `HelpURL` | Строка |
+| `8192` | `VerificationCodeRefreshRequestLockDuration` | Число |
+| `16384` | `UseSSL` | Логическое |
+| `32768` | `AllowAutoSaveAuthentication` | Логическое |
+| `65536` | `AutoSaveAuthenticationByDefault` | Логическое |
+| `131072` | `AutoSavedAuthenticationLifeTime` | Число |
+| `262144` | `UseStandardPasswordCompromiseCheckList` | Логическое |
+| `524288` | `UseSpecifiedPasswordCompromiseCheckList` | Логическое |
+| `1048576` | `UsePasswordCompromiseCheckService` | Логическое |
+| `2097152` | `PasswordCompromiseCheckServiceURL` | Строка |
+| `4194304` | `PasswordCompromiseCheckServiceRequestTimeout` | Число |
+| `8388608` | `IgnorePasswordCompromiseCheckServiceErrors` | Логическое |
+| `16777216` | `VerificationCodeEffectivePeriod` | Число |
+| `33554432` | `EmailAuthenticationMethod` | Перечисление, см. ниже |
+| `67108864` | `EmailAuthenticationVerificationCodeLength` | Число |
+| `134217728` | `EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount` | Число |
+| `268435456` | `EmailAuthenticationSMTPServerAddress` | Строка |
+| `536870912` | `EmailAuthenticationSMTPUser` | Строка |
+| `1073741824` | `EmailAuthenticationSMTPPasswordChanged` | Логическое |
+| `2147483648` | `EmailAuthenticationSMTPPort` | Число |
+| `4294967296` | `EmailAuthenticationSenderName` | Строка |
+| `8589934592` | `EmailAuthenticationHeader` | Строка |
+| `17179869184` | `EmailAuthenticationHTMLMessageText` | Строка |
+| `34359738368` | `EmailAuthenticationVerificationCodeRefreshRequestLockDuration` | Число |
+| `68719476736` | `EmailAuthenticationUseSSLWhenSendingVerificationCode` | Логическое |
+| `137438953472` | `EmailAuthenticationVerificationCodeEffectivePeriod` | Число |
+| `549755813888` | `PasswordRecoverySMTPSecureAuthenticationOnly` | Логическое |
+| `1099511627776` | `PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode` | Перечисление, см. ниже |
+| `2199023255552` | `PasswordRecoveryAccessTokenChanged` | Логическое |
+| `8796093022208` | `EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode` | Перечисление, см. ниже |
+| `17592186044416` | `EmailAuthenticationAccessTokenChanged` | Логическое |
+| `35184372088832` | `PasswordRecoveryFrom` | Строка |
+| `70368744177664` | `EmailAuthenticationFrom` | Строка |
+| `2564` | `VerificationCodeLength`, `Header`, `ShowHelpHyperlink` | Число, строка, логическое; порядок подтверждён совместным изменением |
+
+| Поле | Проверенные коды `N` и результирующие строки |
+|---|---|
+| `PasswordRecoveryMethod` | `0` → `Переход по навигационной ссылке`; `1` → `Отправка кода подтверждения через стандартный сервис`; `2` → `Отправка кода подтверждения по заданным параметрам учетной записи`; `3` → `Нет` |
+| `EmailAuthenticationMethod` | `1`, `2`, `3` с теми же представлениями отправки и `Нет`; код `0` не интерпретируется |
+| `PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode`, `EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode` | `0` → `Не использовать`; `1` → `Использовать`; `2` → `Авто` |
+
+Для этих новых JSON-полей используются фактические ключи и представления
+штатной выгрузки. Например, `HTMLMessageText` и
+`UseSpecifiedPasswordCompromiseCheckList` отличаются от английских имён,
+указанных на странице описания событий в справке. Поля `SMTPPasswordChanged`,
+`PasswordRecoveryAccessTokenChanged` и соответствующие поля электронной почты —
+логические признаки изменения; пароль или токен из них не восстанавливаются.
+Другие комбинации масок, неизвестные коды перечислений и событие
+`AdditionalAuthenticationSettingsUpdateError` сохраняются общим разбором.
+
+<a id="event-log-settings"></a>
+## Настройки журнала регистрации
+
+Обычный JSON для `EventLogSettingsUpdate` и документированного алиаса
+`EventLogSettingsUpdateError`.
+
+| Форма | Поля и значения |
+|---|---|
+| `P/24`: строка и логическое | `EventName`, `EventIsLogged` — настройка регистрации отдельного события |
+| `P/1` с `N/0` | `Levels: "Примечание, Информация, Предупреждение, Ошибка"` |
+| `P/1` с `N/1` | `Levels: "Информация, Предупреждение, Ошибка"` |
+
+Прочие коды уровней, `SplitPeriod` и `EventLogFormat` описаны в справке, но их
+запись в ЖР не подтверждена этим набором сценариев. Для них сохраняется общее
+дерево. Изменение периода разделения через API в проверенном сценарии не создало
+событие с соответствующим содержимым.
 
 <a id="user"></a>
 ## Пользователь
@@ -385,6 +474,31 @@
 копия файла. Синтаксически повреждённые записи обрабатываются отдельно через
 диагностику и лог проблемных записей.
 
+## Кандидаты на дальнейший разбор
+
+Состав полей в справке ещё не подтверждает порядок и типы узлов в записи ЖР.
+Следующие события остаются общим разбором до получения соответствующего
+контрольного журнала и независимой штатной выгрузки.
+
+| События или группа | Что известно из справки | Какого подтверждения не хватает |
+|---|---|---|
+| `_$Debug$_.DebugTargetAttach`, `DebugTargetDetach`, `ExpressionEvaluation` | `DebugServerUser`, `DebugTargetType`; для вычисления также `Expression` | ЖР сервера отладки с настроенными пользователями; обычное подключение отладчика не доказывает эту форму |
+| `_$OpenIDProvider$_.PositiveAssertion`, `NegativeAssertion` | `RelyingPartyURL`; для подтверждения также `Name` | Реальный ответ информационной базы в роли провайдера OpenID |
+| `_$Session$_.AuthenticationFirstFactor` | `Name`, способ аутентификации, `CurrentOSUser` | Сценарий входа с двумя факторами и проверка записанного варианта структуры |
+| `_$Session$_.PasswordChangeError`, `PasswordCompromiseCheckServiceErrorOnAuthentication` | `Name` | Соответствующий отказ при входе или смене пароля через формы платформы; одноимённая ошибка API не заменяет этот сценарий |
+| `_$InfoBase$_.DBConfigExtensionInsert`, `DBConfigExtensionInsertError`, `DBConfigExtensionDeleteError` | Свойства расширения, аналогичные перечисленным выше | Запись конкретной операции при обновлении базы; одинаковый список свойств в справке не гарантирует одинаковый бинарный порядок |
+| `_$InfoBase$_.DBConfigBackgroundUpdateError` | `Vendor`, `Version` | Ошибка именно фонового обновления конфигурации базы |
+| `_$InfoBase$_.UserPasswordPolicyNewError`, `UserPasswordPolicyUpdateError`, `UserPasswordPolicyDeleteError`; `_$User$_.DeleteError` | Защищённые данные, часть событий описана по аналогии с успешными операциями | Ошибка, создавшая именно системную запись ЖР: дубли имён политик в тесте отклонены до появления таких записей |
+| `_$InfoBase$_.RoleUpdate`, `_$User$_.PermissionChange` | Права, ограничения, шаблоны, пользователи и разделители; вложенные структуры и соответствия | Изменение прав при включённом аудите и эталонная выгрузка вложенных значений |
+| `_$InfoBase$_.AdministrationParametersChange`, `SecurityProfileChange` | Административные параметры и состав профиля безопасности | Отдельный серверный контур с нужным режимом аудита; проверка КОРП остаётся отдельной |
+| `_$InfoBase$_.AdditionalAuthenticationSettingsUpdateError` | В справке есть событие ошибки без полного описания его Data | Реальная системная запись ошибки; не подставляем структуру успешного события автоматически |
+
+У остальных строк с общим разбором в справке либо нет отдельного состава сложных
+данных, либо `Data` является значением/ссылкой. Это не доказательство отсутствия
+других форм: скаляры уже читаются общими правилами, а нераспознанная структура
+сохраняется деревом. Частично поддержанные события также требуют дополнительных
+примеров для неперечисленных форм и комбинаций.
+
 ## Дополнительный контекст
 
 При `UseEventContext=true` перечисленные результаты помещаются **строкой** в
@@ -407,7 +521,7 @@
 
 Имена и назначение полей сверены со справкой установленной платформы:
 `shcntx_ru.hbk` → «Глобальный контекст» → `ВыгрузитьЖурналРегистрации` →
-`Отбор` → `Событие`. Порядок полей в бинарном ЖР подтверждался отдельно:
+`Отбор` → `Событие` (страница `objects/Global context/methods/catalog3403/UnloadEventLog4040.html`). Порядок полей в бинарном ЖР подтверждался отдельно:
 контролируемыми изменениями в изолированной базе и сравнением со штатной
 выгрузкой. Для защищённых данных пользователей и политик использована выгрузка
 `ВыгрузитьЖурналРегистрации` из сеанса администратора; офлайн-выгрузка в проверенном

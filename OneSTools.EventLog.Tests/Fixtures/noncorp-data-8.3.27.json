@@ -1,6 +1,6 @@
 {
   "platformVersion": "8.3.27.2325",
-  "provenance": "Artificial records with wire layouts from local journals and controlled test-base writes. Expected Data independently exported by ibcmd or an administrator UnloadEventLog call on 8.3.27.2325. No original journal values or identifiers.",
+  "provenance": "Artificial records from local journals and controlled 8.3.27.2325 writes. Expected Data independently exported by ibcmd or administrator UnloadEventLog XML. Error aliases use the documented same payload; the actual error was not reproduced. No private journal values or identifiers.",
   "cases": [
     {
       "eventCode": "_$Access$_.AccessDenied",
@@ -196,6 +196,326 @@
       "eventCode": "_$Session$_.PasswordRequirementsViolationOnAuthentication",
       "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTarget\"}}}}",
       "expected": {"Name":"FixtureTarget"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2\",{\"S\",\"https://fixture.example.invalid/recover\"}}}",
+      "expected": {"PasswordRecoveryURL":"https://fixture.example.invalid/recover"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4096\",{\"S\",\"https://fixture.example.invalid/help\"}}}",
+      "expected": {"HelpURL":"https://fixture.example.invalid/help"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2048\",{\"B\",\"1\"}}}",
+      "expected": {"ShowHelpHyperlink":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4\",{\"N\",\"7\"}}}",
+      "expected": {"VerificationCodeLength":"7"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8\",{\"N\",\"4\"}}}",
+      "expected": {"MaxUnsuccessfulVerificationCodeValidationAttemptsCount":"4"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8192\",{\"N\",\"41\"}}}",
+      "expected": {"VerificationCodeRefreshRequestLockDuration":"41"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16\",{\"S\",\"smtp.example.invalid\"}}}",
+      "expected": {"SMTPServerAddress":"smtp.example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"32\",{\"S\",\"FixtureSMTP\"}}}",
+      "expected": {"SMTPUser":"FixtureSMTP"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"64\",{\"B\",\"1\"}}}",
+      "expected": {"SMTPPasswordChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"128\",{\"N\",\"2525\"}}}",
+      "expected": {"SMTPPort":"2525"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"35184372088832\",{\"S\",\"fixture@example.invalid\"}}}",
+      "expected": {"PasswordRecoveryFrom":"fixture@example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"256\",{\"S\",\"Fixture Sender\"}}}",
+      "expected": {"SenderName":"Fixture Sender"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"512\",{\"S\",\"Fixture Header\"}}}",
+      "expected": {"Header":"Fixture Header"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1024\",{\"S\",\"<p>Fixture &VerificationCode</p>\"}}}",
+      "expected": {"HTMLMessageText":"<p>Fixture &VerificationCode</p>"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16777216\",{\"N\",\"241\"}}}",
+      "expected": {"VerificationCodeEffectivePeriod":"241"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"549755813888\",{\"B\",\"1\"}}}",
+      "expected": {"PasswordRecoverySMTPSecureAuthenticationOnly":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2199023255552\",{\"B\",\"1\"}}}",
+      "expected": {"PasswordRecoveryAccessTokenChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"32768\",{\"B\",\"1\"}}}",
+      "expected": {"AllowAutoSaveAuthentication":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"65536\",{\"B\",\"1\"}}}",
+      "expected": {"AutoSaveAuthenticationByDefault":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"131072\",{\"N\",\"271\"}}}",
+      "expected": {"AutoSavedAuthenticationLifeTime":"271"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"524288\",{\"B\",\"1\"}}}",
+      "expected": {"UseSpecifiedPasswordCompromiseCheckList":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2097152\",{\"S\",\"https://fixture.example.invalid/check\"}}}",
+      "expected": {"PasswordCompromiseCheckServiceURL":"https://fixture.example.invalid/check"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4194304\",{\"N\",\"17\"}}}",
+      "expected": {"PasswordCompromiseCheckServiceRequestTimeout":"17"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"67108864\",{\"N\",\"7\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeLength":"7"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"134217728\",{\"N\",\"4\"}}}",
+      "expected": {"EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount":"4"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"34359738368\",{\"N\",\"41\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeRefreshRequestLockDuration":"41"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"268435456\",{\"S\",\"smtp.example.invalid\"}}}",
+      "expected": {"EmailAuthenticationSMTPServerAddress":"smtp.example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"536870912\",{\"S\",\"FixtureSMTP\"}}}",
+      "expected": {"EmailAuthenticationSMTPUser":"FixtureSMTP"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1073741824\",{\"B\",\"1\"}}}",
+      "expected": {"EmailAuthenticationSMTPPasswordChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2147483648\",{\"N\",\"2525\"}}}",
+      "expected": {"EmailAuthenticationSMTPPort":"2525"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"70368744177664\",{\"S\",\"fixture@example.invalid\"}}}",
+      "expected": {"EmailAuthenticationFrom":"fixture@example.invalid"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"4294967296\",{\"S\",\"Fixture Sender\"}}}",
+      "expected": {"EmailAuthenticationSenderName":"Fixture Sender"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8589934592\",{\"S\",\"Fixture Header\"}}}",
+      "expected": {"EmailAuthenticationHeader":"Fixture Header"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"17179869184\",{\"S\",\"<p>Fixture &VerificationCode</p>\"}}}",
+      "expected": {"EmailAuthenticationHTMLMessageText":"<p>Fixture &VerificationCode</p>"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"137438953472\",{\"N\",\"241\"}}}",
+      "expected": {"EmailAuthenticationVerificationCodeEffectivePeriod":"241"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"17592186044416\",{\"B\",\"1\"}}}",
+      "expected": {"EmailAuthenticationAccessTokenChanged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"0\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"1\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogReduce",
+      "data": "{\"P\",{{\"D\",\"20000102000000\"}}}",
+      "expected": {"Date":"2000-01-02T00:00:00"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"1\"}}}",
+      "expected": {"Levels":"Информация, Предупреждение, Ошибка"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"0\"}}}",
+      "expected": {"Levels":"Примечание, Информация, Предупреждение, Ошибка"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"16384\",{\"B\",\"0\"}}}",
+      "expected": {"UseSSL":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"0\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Переход по навигационной ссылке"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"262144\",{\"B\",\"0\"}}}",
+      "expected": {"UseStandardPasswordCompromiseCheckList":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8388608\",{\"B\",\"0\"}}}",
+      "expected": {"IgnorePasswordCompromiseCheckServiceErrors":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1048576\",{\"B\",\"1\"}}}",
+      "expected": {"UsePasswordCompromiseCheckService":"true"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"68719476736\",{\"B\",\"0\"}}}",
+      "expected": {"EmailAuthenticationUseSSLWhenSendingVerificationCode":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"2564\",{\"N\",\"9\"},{\"S\",\"Fixture Combined\"},{\"B\",\"1\"}}}",
+      "expected": {"VerificationCodeLength":"9","Header":"Fixture Combined","ShowHelpHyperlink":"true"}
+    },
+    {
+      "eventCode": "_$Data$_.DataHistorySettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"Данные\",{\"Z\",{\"3\",\"1\",{\"Метаданные\",{\"Pattern\",{\"S\"}}},{\"Поле\",{\"Pattern\",{\"S\"}}},{\"Использование\",{\"Pattern\",{\"S\"}}},{{\"S\",\"Справочник.FixtureItems\"},{\"S\",\"\"},{\"S\",\"Да\"}}}}}}}",
+      "expected": {"Data":{"Column":[{"name":"Метаданные"},{"name":"Поле"},{"name":"Использование"}],"Row":{"Использование":"Да","Метаданные":"Справочник.FixtureItems","Поле":""}}}
+    },
+    {
+      "eventCode": "_$Data$_.DataHistorySettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"Данные\",{\"Z\",{\"3\",\"0\",{\"Метаданные\",{\"Pattern\",{\"S\"}}},{\"Поле\",{\"Pattern\",{\"S\"}}},{\"Использование\",{\"Pattern\",{\"S\"}}}}}}}}",
+      "expected": {"Data":{"Column":[{"name":"Метаданные"},{"name":"Поле"},{"name":"Использование"}]}}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"2\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Отправка кода подтверждения по заданным параметрам учетной записи"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"3\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Нет"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1\",{\"N\",\"1\"}}}",
+      "expected": {"PasswordRecoveryMethod":"Отправка кода подтверждения через стандартный сервис"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"2\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Отправка кода подтверждения по заданным параметрам учетной записи"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"3\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Нет"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"33554432\",{\"N\",\"1\"}}}",
+      "expected": {"EmailAuthenticationMethod":"Отправка кода подтверждения через стандартный сервис"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"1\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"1\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"0\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Не использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"0\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Не использовать"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"1099511627776\",{\"N\",\"2\"}}}",
+      "expected": {"PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":"Авто"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate",
+      "data": "{\"P\",{\"8796093022208\",{\"N\",\"2\"}}}",
+      "expected": {"EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":"Авто"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogSettingsUpdateError",
+      "data": "{\"P\",{\"24\",{\"S\",\"_$Access$_.Access\"},{\"B\",\"0\"}}}",
+      "expected": {"EventName":"_$Access$_.Access","EventIsLogged":"false"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.EventLogReduceError",
+      "data": "{\"P\",{{\"D\",\"20000102000000\"}}}",
+      "expected": {"Date":"2000-01-02T00:00:00"}
     }
   ]
 }

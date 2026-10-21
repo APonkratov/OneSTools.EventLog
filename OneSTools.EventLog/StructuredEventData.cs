@@ -10,6 +10,58 @@ namespace OneSTools.EventLog
     // A different event, subtype, arity or field type retains the entire parsed tree.
     internal static class StructuredEventData
     {
+        // Only masks observed in controlled 8.3.27 writes and the native administrator export.
+        // Keys are strings: several masks exceed 32 bits. Unobserved combinations retain raw nodes.
+        private static readonly Dictionary<string, (string Name, char Type)> AuthenticationSettingsFields =
+            new Dictionary<string, (string Name, char Type)>(StringComparer.Ordinal)
+            {
+                ["1"] = ("PasswordRecoveryMethod", 'N'),
+                ["2"] = ("PasswordRecoveryURL", 'S'),
+                ["4"] = ("VerificationCodeLength", 'N'),
+                ["8"] = ("MaxUnsuccessfulVerificationCodeValidationAttemptsCount", 'N'),
+                ["16"] = ("SMTPServerAddress", 'S'),
+                ["32"] = ("SMTPUser", 'S'),
+                ["64"] = ("SMTPPasswordChanged", 'B'),
+                ["128"] = ("SMTPPort", 'N'),
+                ["256"] = ("SenderName", 'S'),
+                ["512"] = ("Header", 'S'),
+                ["1024"] = ("HTMLMessageText", 'S'),
+                ["2048"] = ("ShowHelpHyperlink", 'B'),
+                ["4096"] = ("HelpURL", 'S'),
+                ["8192"] = ("VerificationCodeRefreshRequestLockDuration", 'N'),
+                ["16384"] = ("UseSSL", 'B'),
+                ["32768"] = ("AllowAutoSaveAuthentication", 'B'),
+                ["65536"] = ("AutoSaveAuthenticationByDefault", 'B'),
+                ["131072"] = ("AutoSavedAuthenticationLifeTime", 'N'),
+                ["262144"] = ("UseStandardPasswordCompromiseCheckList", 'B'),
+                ["524288"] = ("UseSpecifiedPasswordCompromiseCheckList", 'B'),
+                ["1048576"] = ("UsePasswordCompromiseCheckService", 'B'),
+                ["2097152"] = ("PasswordCompromiseCheckServiceURL", 'S'),
+                ["4194304"] = ("PasswordCompromiseCheckServiceRequestTimeout", 'N'),
+                ["8388608"] = ("IgnorePasswordCompromiseCheckServiceErrors", 'B'),
+                ["16777216"] = ("VerificationCodeEffectivePeriod", 'N'),
+                ["33554432"] = ("EmailAuthenticationMethod", 'N'),
+                ["67108864"] = ("EmailAuthenticationVerificationCodeLength", 'N'),
+                ["134217728"] = ("EmailAuthenticationMaxUnsuccessfulVerificationCodeValidationAttemptsCount", 'N'),
+                ["268435456"] = ("EmailAuthenticationSMTPServerAddress", 'S'),
+                ["536870912"] = ("EmailAuthenticationSMTPUser", 'S'),
+                ["1073741824"] = ("EmailAuthenticationSMTPPasswordChanged", 'B'),
+                ["2147483648"] = ("EmailAuthenticationSMTPPort", 'N'),
+                ["4294967296"] = ("EmailAuthenticationSenderName", 'S'),
+                ["8589934592"] = ("EmailAuthenticationHeader", 'S'),
+                ["17179869184"] = ("EmailAuthenticationHTMLMessageText", 'S'),
+                ["34359738368"] = ("EmailAuthenticationVerificationCodeRefreshRequestLockDuration", 'N'),
+                ["68719476736"] = ("EmailAuthenticationUseSSLWhenSendingVerificationCode", 'B'),
+                ["137438953472"] = ("EmailAuthenticationVerificationCodeEffectivePeriod", 'N'),
+                ["549755813888"] = ("PasswordRecoverySMTPSecureAuthenticationOnly", 'B'),
+                ["1099511627776"] = ("PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode", 'N'),
+                ["2199023255552"] = ("PasswordRecoveryAccessTokenChanged", 'B'),
+                ["8796093022208"] = ("EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode", 'N'),
+                ["17592186044416"] = ("EmailAuthenticationAccessTokenChanged", 'B'),
+                ["35184372088832"] = ("PasswordRecoveryFrom", 'S'),
+                ["70368744177664"] = ("EmailAuthenticationFrom", 'S'),
+            };
+
         public static bool ShouldParse(BracketsNode node)
         {
             if (List(node, 1) && Literal(node[0], "U")) return false;
@@ -116,6 +168,22 @@ namespace OneSTools.EventLog
                         Literal(body[1][0], "Имя") && Typed(body[1][1], "S"))
                         return new Dictionary<string, object> { ["Name"] = Text(body[1][1]) };
                     break;
+                case "_$InfoBase$_.AdditionalAuthenticationSettingsUpdate":
+                    return AuthenticationSettings(body);
+                case "_$InfoBase$_.EventLogSettingsUpdate":
+                case "_$InfoBase$_.EventLogSettingsUpdateError":
+                    if (List(body, 3) && Literal(body[0], "24"))
+                        return Fields(body, new[] { "EventName", "EventIsLogged" }, "SB", 1);
+                    if (List(body, 2) && Literal(body[0], "1") && Typed(body[1], "N"))
+                    {
+                        var levels = body[1][1].Text == "0" ? "Примечание, Информация, Предупреждение, Ошибка" :
+                            body[1][1].Text == "1" ? "Информация, Предупреждение, Ошибка" : null;
+                        if (levels != null) return new Dictionary<string, object> { ["Levels"] = levels };
+                    }
+                    break;
+                case "_$InfoBase$_.EventLogReduce":
+                case "_$InfoBase$_.EventLogReduceError":
+                    return Fields(body, new[] { "Date" }, "D");
                 case "_$InfoBase$_.RegionalSettingsChange":
                     return Fields(body, new[] { "LocaleCode", "UseCurrentSessionSettings", "NumbersDecimalSeparator",
                         "NumbersDigitGroupSeparator", "NumbersDigitGroupFormat", "NegativeNumberPresentation",
@@ -138,6 +206,7 @@ namespace OneSTools.EventLog
                 case "_$InfoBase$_.DBConfigExtensionUpdateError":
                 case "_$InfoBase$_.DBConfigExtensionDelete":
                     return Fields(body, new[] { "Name", "Version", "Vendor", "UUID", "HashSum", "Synonym", "SafeMode", "SecurityProfile", "Active", "UnsafeOperationProtection", "Purpose", "UsedInDistributedInfoBase", "Scope", "DefaultRoles", "UseDefaultRolesForAllUsers" }, "SSSSSSBSBBSBSAB");
+                case "_$Data$_.DataHistorySettingsUpdate":
                 case "_$InfoBase$_.PredefinedDataUpdate":
                 case "_$Data$_.PredefinedDataInitialization":
                 case "_$Data$_.UpdatePredefinedData":
@@ -170,6 +239,46 @@ namespace OneSTools.EventLog
                 };
             }
             return null;
+        }
+
+        private static object AuthenticationSettings(BracketsNode body)
+        {
+            if (List(body, 4) && Literal(body[0], "2564"))
+                return Fields(body, new[] { "VerificationCodeLength", "Header", "ShowHelpHyperlink" }, "NSB", 1);
+            if (!List(body, 2) || !body[0].IsValueNode ||
+                !AuthenticationSettingsFields.TryGetValue(body[0].Text, out var field)) return null;
+            var values = Fields(body, new[] { field.Name }, field.Type.ToString(), 1) as Dictionary<string, object>;
+            if (values == null) return null;
+            var token = (string)values[field.Name];
+            string value;
+            switch (field.Name)
+            {
+                case "PasswordRecoveryMethod":
+                    value = token switch
+                    {
+                        "0" => "Переход по навигационной ссылке",
+                        "1" => "Отправка кода подтверждения через стандартный сервис",
+                        "2" => "Отправка кода подтверждения по заданным параметрам учетной записи",
+                        "3" => "Нет", _ => null
+                    };
+                    break;
+                case "EmailAuthenticationMethod":
+                    value = token switch
+                    {
+                        "1" => "Отправка кода подтверждения через стандартный сервис",
+                        "2" => "Отправка кода подтверждения по заданным параметрам учетной записи",
+                        "3" => "Нет", _ => null
+                    };
+                    break;
+                case "PasswordRecoveryTokenAuthenticationWhenSendingVerificationCode":
+                case "EmailAuthenticationTokenAuthenticationWhenSendingVerificationCode":
+                    value = token switch { "0" => "Не использовать", "1" => "Использовать", "2" => "Авто", _ => null };
+                    break;
+                default: return values;
+            }
+            if (value == null) return null;
+            values[field.Name] = value;
+            return values;
         }
 
         private static object NamedValue(BracketsNode node)
@@ -230,13 +339,13 @@ namespace OneSTools.EventLog
             return result;
         }
 
-        private static object Fields(BracketsNode body, string[] names, string types)
+        private static object Fields(BracketsNode body, string[] names, string types, int offset = 0)
         {
-            if (!List(body, names.Length)) return null;
+            if (!List(body, names.Length + offset)) return null;
             var result = new Dictionary<string, object>();
             for (var i = 0; i < names.Length; i++)
             {
-                var node = body[i];
+                var node = body[i + offset];
                 if (types[i] == 'U')
                 {
                     if (!List(node, 1) || !Literal(node[0], "U")) return null;

@@ -93,7 +93,19 @@ public sealed class StructuredDataTests : IDisposable
     [MemberData(nameof(PlatformFixtures))]
     public void ExpandedLayoutsMatchIndependentPlatformFixtures(string code, string data, string expected)
     {
-        AssertJson(expected, Read(code, data).Data);
+        foreach (var strict in new[] { false, true })
+        foreach (var context in new[] { false, true })
+        {
+            var actual = Read(code, data, strict, context).Data;
+            if (context)
+            {
+                var envelope = JsonNode.Parse(actual)!;
+                Assert.Equal(code, envelope["EventCode"]!.GetValue<string>());
+                Assert.NotNull(envelope["DataNodes"]);
+                actual = envelope["Data"]!.GetValue<string>();
+            }
+            AssertJson(expected, actual);
+        }
     }
 
     [Fact]
@@ -145,7 +157,7 @@ public sealed class StructuredDataTests : IDisposable
     private EventLogReaderSettings Settings() =>
         new() { LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc };
 
-    private EventLogItem Read(string ev, string data)
+    private EventLogItem Read(string ev, string data, bool strict = false, bool context = false)
     {
         File.WriteAllText(Path.Combine(_folder, "1Cv8.lgf"),
             "1CV8LOG(ver 2.0)\n11111111-2222-3333-4444-555555555555\n\n{4,\"" + ev + "\",1}", new UTF8Encoding(false));
@@ -153,7 +165,8 @@ public sealed class StructuredDataTests : IDisposable
             "{20261009123456,C,{0,0},0,0,0,17,1,I,\"\"\"Тест\"\"\",0," + data + ",\"\",0,0,0,23,0,{0}}", new UTF8Encoding(false));
         var settings = new EventLogReaderSettings
         {
-            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc
+            LogFolder = _folder, LiveMode = false, TimeZone = DateTimeZone.Utc,
+            UseStrictParsing = strict, UseEventContext = context
         };
         using var reader = new EventLogReader(settings);
         var item = reader.ReadNextEventLogItem();
