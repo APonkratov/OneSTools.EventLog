@@ -8,6 +8,48 @@ namespace OneSTools.EventLog.Exporter.IntegrationTests;
 public sealed class StructuredClickHouseTests
 {
     [ClickHouseFact]
+    public async Task KnownNamedPayloadsMatchPlatformWithoutChangingTheExistingTable()
+    {
+        await using var server = new ClickHouseServer();
+        await server.CreateLegacyTable();
+        var schema = await server.Schema();
+        var folder = Path.Combine(Path.GetTempPath(), "onestools-known-named-clickhouse", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            using var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
+                "Fixtures", "known-named-data-8.3.27.json")));
+            var cases = fixture.RootElement.GetProperty("cases").EnumerateArray().ToArray();
+            File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), string.Join(",\n", cases.Select((c, i) =>
+                "{4,\"" + c.GetProperty("eventCode").GetString() + "\"," + (i + 1) + "}")));
+            File.WriteAllText(Path.Combine(folder, "20261021000000.lgp"), string.Join(",\n", cases.Select((c, i) =>
+                "{20261021120000,N,{0,0},0,0,0,1," + (i + 1) + ",I,\"\",0," + c.GetProperty("data").GetString() + ",\"\",0,0,0,1,0,{0}}")));
+            var items = new List<EventLogItem>();
+            using (var reader = new EventLogReader(new EventLogReaderSettings
+            {
+                LogFolder = folder, LiveMode = false, TimeZone = DateTimeZone.Utc
+            }))
+                while (reader.ReadNextEventLogItem() is { } item) items.Add(item);
+            Assert.Equal(cases.Length, items.Count);
+            using (var storage = server.Storage()) await storage.WriteEventLogDataAsync(items);
+            var stored = (await server.Query($"SELECT * FROM {server.Database}.EventLogItems ORDER BY Id FORMAT JSONEachRow"))
+                .TrimEnd().Split('\n');
+            Assert.Equal(cases.Length, stored.Length);
+            for (var i = 0; i < cases.Length; i++)
+            {
+                using var row = JsonDocument.Parse(stored[i]);
+                Assert.Equal(24, row.RootElement.EnumerateObject().Count());
+                var data = row.RootElement.GetProperty("Data").GetString()!;
+                Assert.Equal(items[i].Data, data);
+                Assert.True(JsonNode.DeepEquals(JsonNode.Parse(cases[i].GetProperty("expected").GetRawText()), JsonNode.Parse(data)));
+            }
+            Assert.Equal("FixtureUser\n", await server.Query($"SELECT JSONExtractString(Data, 'Name') FROM {server.Database}.EventLogItems WHERE Id=1"));
+            Assert.Equal(schema, await server.Schema());
+        }
+        finally { Directory.Delete(folder, true); }
+    }
+
+    [ClickHouseFact]
     public async Task PositionalPayloadsUseExistingDataStringAndKeepAllTwentyFourColumns()
     {
         await using var server = new ClickHouseServer();

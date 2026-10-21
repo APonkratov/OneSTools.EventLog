@@ -43,6 +43,13 @@ namespace OneSTools.EventLog
             if (positional != null) return positional;
             switch (eventCode)
             {
+                case "_$User$_.AuthenticationLock":
+                case "_$User$_.AuthenticationUnlock":
+                case "_$User$_.AuthenticationUnlockError":
+                    if (List(body, 2) && Literal(body[0], "1") && List(body[1], 2) &&
+                        Literal(body[1][0], "Имя") && Typed(body[1][1], "S"))
+                        return new Dictionary<string, object> { ["Name"] = Text(body[1][1]) };
+                    break;
                 case "_$Session$_.Authentication":
                 case "_$Session$_.AuthenticationError":
                     if (List(body, 4) && Literal(body[0], "518") && Typed(body[1], "S") &&
