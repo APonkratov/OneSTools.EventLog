@@ -1,6 +1,6 @@
 {
   "platformVersion": "8.3.27.2325",
-  "provenance": "Artificial records with wire layouts from local journals; expected Data exported by ibcmd. No original values or identifiers.",
+  "provenance": "Artificial records with wire layouts from local journals and controlled test-base writes. Expected Data independently exported by ibcmd or an administrator UnloadEventLog call on 8.3.27.2325. No original journal values or identifiers.",
   "cases": [
     {
       "eventCode": "_$Access$_.AccessDenied",
@@ -156,6 +156,46 @@
       "eventCode": "_$Data$_.UpdatePredefinedData",
       "data": "{\"P\",\n{1,\n{\"Данные\",\n{\"Z\",\n{1,0,\n{\"Column0\",\n{\"Pattern\",\n{\"S\"\n}\n}\n}\n}\n}\n}\n}\n}",
       "expected": {"Data":{"Column":{"name":"Column0"}}}
+    },
+    {
+      "eventCode": "_$InfoBase$_.RegionalSettingsChange",
+      "data": "{\"P\",{{\"S\",\"en_US\"},{\"B\",\"0\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"-1\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"0\"}}}",
+      "expected": {"LocaleCode":"en_US","UseCurrentSessionSettings":"false","NumbersDecimalSeparator":"","NumbersDigitGroupSeparator":"","NumbersDigitGroupFormat":"","NegativeNumberPresentation":"-1","BooleanFalsePresentation":"","BooleanTruePresentation":"","DatePresentationFormat":"","TimePresentationFormat":"","FirstDayOfWeek":"0"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.RegionalSettingsChange",
+      "data": "{\"P\",{{\"S\",\"en_US\"},{\"B\",\"0\"},{\"S\",\",\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"-1\"},{\"S\",\"FixtureFalse\"},{\"S\",\"FixtureTrue\"},{\"S\",\"\"},{\"S\",\"\"},{\"N\",\"0\"}}}",
+      "expected": {"LocaleCode":"en_US","UseCurrentSessionSettings":"false","NumbersDecimalSeparator":",","NumbersDigitGroupSeparator":"","NumbersDigitGroupFormat":"","NegativeNumberPresentation":"-1","BooleanFalsePresentation":"FixtureFalse","BooleanTruePresentation":"FixtureTrue","DatePresentationFormat":"","TimePresentationFormat":"","FirstDayOfWeek":"0"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateNew",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate\"}}}}",
+      "expected": {"Name":"FixtureTemplate"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate2\"}}}}",
+      "expected": {"Name":"FixtureTemplate2"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.SecondAuthenticationFactorTemplateDelete",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTemplate2\"}}}}",
+      "expected": {"Name":"FixtureTemplate2"}
+    },
+    {
+      "eventCode": "_$InfoBase$_.UserPasswordPolicyDelete",
+      "data": "{\"P\",{{\"S\",\"FixturePolicy\"}}}",
+      "expected": {"Name":"FixturePolicy"}
+    },
+    {
+      "eventCode": "_$User$_.Delete",
+      "data": "{\"P\",{{\"S\",\"FixtureDelete\"}}}",
+      "expected": {"Name":"FixtureDelete"}
+    },
+    {
+      "eventCode": "_$Session$_.PasswordRequirementsViolationOnAuthentication",
+      "data": "{\"P\",{\"1\",{\"Имя\",{\"S\",\"FixtureTarget\"}}}}",
+      "expected": {"Name":"FixtureTarget"}
     }
   ]
 }

@@ -5,18 +5,19 @@ using OneSTools.BracketsFile;
 
 namespace OneSTools.EventLog
 {
-    // These layouts produce Data=null in ibcmd, including 8.3.27.2325.
-    // Names come from changing one property at a time in an isolated 8.3.27 base.
-    // Unknown positions remain explicitly unnamed; the full wire tree is retained.
+    // Field positions checked against controlled writes and an administrator's
+    // UnloadEventLog export from 8.3.27.2325; the offline oracle returned null.
+    // The full wire tree is retained alongside the named values.
     internal static class PositionalEventData
     {
         private static readonly string[] UserNames =
         {
             "OSAuthentication", "StandardAuthentication", "CannotChangePassword", "Name", "Language",
-            null, "PasswordIsSet", "ShowInList", "FullName", "OSUser", "RunMode", "Roles", null,
-            "OpenIDAuthentication", null, null, null, null, "Email", "OpenIDConnectAuthentication",
-            "AccessTokenAuthentication", null, "PasswordPolicyName", "PasswordSettingDate", null,
-            "QRCodeAuthentication", null, "EmailAuthentication"
+            "PasswordChanged", "PasswordIsSet", "ShowInList", "FullName", "OSUser", "RunMode", "Roles", "DefaultInterface",
+            "OpenIDAuthentication", "UnsafeOperationProtection", "SecondAuthenticationFactorSettings",
+            "SecondAuthenticationFactorSettingsProcessing", "CannotRecoveryPassword", "Email", "OpenIDConnectAuthentication",
+            "AccessTokenAuthentication", "UserMatchingKeys", "PasswordPolicyName", "PasswordSettingDate", "PasswordHashAlgorithmType",
+            "QRCodeAuthentication", "PasswordDoesNotSatisfyRequirements", "EmailAuthentication"
         };
 
         private static readonly string[] PolicyNames =
@@ -36,13 +37,13 @@ namespace OneSTools.EventLog
                 case "_$User$_.NewError":
                 case "_$User$_.UpdateError":
                     if (body.Count == 29 && Literal(body[0], "65535"))
-                        return Layout(node, UserNames, "BBBSOBBBSSSAOBBASBSBBASDSBBB");
+                        return Layout(node, UserNames, "BBBSOBBBSSSAOBBTSBSBBTSDSBBB");
                     if (body.Count == 28 && Literal(body[0], "65534"))
                     {
                         // The 65534 layout omits position 13 of the 65535 layout.
                         var names = new List<string>(UserNames);
                         names.RemoveAt(12);
-                        return Layout(node, names.ToArray(), "BBBSOBBBSSSABBASBSBBASDSBBB");
+                        return Layout(node, names.ToArray(), "BBBSOBBBSSSABBTSBSBBTSDSBBB");
                     }
                     break;
                 case "_$InfoBase$_.UserPasswordPolicyNew":
@@ -52,8 +53,14 @@ namespace OneSTools.EventLog
                     break;
                 case "_$InfoBase$_.ParametersUpdate":
                 case "_$InfoBase$_.ParametersUpdateError":
+                    if (body.Count == 4 && Literal(body[0], "448"))
+                        return Layout(node, new[] { "MaxUnsuccessfulAttemptsCount", "LockDuration", "UserNameAdditionCodes" }, "NNS");
                     if (body.Count == 3 && Literal(body[0], "192"))
                         return Layout(node, new[] { "MaxUnsuccessfulAttemptsCount", "LockDuration" }, "NN");
+                    if (body.Count == 3 && Literal(body[0], "320"))
+                        return Layout(node, new[] { "MaxUnsuccessfulAttemptsCount", "UserNameAdditionCodes" }, "NS");
+                    if (body.Count == 3 && Literal(body[0], "384"))
+                        return Layout(node, new[] { "LockDuration", "UserNameAdditionCodes" }, "NS");
                     if (body.Count == 2)
                     {
                         // Only observed masks are accepted; ordering for other combinations
@@ -62,8 +69,32 @@ namespace OneSTools.EventLog
                         switch (body[0].Text)
                         {
                             case "1": name = "LockWaitTime"; break;
+                            case "2": name = "UserPasswordMinLength"; break;
+                            case "4":
+                                if (!TypedNumber(body[1], "0") && !TypedNumber(body[1], "3")) return null;
+                                return Parameter(node, "UserPasswordStrengthCheck", TypedNumber(body[1], "3") ? "true" : "false");
+                            case "8": name = "PassiveSessionHibernateTime"; break;
+                            case "16": name = "HibernateSessionTerminateTime"; break;
                             case "64": name = "MaxUnsuccessfulAttemptsCount"; break;
                             case "128": name = "LockDuration"; break;
+                            case "256":
+                                return StringParameter(node, "UserNameAdditionCodes");
+                            case "512": name = "UserPasswordMinEffectivePeriod"; break;
+                            case "1024": name = "UserPasswordMaxEffectivePeriod"; break;
+                            case "2048": name = "UserPasswordReuseLimit"; break;
+                            case "4096": name = "UserPasswordExpirationNotificationPeriod"; break;
+                            case "8192":
+                                return StringParameter(node, "UserPasswordHashAlgorithmType");
+                            case "16384":
+                                return Layout(node, new[] { "UserPasswordCompromiseCheck" }, "B");
+                            case "32768":
+                                if (TypedNumber(body[1], "0")) return Parameter(node,
+                                    "ActionOnUserPasswordRequirementsViolationOnAuthentication", "Потребовать смену пароля");
+                                if (TypedNumber(body[1], "1")) return Parameter(node,
+                                    "ActionOnUserPasswordRequirementsViolationOnAuthentication", "Предложить смену пароля");
+                                if (TypedNumber(body[1], "2")) return Parameter(node,
+                                    "ActionOnUserPasswordRequirementsViolationOnAuthentication", "Нет");
+                                return null;
                             case "65536": name = "InactivityTimeForTerminateSessionNotification"; break;
                             case "131072": name = "InactivityTimeForTerminateSession"; break;
                             default: return null;
@@ -74,6 +105,22 @@ namespace OneSTools.EventLog
             }
             return null;
         }
+
+        private static bool TypedNumber(BracketsNode node, string value) => !node.IsValueNode && node.Count == 2 &&
+            Literal(node[0], "N") && Literal(node[1], value);
+
+        private static object StringParameter(BracketsNode node, string name)
+        {
+            var value = Value(node[1][1], 'S');
+            return value == null ? null : Parameter(node, name, value);
+        }
+
+        private static object Parameter(BracketsNode node, string name, object value) => new Dictionary<string, object>
+        {
+            ["$format"] = "1c-positional-data-v1", ["layout"] = "P/" + node[1][0].Text,
+            ["values"] = new Dictionary<string, object> { [name] = value },
+            ["unnamedFields"] = new List<object>(), ["nodes"] = StructuredEventData.TokenTree(node)
+        };
 
         private static object Layout(BracketsNode node, string[] names, string types)
         {
@@ -96,7 +143,7 @@ namespace OneSTools.EventLog
 
         private static object Value(BracketsNode node, char type)
         {
-            if (node.IsValueNode || node.Count != 2 || !Literal(node[0], type.ToString())) return null;
+            if (node.IsValueNode || node.Count != 2 || !Literal(node[0], type == 'T' ? "A" : type.ToString())) return null;
             var payload = node[1];
             if (type == 'O')
             {
@@ -105,7 +152,7 @@ namespace OneSTools.EventLog
                     !Guid.TryParseExact(payload[1].Text, "D", out _) || !Guid.TryParseExact(payload[2].Text, "D", out _)) return null;
                 return new Dictionary<string, object> { ["$type"] = "O", ["typeId"] = payload[1].Text, ["value"] = payload[2].Text };
             }
-            if (type == 'A')
+            if (type == 'A' || type == 'T')
             {
                 if (payload.IsValueNode || payload.Count == 0 || !payload[0].IsValueNode ||
                     !int.TryParse(payload[0].Text, NumberStyles.None, CultureInfo.InvariantCulture, out var count) ||
@@ -113,7 +160,7 @@ namespace OneSTools.EventLog
                 var items = new List<object>();
                 for (var i = 1; i <= count; i++)
                 {
-                    var value = Value(payload[i], 'O');
+                    var value = Value(payload[i], type == 'T' ? 'S' : 'O');
                     if (value == null) return null;
                     items.Add(value);
                 }

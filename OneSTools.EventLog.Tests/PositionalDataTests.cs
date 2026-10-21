@@ -20,7 +20,7 @@ public sealed class PositionalDataTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void ControlledPropertyWritesDecodeWithoutLosingUnmappedPositions(string fixture)
+    public void ControlledPropertyWritesMatchVerifiedFieldsAndPreserveRawNodes(string fixture)
     {
         var sample = JsonNode.Parse(fixture)!;
         var code = sample["eventCode"]!.ToString();
@@ -47,6 +47,10 @@ public sealed class PositionalDataTests : IDisposable
     [InlineData("invalid-reference")]
     [InlineData("invalid-array-count")]
     [InlineData("unknown-role-type")]
+    [InlineData("invalid-second-factor-count")]
+    [InlineData("wrong-second-factor-type")]
+    [InlineData("invalid-matching-key-count")]
+    [InlineData("wrong-matching-key-type")]
     [InlineData("unknown-event")]
     public void ChangedUserLayoutsKeepCompleteFallbackInsteadOfMislabelingFields(string mutation)
     {
@@ -65,6 +69,10 @@ public sealed class PositionalDataTests : IDisposable
             case "invalid-reference": body[5]![1]![2] = "not-a-uuid"; break;
             case "invalid-array-count": body[12]![1]![0] = "2"; break;
             case "unknown-role-type": body[12]![1]![1]![0] = "Future"; break;
+            case "invalid-second-factor-count": body[16]![1]![0] = "1"; break;
+            case "wrong-second-factor-type": body[16] = new JsonArray("A", new JsonArray("1", new JsonArray("N", "7"))); break;
+            case "invalid-matching-key-count": body[22]![1]![0] = "2147483647"; break;
+            case "wrong-matching-key-type": body[22] = new JsonArray("A", new JsonArray("1", new JsonArray("O", new JsonArray("#", "type", "value")))); break;
             case "unknown-event": code = "Fixture.Future"; break;
         }
         var result = JsonNode.Parse(Read(code, Wire(nodes)).Data)!;
@@ -74,6 +82,14 @@ public sealed class PositionalDataTests : IDisposable
 
     [Theory]
     [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{256,{N,9}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{4,{N,1}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{4,{B,1}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{8192,{N,1}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{32768,{N,3}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{16384,{B,2}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{448,{N,7},{N,61},{N,3}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{320,{N,7},{S,code},{S,extra}}}")]
+    [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{384,{S,61},{S,code}}}")]
     [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{192,{N,3}}}")]
     [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{128,{S,60}}}")]
     [InlineData("_$InfoBase$_.ParametersUpdate", "{P,{65,{N,1},{N,3}}}")]

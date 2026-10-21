@@ -38,6 +38,8 @@ public sealed class StructuredDataTests : IDisposable
     [InlineData("_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"vendor\"},{\"S\",\"version\"},{\"U\"}}}", "[\"P\",[[\"S\",\"vendor\"],[\"S\",\"version\"],[\"U\"]]]")]
     [InlineData("_$InfoBase$_.ConfigUpdate", "{\"P\",{{\"S\",\"vendor\"},{\"N\",1}}}", "[\"P\",[[\"S\",\"vendor\"],[\"N\",\"1\"]]]")]
     [InlineData("_$InfoBase$_.ExclusiveModeChange", "{\"P\",{2,{\"B\",2}}}", "[\"P\",[\"2\",[\"B\",\"2\"]]]")]
+    [InlineData("_$InfoBase$_.RegionalSettingsChange", "{P,{{S,en_US},{B,2}}}", "[\"P\",[[\"S\",\"en_US\"],[\"B\",\"2\"]]]")]
+    [InlineData("_$InfoBase$_.UserPasswordPolicyDelete", "{P,{{S,Fixture},{S,extra}}}", "[\"P\",[[\"S\",\"Fixture\"],[\"S\",\"extra\"]]]")]
     [InlineData("Corpus.Future", "{\"P\",{2,{\"B\",1}}}", "[\"P\",[\"2\",[\"B\",\"1\"]]]")]
     [InlineData("Corpus.Future", "{\"P\",{999,{\"P\",{111,{\"X\",\"\"},{\"S\",\"a\"\"b\"},{\"N\",12345678901234567890123456789012345678}}}}}", "[\"P\",[\"999\",[\"P\",[\"111\",[\"X\",\"\"],[\"S\",\"a\\\"\\\"b\"],[\"N\",\"12345678901234567890123456789012345678\"]]]]]")]
     [InlineData("Corpus.Future", "{\"X\",\"future-data\"}", "[\"X\",\"future-data\"]")]

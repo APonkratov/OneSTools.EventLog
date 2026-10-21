@@ -57,9 +57,8 @@ public sealed class StructuredClickHouseTests
         Directory.CreateDirectory(folder);
         try
         {
-            using var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,
-                "Fixtures", "known-named-data-8.3.27.json")));
-            var cases = fixture.RootElement.GetProperty("cases").EnumerateArray().ToArray();
+            var cases = FixtureCases("known-named-data-8.3.27.json")
+                .Concat(FixtureCases("noncorp-data-8.3.27.json")).ToArray();
             File.WriteAllText(Path.Combine(folder, "1Cv8.lgf"), string.Join(",\n", cases.Select((c, i) =>
                 "{4,\"" + c.GetProperty("eventCode").GetString() + "\"," + (i + 1) + "}")));
             File.WriteAllText(Path.Combine(folder, "20261021000000.lgp"), string.Join(",\n", cases.Select((c, i) =>
@@ -129,6 +128,12 @@ public sealed class StructuredClickHouseTests
             Assert.Equal(schema, await server.Schema());
         }
         finally { Directory.Delete(folder, true); }
+    }
+
+    private static JsonElement[] FixtureCases(string name)
+    {
+        using var fixture = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", name)));
+        return fixture.RootElement.GetProperty("cases").EnumerateArray().Select(c => c.Clone()).ToArray();
     }
 
     private static string Wire(JsonElement node) => node.ValueKind == JsonValueKind.Array

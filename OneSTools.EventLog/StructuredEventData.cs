@@ -46,6 +46,7 @@ namespace OneSTools.EventLog
                 case "_$User$_.AuthenticationLock":
                 case "_$User$_.AuthenticationUnlock":
                 case "_$User$_.AuthenticationUnlockError":
+                case "_$Session$_.PasswordRequirementsViolationOnAuthentication":
                     if (List(body, 2) && Literal(body[0], "1") && List(body[1], 2) &&
                         Literal(body[1][0], "Имя") && Typed(body[1][1], "S"))
                         return new Dictionary<string, object> { ["Name"] = Text(body[1][1]) };
@@ -103,9 +104,23 @@ namespace OneSTools.EventLog
                         return new Dictionary<string, object> { ["Action"] = Text(body[1]), ["Data"] = null };
                     break;
                 case "_$Session$_.ConfigExtensionApplyError":
+                case "_$InfoBase$_.UserPasswordPolicyDelete":
+                case "_$User$_.Delete":
                     if (List(body, 1) && Typed(body[0], "S"))
                         return new Dictionary<string, object> { ["Name"] = Text(body[0]) };
                     break;
+                case "_$InfoBase$_.SecondAuthenticationFactorTemplateNew":
+                case "_$InfoBase$_.SecondAuthenticationFactorTemplateUpdate":
+                case "_$InfoBase$_.SecondAuthenticationFactorTemplateDelete":
+                    if (List(body, 2) && Literal(body[0], "1") && List(body[1], 2) &&
+                        Literal(body[1][0], "Имя") && Typed(body[1][1], "S"))
+                        return new Dictionary<string, object> { ["Name"] = Text(body[1][1]) };
+                    break;
+                case "_$InfoBase$_.RegionalSettingsChange":
+                    return Fields(body, new[] { "LocaleCode", "UseCurrentSessionSettings", "NumbersDecimalSeparator",
+                        "NumbersDigitGroupSeparator", "NumbersDigitGroupFormat", "NegativeNumberPresentation",
+                        "BooleanFalsePresentation", "BooleanTruePresentation", "DatePresentationFormat",
+                        "TimePresentationFormat", "FirstDayOfWeek" }, "SBSSSNSSSSN");
                 case "_$Session$_.ExternalDataProcessorConnect":
                 case "_$Session$_.ExternalDataProcessorConnectError":
                 case "_$Session$_.ExternalReportConnect":
